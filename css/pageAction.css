@@ -1,0 +1,167 @@
+@font-face {
+    font-family: Lato;
+    src: url('fonts/LatoLatin-Regular.woff2') format('woff2');
+    font-weight: normal;
+}
+html{
+    margin:0;
+    padding:0;
+}
+body{
+    font-family: 'Lato', sans-serif;
+    background-color: rgb(251, 251, 251);
+    color:black;
+    font-size: 20px;
+    display:flex;
+    flex-direction:column;
+    width:386px;
+    height:100%;
+    margin:auto;
+    padding:10px;
+}
+#sliderContainer{
+    align-items:baseline;
+}
+#str{
+    font-family:"Calisto MT", "Liberation Serif", serif;
+    font-size:125%;
+    display: inline-block; 
+    width: 35px;
+    max-width: 35px;
+}
+#slider {
+    padding:0;
+    padding-left:10px;
+    margin:0;
+    width: 250px;
+    border-radius: 5px;
+}
+#slider:focus {
+    outline: none;
+}
+#slider::-moz-range-thumb {
+    width: 10px;
+    height: 25px;
+    border-radius: 50%;
+    border: 1px solid black;
+    cursor:w-resize;
+    background: black;
+    transition: 0.07s ease-in;
+}
+#slider::-moz-range-track {
+    width: 100%;
+    height: 5px;
+    cursor: pointer;
+    background: #eee;
+    border-radius: 1em;
+    border: 2px solid black;
+}
+.urlContainer{
+    display:flex;
+    flex-flow:row;
+    justify-content:center;
+    margin-top:10px;
+    margin-bottom:20px;
+    /*border: 2px solid rgb(128, 0, 0);*/
+}
+#refreshBtn{
+    cursor: context-menu;
+    opacity: 0;
+    position:absolute;
+    color:navy;
+    border: 2px solid navy;
+    font-size:18px;
+    transition: opacity ease-in 0.3s;
+}
+#refreshBtn:hover{
+    transition: color ease-out 0.1s;
+    transition: background-color ease-out 0.1s;
+    color:white;
+    background-color:navy;
+}
+#url{
+    opacity: 1;
+    font-size: 100%;
+    font-family: 'Cambria', 'Ubuntu';
+    font-style: normal;
+    color: navy;
+    transition: opacity ease-out 0.1s;
+}
+button {
+    font-size: 0.7em;
+    padding: 0.35em 1em;
+    cursor: pointer;
+    font-family:"Lato";
+    border-radius: 5px;
+    transition: background-color 0.1s ease-out;
+    color:black;
+    background-color: #eee;
+    border: 0.15em solid black;
+}
+button:hover {
+    color: white;
+    background-color: black;
+}
+input[type='checkbox'] {
+    float: right;
+    position: absolute;
+    opacity: 0;
+    height: 0;
+    width: 0;
+}
+.container {
+    float:right;
+    position: relative;
+    margin-right: 20px;
+    cursor: pointer;
+    user-select: none;
+}
+.checkmark {
+    position: absolute;
+    height: 15px;
+    width: 15px;
+    background-color: #eee;
+    border: 2px solid black;
+    border-radius: 20px;
+    transition: color ease-out 0.1s;
+    transition: background-color ease-out 0.1s;
+}
+.container:hover input ~ .checkmark {
+    background-color: #ccc;
+}
+.container input:checked ~ .checkmark {
+    background-color: black;
+}
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+.container input:checked ~ .checkmark:after {
+    display: block;
+}
+.container .checkmark:after {
+    left:  6px;
+    top: 2px;
+    width: 2px;
+    height: 7px;
+    margin:0;
+    padding:0;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+#optionsContainer{
+    display:flex;
+    flex-direction:column;
+    flex-wrap:wrap;
+}
+.option{
+    width:100%;
+}
+#optionsBtn{
+    margin-top: 10px;
+    font-size: 15px;
+    width:125px;
+    align-self:flex-end;
+}

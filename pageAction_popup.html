@@ -1,0 +1,91 @@
+<!--pageAction_popup.html
+    Fushko-->
+<!DOCTYPE HTML>
+<html lang="en">
+    <head> 
+        <meta charset="utf-8"/>
+        <link rel="stylesheet" type="text/css" href="css/pageAction.css">
+        <title>Font Contrast</title>
+    </head>
+    <body>
+        <div id="sliderContainer">
+            <span id = "ctrlStr">Strength:</span>
+            <span id = "str"></span>
+            <input id = "slider" type = "range" min = "-100" max = "100" value = "35">
+        </div>
+        
+        <div class="urlContainer">
+            <span id ="url"></span>
+            <button id="refreshBtn">Refresh</button>
+        </div>
+        
+        <div id="optionsContainer">
+            
+            <div class="option">
+                <span>Whitelist</span>
+                <label class="container">
+                    <input type="checkbox" id="addWL">
+                    <span class="checkmark"></span>
+                </label>
+            </div>
+            
+            <div class="option" style="margin-bottom:0.2em">
+                <span>Blacklist</span>
+                <label class="container">
+                    <input type="checkbox" id="addBL">
+                    <span class="checkmark"></span>
+                </label>
+            </div>
+
+            <div class ="option">
+                <span>Bold text</span>
+                <label class="container">
+                    <input type="checkbox" id="boldText">
+                    <span class="checkmark"></span>
+                </label>
+            </div>
+
+            <div class ="option">
+                <span>Skip colored text</span>
+                <label class="container">
+                    <input type="checkbox" id="skipColoreds">
+                    <span class="checkmark"></span>
+                </label>
+            </div>
+            
+            <div class ="option">
+                <span>Skip headings</span>
+                <label class="container">
+                    <input type="checkbox" id="skipHeadings">
+                    <span class="checkmark"></span>
+                </label>
+            </div>
+            
+            <div class ="option">
+                <span>Advanced dimming</span>
+                <label class="container">
+                    <input type="checkbox" id="advDimming">
+                    <span class="checkmark"></span>
+                </label>
+            </div>
+
+            <div class ="option">
+                <span>Force placeholder dimming</span>
+                <label class="container">
+                    <input type="checkbox" id="forcePlhdr">
+                    <span class="checkmark"></span>
+                </label>
+            </div>
+            
+            <div class ="option">
+                <span>Form outline</span>
+                <label class="container">
+                    <input type="checkbox" id="outline">
+                    <span class="checkmark"></span>
+                </label>
+            </div>
+        </div>
+        <button id="optionsBtn">More options</button>
+        <script src="pageAction_options.js"></script>
+    </body>
+</html>

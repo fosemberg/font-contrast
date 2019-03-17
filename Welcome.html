@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Font Contrast Welcome</title>
+        <style>
+            @font-face {
+                font-family: Lato;
+                src: url('css/fonts/LatoLatin-Bold.woff2') format('woff2');
+                font-weight: bold;
+            }
+            @font-face {
+                font-family: Lato;
+                src: url('css/fonts/LatoLatin-Regular.woff2') format('woff2');
+                font-weight: normal;
+            }
+            body{
+                font-family:'Lato', sans-serif;
+                font-size: 20px;
+                background-color: white;
+                color:black;
+            }
+            #grey{
+                color: rgb(160, 160, 160);
+                color: rgb(120, 124, 126);
+            }
+            img {
+                pointer-events:none;
+            }
+            #ico {
+                width: 24px;
+                height: 24px;
+            }
+            li{
+                margin-bottom: 0.7em;
+            }
+        </style>
+    </head>
+    <body>
+        <h2>Welcome to Font Contrast!</h2>
+        <p>
+            The app has two buttons:
+            <ul>
+                <li>The <img src="icons/off.png" alt="Grey 'C' Icon" id ="ico"> button in the add-on bar toggles the add-on for the current tab.</li>
+                <li>The <img src="icons/halo.png" alt="Blue Halo 'C' Icon" id = "ico"> button in the address bar manages the options for the current page.</li>
+            </ul>
+        </p> 
+
+        <p>Try toggling the add-on. </p>
+
+        <p id ="grey">This grey text should now turn black!</p>
+        
+        <h3>Options guide:</h3>
+
+        <p>Clicking on the options button will open this window:</p>
+        <img src="options.png">
+        <ul>
+        <li><strong>Strength:</strong> Controls the grey text detection for the website. A higher value may detect more grey text, but may also darken light text against dark backgrounds.</li>
+        <li><strong>Whitelist:</strong> Adds the website to the whitelist. Dragging the slider or toggling another option will automatically check this option.</li>
+        <li><strong>Blacklist:</strong> Adds the website to the blacklist.</li>
+        <li><strong>Bold text:</strong> Changes the font weight of all text to bold.</li>
+        <li><strong>Skip colored text:</strong> Attempts to avoid non-grey text. Affected by strength.</li>
+        <li><strong>Skip headings:</strong> Avoids all big headings.</li>
+        <li><strong>Advanced dimming:</strong> Dims text to a darker shade of its color (rather than just black) based on the Strength value. Can be slow on heavy websites.</li>
+        <li><strong>Force placeholder dimming:</strong> Forces all placeholder text to turn black, instead of just increasing their opacity. Useful in websites where placeholders are still grey with the add-on enabled.</li>
+        <li><strong>Form outline:</strong> Attempts to add a black outline around text areas.</li> 
+        <li><strong>More options:</strong> Opens a tab with the default options and the whitelist/blacklist.</li>
+        </ul>
+    </body>
+</html>
