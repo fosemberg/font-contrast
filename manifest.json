@@ -1,7 +1,7 @@
 {
   "name": "Font Contrast",
   "description": "Fix the font contrast on badly designed pages",
-  "version": "1.4.6",
+  "version": "1.4.7",
   "author": "Fushko",
   "permissions": [
     "http://*/*", "https://*/*", "storage", "tabs", "file:///*"
