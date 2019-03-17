@@ -17,19 +17,6 @@ function getRGBarr(rgbString)
     return colors;
 }
 
-function getRGBAarr(rgbString) 
-{
-    let colors = rgbString.split(")");
-    colors = colors[0].split("(");
-    colors = colors[1].split(",");
-
-    colors[0] = parseFloat(colors[0]);
-    colors[1] = parseFloat(colors[1]);
-    colors[2] = parseFloat(colors[2]);
-
-    return colors;
-}
-
 function calcLuma(rgbString) 
 {
     let colors = getRGBarr(rgbString);
@@ -410,6 +397,6 @@ if (!document.getElementById("_fc_"))
     "forcePlhdr"
     ], init);
 }
-else /*enable();*/ x.appendChild(t);
+else x.appendChild(t);
 
 chrome.runtime.sendMessage({from: "yo", t: true});
