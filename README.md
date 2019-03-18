@@ -1,3 +1,7 @@
 # Font Contrast v1.4.7
 
-Simple add-on that turns grey text to black. Its purpose is to improve legibility on hard to read websites.
+Simple add-on to improve legibility on hard to read websites. Allows you to turn all text black, or to dim to a darker shade of the same color (e.g. light grey to dark grey).
+
+## License
+
+GPL-3.0

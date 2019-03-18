@@ -1,6 +1,8 @@
-/**pageAction_options.js 
- * Fushko
-*/
+/**
+ * Copyright (C) 2019 Francesco Fusco. All rights reserved.
+ * License: https://github.com/Fushko/font-contrast#license
+ */
+
 const storage = chrome.storage.local;
 const doc = document;
 
