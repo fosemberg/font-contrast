@@ -6,10 +6,22 @@
         <title>Font Contrast</title>
     </head>
     <body>
+        <div id="sliderContainer" >
+            <span class ="sliderDesc">Strength:</span>
+            <span class = "val" id = "strLabel"></span>
+            <input type = "range" class = "slider" id = "strSlider" min = "-100" max = "100" value = "35">
+        </div>
+
+        <div id="sliderContainer" style="margin-top:0.35em">
+            <span class ="sliderDesc">Increase size (%):</span>
+            <span class = "val" id = "sizeLabel"></span>
+            <input type = "range" class = "slider" id ="sizeSlider" min = "0" max = "100" value = "0">
+        </div>
+
         <div id="sliderContainer">
-            <span id = "ctrlStr">Strength:</span>
-            <span id = "str"></span>
-            <input id = "slider" type = "range" min = "-100" max = "100" value = "35">
+            <span class ="sliderDesc">Threshold (px):</span>
+            <span class = "val" id = "thresholdLabel"></span>
+            <input type = "range" class = "slider" id ="thresholdSlider" min = "0" max = "50" value = "14">
         </div>
         
         <div class="urlContainer">

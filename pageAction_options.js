@@ -6,22 +6,29 @@
 const storage = chrome.storage.local;
 const doc = document;
 
-let slider = doc.querySelector("#slider");
-let sliderStr = doc.querySelector("#str");
+let strSlider       = doc.querySelector("#strSlider");
+let strLabel        = doc.querySelector("#strLabel");
 
-let urlSpan = doc.querySelector("#url");
+let sizeSlider      = doc.querySelector("#sizeSlider");
+let sizeLabel       = doc.querySelector("#sizeLabel");
 
-let WLcheck = doc.querySelector("#addWL");
-let BLcheck = doc.querySelector("#addBL");
-let skipColoreds = doc.querySelector("#skipColoreds");
-let skipHeadings = doc.querySelector("#skipHeadings");
-let advDimming = doc.querySelector("#advDimming");
-let outline = doc.querySelector("#outline");
-let boldText = doc.querySelector("#boldText");
-let forcePlhdr = doc.querySelector("#forcePlhdr");
+let thresholdSlider = doc.querySelector("#thresholdSlider");
+let thresholdLabel  = doc.querySelector("#thresholdLabel");
 
-let optionsBtn = doc.querySelector("#optionsBtn");
-let refreshBtn = doc.querySelector("#refreshBtn");
+let urlSpan         = doc.querySelector("#url");
+
+let WLcheck         = doc.querySelector("#addWL");
+let BLcheck         = doc.querySelector("#addBL");
+
+let skipColoreds    = doc.querySelector("#skipColoreds");
+let skipHeadings    = doc.querySelector("#skipHeadings");
+let advDimming      = doc.querySelector("#advDimming");
+let outline         = doc.querySelector("#outline");
+let boldText        = doc.querySelector("#boldText");
+let forcePlhdr      = doc.querySelector("#forcePlhdr");
+
+let optionsBtn      = doc.querySelector("#optionsBtn");
+let refreshBtn      = doc.querySelector("#refreshBtn");
 
 let isURLshown = false;
 
@@ -147,7 +154,20 @@ let callback = (tabs) => {
 
     if(url.startsWith("http")) urlSpan.innerText = domain;
 
-    storage.get(["whitelist", "blacklist", "globalStr", "skipColoreds", "skipHeadings", "advDimming", "boldText", "forcePlhdr"], (items) => 
+
+    let settings = [
+        "whitelist", 
+        "blacklist", 
+        "globalStr",
+        "size",
+        "sizeThreshold", 
+        "skipColoreds", 
+        "skipHeadings", 
+        "advDimming", 
+        "boldText", 
+        "forcePlhdr"];
+
+    storage.get(settings, (items) => 
     {    
         let whitelist = items.whitelist || [];
         let blacklist = items.blacklist || [];
@@ -164,54 +184,78 @@ let callback = (tabs) => {
         
             if(idx > -1)
             {
-                slider.value         = whitelist[idx].strength;
-                sliderStr.innerText  = whitelist[idx].strength;
-                skipHeadings.checked = whitelist[idx].skipHeadings;
-                skipColoreds.checked = whitelist[idx].skipColoreds;
-                advDimming.checked   = whitelist[idx].advDimming;
-                outline.checked      = whitelist[idx].outline;
-                boldText.checked     = whitelist[idx].boldText;
-                forcePlhdr.checked   = whitelist[idx].forcePlhdr;
+                let wlItem = whitelist[idx];
+
+                strSlider.value           = wlItem.strength;
+                strLabel.innerText        = wlItem.strength;
+
+                sizeSlider.value          = wlItem.size;
+                sizeLabel.innerText       = wlItem.size;
+
+                thresholdSlider.value     = wlItem.threshold;
+                thresholdLabel.innerText  = wlItem.threshold;
+
+                skipHeadings.checked      = wlItem.skipHeadings;
+                skipColoreds.checked      = wlItem.skipColoreds;
+                advDimming.checked        = wlItem.advDimming;
+                outline.checked           = wlItem.outline;
+                boldText.checked          = wlItem.boldText;
+                forcePlhdr.checked        = wlItem.forcePlhdr;
     
                 WLcheck.checked = true;
                 BLcheck.checked = false;
             }
             else 
             {
-                slider.value = items.globalStr;
-                sliderStr.innerText = items.globalStr;
+                strSlider.value           = items.globalStr;
+                sizeSlider.value          = items.size;
+                thresholdSlider.value     = items.sizeThreshold;
+                strLabel.innerText        = items.globalStr;
+                sizeLabel.innerText       = items.size;
+                thresholdLabel.innerText  = items.sizeThreshold;
 
-                skipHeadings.checked = globalChecks[0];
-                skipColoreds.checked = globalChecks[1];
-                advDimming.checked   = globalChecks[2];
-                boldText.checked     = globalChecks[3];
-                forcePlhdr.checked   = globalChecks[4];
+                skipHeadings.checked      = globalChecks[0];
+                skipColoreds.checked      = globalChecks[1];
+                advDimming.checked        = globalChecks[2];
+                boldText.checked          = globalChecks[3];
+                forcePlhdr.checked        = globalChecks[4];
             }
         }
 
         let wlItem = {
-            url: domain, 
-            strength: items.globalStr,
-            skipHeadings: globalChecks[0], 
-            skipColoreds: globalChecks[1], 
-            advDimming:   globalChecks[2],
-            outline: false,
-            boldText: globalChecks[3],
-            forcePlhdr: globalChecks[4]
+            url:            domain, 
+            strength:       items.globalStr,
+            size:           items.size,
+            threshold:      items.sizeThreshold,
+
+            skipHeadings:   globalChecks[0], 
+            skipColoreds:   globalChecks[1], 
+            advDimming:     globalChecks[2],
+            boldText:       globalChecks[3],
+            forcePlhdr:     globalChecks[4],
+            outline:        false, //The outline cannot be set globally for now
+   
         };
 
-        slider.oninput = () =>
-        {
-            let str = slider.value;
-            sliderStr.innerText = str;
+        let updateWLItem = () => {
+            wlItem.strength     = strSlider.value;
+            wlItem.size         = sizeSlider.value;
+            wlItem.threshold    = thresholdSlider.value;
 
-            wlItem.strength     = str;
-            wlItem.skipHeadings = skipHeadings.checked;
             wlItem.skipColoreds = skipColoreds.checked;
+            wlItem.skipHeadings = skipHeadings.checked;
             wlItem.advDimming   = advDimming.checked;
             wlItem.outline      = outline.checked;
             wlItem.boldText     = boldText.checked;
             wlItem.forcePlhdr   = forcePlhdr.checked;
+        };
+
+        strSlider.oninput = () =>
+        {
+            let str = strSlider.value;
+            strLabel.innerText = str;
+
+            updateWLItem();
 
             if(BLcheck.checked)
             {
@@ -220,6 +264,37 @@ let callback = (tabs) => {
 
             whitelist = updateWL(wlItem, whitelist, domain, true);
         };
+
+        sizeSlider.oninput = () =>
+        {
+            let sizeOffset = sizeSlider.value;
+            sizeLabel.innerText = sizeOffset;
+
+            updateWLItem();
+
+            if(BLcheck.checked)
+            {
+                blacklist = updateBL(blacklist, domain, false);
+            }
+
+            whitelist = updateWL(wlItem, whitelist, domain, true);
+        };
+
+        thresholdSlider.oninput = () =>
+        {
+            let sizeThreshold = thresholdSlider.value;
+            thresholdLabel.innerText = sizeThreshold;
+
+            updateWLItem();
+
+            if(BLcheck.checked)
+            {
+                blacklist = updateBL(blacklist, domain, false);
+            }
+
+            whitelist = updateWL(wlItem, whitelist, domain, true);
+        };
+
 
         WLcheck.addEventListener("click", () => {
             let isChecked = WLcheck.checked;
@@ -253,18 +328,8 @@ let callback = (tabs) => {
             }
         });
 
-        let updateWLItems = () => {
-            wlItem.strength = slider.value;
-            wlItem.skipColoreds = skipColoreds.checked;
-            wlItem.skipHeadings = skipHeadings.checked;
-            wlItem.advDimming = advDimming.checked;
-            wlItem.outline = outline.checked;
-            wlItem.boldText = boldText.checked;
-            wlItem.forcePlhdr = forcePlhdr.checked;
-        };
-        
         skipColoreds.addEventListener("click", () => {
-            updateWLItems();
+            updateWLItem();
 
             whitelist = updateWL(wlItem, whitelist, domain, true);
 
@@ -272,7 +337,7 @@ let callback = (tabs) => {
         });
 
         skipHeadings.addEventListener("click", () => {
-            updateWLItems();
+            updateWLItem();
 
             whitelist = updateWL(wlItem, whitelist, domain, true);
 
@@ -280,7 +345,7 @@ let callback = (tabs) => {
         });
 
         advDimming.addEventListener("click", () => {
-            updateWLItems();
+            updateWLItem();
 
             whitelist = updateWL(wlItem, whitelist, domain, true);
 
@@ -288,7 +353,7 @@ let callback = (tabs) => {
         });
 
         outline.addEventListener("click", () => {
-            updateWLItems();
+            updateWLItem();
 
             whitelist = updateWL(wlItem, whitelist, domain, true);
 
@@ -296,7 +361,7 @@ let callback = (tabs) => {
         });
 
         boldText.addEventListener("click", () => {
-            updateWLItems();
+            updateWLItem();
 
             whitelist = updateWL(wlItem, whitelist, domain, true);
 
@@ -304,7 +369,7 @@ let callback = (tabs) => {
         });
 
         forcePlhdr.addEventListener("click", () => {
-            updateWLItems();
+            updateWLItem();
 
             whitelist = updateWL(wlItem, whitelist, domain, true);
 

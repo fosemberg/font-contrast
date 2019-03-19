@@ -144,7 +144,7 @@ function process(nodes, str, checks)
         tagsToSkip = tagsToSkip.concat(headings);
     }
 
-    //let dbArr = [];
+    let dbArr = [];
 
     for(let i = 0, len = nodes.length; i < len; ++i)
     {
@@ -159,11 +159,21 @@ function process(nodes, str, checks)
     
         if(!containsText(node) || !tag || ~tagsToSkip.indexOf(tag) || classe.startsWith("ytp") || ~classesToSkip.indexOf(classe)) continue;
      
-        let color = getComputedStyle(node, null).getPropertyValue("color");
+        let style = getComputedStyle(node, null);
+
+        let color   = style.getPropertyValue("color");
+        let bgColor = style.getPropertyValue("background-color");
+        let size    = style.getPropertyValue("font-size");
+
+        size = parseInt(size);
+
+        let sizeLimit = 50; //@TODO: non-arbitrary size limit
+
+        if(size < sizeLimit) node.setAttribute("s__", size); 
 
         if(color === black || color === white || color === transparent) continue;
        
-        let saturation = calcDelta(color);
+        let colorfulness = calcDelta(color);
 
         if(checks[1]) //Skip colored text & links
         {
@@ -171,11 +181,9 @@ function process(nodes, str, checks)
             if(tag === "a") offset = -32; 
             let val = 32 + str + offset;
 
-            if(saturation > val /*|| luma > 180*/) continue;
+            if(colorfulness > val) continue;
         }
-      
-        let bgColor = getComputedStyle(node, null).getPropertyValue("background-color");
-
+        
         let parent = node.parentNode;
 
         while (bgColor === transparent && parent)
@@ -209,17 +217,15 @@ function process(nodes, str, checks)
     
         let bgLumaOffset = bgLuma + str;
 
-        /*Logging
         let dimmed = luma < bgLumaOffset;
-        let obj = {tag, color, bgColor, luma, bgLuma, bgLumaOffset, dimmed};
-        dbArr.push(obj);*/
+        dbArr.push({tag, size, color, bgColor, luma, bgLuma, bgLumaOffset, dimmed});
 
         if(luma > bgLumaOffset) continue;
 
         if(checks[2]) //Advanced mode
         {
             let greyOffset = 16;
-            greyOffset -= saturation;
+            greyOffset -= colorfulness;
     
             let amount = str + greyOffset + 35;
             
@@ -269,10 +275,11 @@ if (!document.getElementById("_fc_"))
     createElem();
 
     const doc = document;
-    let debug = 0;
+    let db = 0;
 
     let init = (items) => {
         let str               = items.globalStr;
+
         let skipHeadings      = items.skipHeadings;
         let skipColoreds      = items.skipColoreds;
         let advDimming        = items.advDimming;
@@ -289,7 +296,10 @@ if (!document.getElementById("_fc_"))
 
         if(idx > -1) 
         {
-                  str = whitelist[idx].strength;
+            str       = whitelist[idx].strength;
+            size      = whitelist[idx].size;
+            sizeLimit = whitelist[idx].threshold;
+
             checks[0] = whitelist[idx].skipHeadings;
             checks[1] = whitelist[idx].skipColoreds; 
             checks[2] = whitelist[idx].advDimming;
@@ -299,7 +309,7 @@ if (!document.getElementById("_fc_"))
         } 
 
         let dbStr = "Website processed in";
-        if(debug) console.time(dbStr);
+        if(db) console.time(dbStr);
 
         let elems = [];
         elems = nodeListToArr(document.body.getElementsByTagName("*"));
@@ -316,13 +326,35 @@ if (!document.getElementById("_fc_"))
             y.appendChild(z);
         }
 
-        let bold = "";
-        if(checks[4]) bold = "*{font-weight:bold!important}";
+        let boldStr = "";
+        if(checks[4]) boldStr = "*{font-weight:bold!important}";
 
         let force = "";
         if(checks[5]) force = "color:black!important";
 
-        let css = `${bold}::placeholder{opacity:1!important;${force}}[b__]{border:1px solid black!important}`;
+        let plhdrStr = `::placeholder{opacity:1!important;${force}}`;
+
+        let sizeStr = "";
+
+        if(size > 0) 
+        {
+            let increaseAmount = size;
+            let i = 1;
+
+            while(i <= sizeLimit)
+            {
+                sizeStr += `[s__="${i}"]{font-size: calc(${i++}px + ${increaseAmount}%)!important}\n`;
+            }
+        }
+
+        let borderStr = "[b__]{border:1px solid black!important}";
+        
+        let css = `
+        ${sizeStr}
+        ${boldStr}
+        ${plhdrStr}
+        ${borderStr}
+        `;
 
         css += '[d__]{';
 
@@ -338,9 +370,9 @@ if (!document.getElementById("_fc_"))
 
         t.nodeValue = css;
 
-        if(debug) console.timeEnd(dbStr);
+        if(db) console.timeEnd(dbStr);
 
-        /*New elements----------------------------------*/
+        /* New elements */
         dbStr = "New elements processed in";
 
         let callback = (mutationsList) => {
@@ -350,7 +382,7 @@ if (!document.getElementById("_fc_"))
             mutationsList.forEach((mutation) => {
                 if(mutation.addedNodes && mutation.addedNodes.length > 0)
                 {
-                    if(debug) console.time(dbStr);
+                    if(db) console.time(dbStr);
                
                     for(let i = 0, len = mutation.addedNodes.length; i < len; ++i)
                     {
@@ -358,7 +390,6 @@ if (!document.getElementById("_fc_"))
 
                         if(node instanceof HTMLElement)
                         {
-                            //process(node, str, checks);
                             let children = [];
                             children = nodeListToArr(node.getElementsByTagName("*"));
                             children.push(node);
@@ -369,7 +400,7 @@ if (!document.getElementById("_fc_"))
                             else process(children, str, checks);
                         }
                     }
-                    if(debug) console.timeEnd(dbStr);
+                    if(db) console.timeEnd(dbStr);
                 }
             });
 
@@ -387,17 +418,20 @@ if (!document.getElementById("_fc_"))
         x.appendChild(t);
     };
 
-    browser.storage.local.get([
-    "globalStr",
-    "whitelist",
-    "skipHeadings",
-    /*"skipLinks",*/
-    "skipColoreds",
-    "smoothEnabled",
-    "advDimming",
-    "boldText",
-    "forcePlhdr"
-    ], init);
+    let settings = [
+        "whitelist", 
+        "blacklist", 
+        "globalStr",
+        "size",
+        "sizeThreshold", 
+        "skipColoreds", 
+        "skipHeadings", 
+        "advDimming", 
+        "boldText", 
+        "forcePlhdr"
+    ];
+
+    browser.storage.local.get(settings, init);
 }
 else x.appendChild(t);
 

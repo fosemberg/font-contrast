@@ -24,19 +24,46 @@
                     </p>
                 </div>
 
-                <span id = "sliderStr"></span>
-                <input type = "range" min = "-100" max = "100" value = "0" id = "slider">
+                <span class ="sliderLabel" id = "strLabel"></span>
+                <input type = "range" min = "-100" max = "100" value = "0" class="slider" id = "strSlider">
             </div>
+
+            <div class ="settings" id ="sizeOption">
+                <span>Increase size (%)</span>
+
+                <div class="help-tip" id="sizeTip">
+                    <p>
+                        Increases font size. Fonts above the size threshold won't be affected.
+                    </p>
+                </div>
+    
+                <span class ="sliderLabel" id = "sizeLabel"></span>
+                <input type = "range" min = "0" max = "100" value = "0" class="slider" id = "sizeSlider">
+            </div>
+
+            <div class ="settings" id ="sizeOption">
+                <span>Size threshold (px)</span>
+
+                <div class="help-tip" id="thrTip">
+                    <p>
+                        Determines the minimum size a font has to be (in pixels) for it to be affected by a size increase. By default, only small fonts are affected.
+                    </p>
+                </div>
+    
+                <span class ="sliderLabel" id = "threshLabel"></span>
+                <input type = "range" min = "0" max = "50" value = "0" class="slider" id = "threshSlider">
+            </div>
+
 
             <div class="settings">
                 <span>Activate on all websites</span>
                 
                 <div class="help-tip" id="defaultEnTip">
-                        <p>
-                           Toggles the add-on automatically on every website possible.
-                           <br>When this is disabled, the app will enable only on whitelisted websites, or when pressing the "C" icon in the add-on bar.
-                        </p>
-                    </div>
+                    <p>
+                        Toggles the add-on automatically on every website possible.
+                        <br>When this is disabled, the app will enable only on whitelisted websites, or when pressing the "C" icon in the add-on bar.
+                    </p>
+                </div>
 
                 <label class="container">
                     <input type="checkbox" id="defaultEn">

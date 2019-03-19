@@ -6,25 +6,41 @@
 const storage = chrome.storage.local;
 const doc = document;
 
-//Slider
-let slider = doc.querySelector("#slider");
-let sliderStr = doc.querySelector("#sliderStr");
+//Sliders
+let strSlider       = doc.querySelector("#strSlider");
+let strLabel        = doc.querySelector("#strLabel");
+let sizeSlider      = doc.querySelector("#sizeSlider");
+let sizeLabel       = doc.querySelector("#sizeLabel");
+let threshSlider    = doc.querySelector("#threshSlider");
+let threshLabel     = doc.querySelector("#threshLabel");
 
-slider.oninput = () => {
-  let val = slider.value;
-  sliderStr.innerText = val;
-  storage.set({globalStr: val});
+strSlider.oninput = () => {
+    let val = strSlider.value;
+    strLabel.innerText = val;
+    storage.set({globalStr: val});
+};
+
+sizeSlider.oninput = () => {
+    let val = sizeSlider.value;
+    sizeLabel.innerText = val;
+    storage.set({"size": val});
+};
+
+threshSlider.oninput = () => {
+    let val = threshSlider.value;
+    threshLabel.innerText = val;
+    storage.set({"sizeThreshold": val});
 };
 
 //Options
-let skipHeadings   = doc.querySelector('#skipHeadings');
-let skipLinks     = doc.querySelector('#skipLinks');
+let skipHeadings    = doc.querySelector('#skipHeadings');
+let skipLinks       = doc.querySelector('#skipLinks');
 //let skipColoreds  = doc.querySelector('#skipColoreds');
-let globalEnabled = doc.querySelector('#defaultEn');
-let smoothEnabled = doc.querySelector('#smoothEnabled');
-let advDimming = doc.querySelector('#advDimming');
-let boldText = doc.querySelector('#boldText');
-let forcePlhdr = doc.querySelector('#forcePlhdr');
+let globalEnabled   = doc.querySelector('#defaultEn');
+let smoothEnabled   = doc.querySelector('#smoothEnabled');
+let advDimming      = doc.querySelector('#advDimming');
+let boldText        = doc.querySelector('#boldText');
+let forcePlhdr      = doc.querySelector('#forcePlhdr');
 
 globalEnabled = addEventListener('click', () => {
     storage.set({'enableEverywhere': isChecked("defaultEn")});
@@ -59,23 +75,24 @@ function isChecked(arg) {
 }
 
 //Whitelist
-let WLtable = doc.querySelector('#whitelist');
-let addButton = doc.querySelector('#add');
-let resetButton = doc.querySelector('#reset');
-let textarea = doc.querySelector('#urltext');
-let header = doc.getElementById("header");
-let WLtbody = doc.querySelector("#WLtbody");
-let rowCount = 0;
-header.style.display = "none";
+let WLtable       = doc.querySelector('#whitelist');
+let addButton     = doc.querySelector('#add');
+let resetButton   = doc.querySelector('#reset');
+let textarea      = doc.querySelector('#urltext');
+let header        = doc.getElementById("header");
+let WLtbody       = doc.querySelector("#WLtbody");
+let rowCount      = 0;
 
 //Blacklist
-let BLtable = doc.querySelector('#blacklist');
-let BLaddButton = doc.querySelector('#BLadd');
+let BLtable       = doc.querySelector('#blacklist');
+let BLaddButton   = doc.querySelector('#BLadd');
 let BLresetButton = doc.querySelector('#BLreset');
-let BLtextarea = doc.querySelector('#BLurltext');
-let BLheader = doc.getElementById("BLheader");
-let BLtbody = doc.querySelector("#BLtbody");
-let BLrowCount = 0;
+let BLtextarea    = doc.querySelector('#BLurltext');
+let BLheader      = doc.getElementById("BLheader");
+let BLtbody       = doc.querySelector("#BLtbody");
+let BLrowCount    = 0;
+
+header.style.display   = "none";
 BLheader.style.display = "none";
 
 let wl = [];
@@ -175,7 +192,7 @@ function addDomain(isWhitelist)
             {
                 let wlItem = {
                     url: domain, 
-                    strength: slider.value, 
+                    strength: strSlider.value, 
                     skipHeadings: isChecked("skipHeadings"), 
                     skipColoreds: isChecked("skipColoreds"), 
                     advDimming: isChecked("advDimming")
@@ -341,9 +358,15 @@ function addRow(isWhitelist, url)
 
 function updateSettings() 
 {
-    storage.get('globalStr', (items) => {
-        slider.value = items.globalStr;
-        sliderStr.innerText = items.globalStr;
+    storage.get(['globalStr', 'size', 'sizeThreshold'], (items) => {
+        strSlider.value     = items.globalStr;
+        sizeSlider.value    = items.size;
+        threshSlider.value  = items.sizeThreshold;
+
+
+        strLabel.innerText = items.globalStr;
+        sizeLabel.innerText = items.size;
+        threshLabel.innerText = items.sizeThreshold;
     });
 
     storage.get(['skipHeadings','skipColoreds', 'enableEverywhere', 'smoothEnabled', 'advDimming', 'boldText', 'forcePlhdr'], (items) => {
