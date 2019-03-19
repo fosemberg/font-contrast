@@ -37,16 +37,16 @@ body {
 .checkboxes > * {
     margin-bottom: 1.35em;
 }
-#slider {
+.slider {
     width: 35%;
     font-size: 0.5em;
     background: transparent;
     float:right;
 }
-#slider:focus {
+.slider:focus {
     outline: none;
 }
-#slider::-moz-range-thumb {
+.slider::-moz-range-thumb {
     height: 2.35em;
     width: 1em;
     border-radius: 50%;
@@ -55,7 +55,7 @@ body {
     background: black;
     transition: 0.07s ease-in;
 }
-#slider::-moz-range-track {
+.slider::-moz-range-track {
     width: 100%;
     height: 0.6em;
     cursor: pointer;
@@ -63,8 +63,9 @@ body {
     border-radius: 1em;
     border: 0.35vw solid black;
 }
-#sliderStr{
-    margin-left:13em;
+.sliderLabel{
+    position:absolute;
+    right:35vw;
     font-size:1.25em;
     font-family:"Calisto MT", "Liberation Serif", serif;
 }
@@ -236,8 +237,13 @@ input[type='checkbox'] {
     cursor: default;
 }
 #strTip{
-    top: 0;
     left: 10.5vw;
+}
+#sizeTip {
+    left: 18.5vw;
+}
+#thrTip {
+    left: 20.5vw;
 }
 #defaultEnTip{
     left: 27vw;

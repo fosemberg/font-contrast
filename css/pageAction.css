@@ -8,52 +8,58 @@
     src: url('fonts/LatoLatin-Regular.woff2') format('woff2');
     font-weight: normal;
 }
-html{
+html
+{
     margin:0;
     padding:0;
 }
-body{
+body
+{
     font-family: 'Lato', sans-serif;
     background-color: rgb(251, 251, 251);
     color:black;
     font-size: 20px;
     display:flex;
     flex-direction:column;
-    width:386px;
+    width:450px; /*386px*/
     height:100%;
     margin:auto;
     padding:10px;
 }
-#sliderContainer{
+#sliderContainer {
     align-items:baseline;
 }
-#str{
+.val {
     font-family:"Calisto MT", "Liberation Serif", serif;
     font-size:125%;
     display: inline-block; 
     width: 35px;
     max-width: 35px;
 }
-#slider {
+.sliderDesc {
+    font-size:0.8em;
+}
+.slider {
+    float:right;
     padding:0;
     padding-left:10px;
     margin:0;
-    width: 250px;
+    width: 235px;
     border-radius: 5px;
 }
-#slider:focus {
+.slider:focus {
     outline: none;
 }
-#slider::-moz-range-thumb {
+.slider::-moz-range-thumb {
     width: 10px;
-    height: 25px;
+    height: 20px;
     border-radius: 50%;
     border: 1px solid black;
     cursor:w-resize;
     background: black;
     transition: 0.07s ease-in;
 }
-#slider::-moz-range-track {
+.slider::-moz-range-track {
     width: 100%;
     height: 5px;
     cursor: pointer;
@@ -61,7 +67,7 @@ body{
     border-radius: 1em;
     border: 2px solid black;
 }
-.urlContainer{
+.urlContainer {
     display:flex;
     flex-flow:row;
     justify-content:center;
