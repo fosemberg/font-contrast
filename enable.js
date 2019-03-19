@@ -279,6 +279,7 @@ if (!document.getElementById("_fc_"))
 
     let init = (items) => {
         let str               = items.globalStr;
+        let size              = items.size;
 
         let skipHeadings      = items.skipHeadings;
         let skipColoreds      = items.skipColoreds;
@@ -338,12 +339,11 @@ if (!document.getElementById("_fc_"))
 
         if(size > 0) 
         {
-            let increaseAmount = size;
             let i = 1;
 
             while(i <= sizeLimit)
             {
-                sizeStr += `[s__="${i}"]{font-size: calc(${i++}px + ${increaseAmount}%)!important}\n`;
+                sizeStr += `[s__="${i}"]{font-size: calc(${i++}px + ${size}%)!important}\n`;
             }
         }
 
