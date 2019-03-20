@@ -128,7 +128,7 @@ function adjustBrightness(rgbStr, str)
     return newStr;
 }
 
-function process(nodes, str, checks)
+function process(nodes, settings)
 {
     if(typeof this.c === "undefined") this.c = 0;
 
@@ -139,11 +139,12 @@ function process(nodes, str, checks)
 
     let css = "";
 
-    if(checks[0]) //Skip headers
+    if(settings.skipHeadings)
     {  
         tagsToSkip = tagsToSkip.concat(headings);
     }
 
+    let db = false; //debug
     let dbArr = [];
 
     for(let i = 0, len = nodes.length; i < len; ++i)
@@ -152,14 +153,14 @@ function process(nodes, str, checks)
 
         let tag = String(node.localName), classe = String(node.className), id = String(node.id);
 
-        if(checks[3] && tag === "input" && node.type != "submit") 
+        if(settings.outline && tag === "input" && node.type != "submit") 
         {
             node.setAttribute("b__", "");
         }
     
         if(!containsText(node) || !tag || ~tagsToSkip.indexOf(tag) || classe.startsWith("ytp") || ~classesToSkip.indexOf(classe)) continue;
      
-        let style = getComputedStyle(node, null);
+        let style   = getComputedStyle(node, null);
 
         let color   = style.getPropertyValue("color");
         let bgColor = style.getPropertyValue("background-color");
@@ -167,19 +168,20 @@ function process(nodes, str, checks)
 
         size = parseInt(size);
 
-        let sizeLimit = 50; //@TODO: non-arbitrary size limit
-
-        if(size < sizeLimit) node.setAttribute("s__", size); 
-
+        if(settings.size > 0) 
+        {
+            if(size < settings.sizeLimit) node.setAttribute("s__", size); 
+        }
+        
         if(color === black || color === white || color === transparent) continue;
        
         let colorfulness = calcDelta(color);
 
-        if(checks[1]) //Skip colored text & links
+        if(settings.skipColoreds)
         {
             let offset = 0;
             if(tag === "a") offset = -32; 
-            let val = 32 + str + offset;
+            let val = 32 + settings.str + offset;
 
             if(colorfulness > val) continue;
         }
@@ -215,19 +217,22 @@ function process(nodes, str, checks)
             }
         }
     
-        let bgLumaOffset = bgLuma + str;
+        let bgLumaOffset = bgLuma + settings.str;
 
-        let dimmed = luma < bgLumaOffset;
-        dbArr.push({tag, size, color, bgColor, luma, bgLuma, bgLumaOffset, dimmed});
+        if(db) 
+        {
+            let dimmed = luma < bgLumaOffset;
+            dbArr.push({tag, size, color, bgColor, luma, bgLuma, bgLumaOffset, dimmed});
+        }
 
         if(luma > bgLumaOffset) continue;
 
-        if(checks[2]) //Advanced mode
+        if(settings.advDimming)
         {
             let greyOffset = 16;
             greyOffset -= colorfulness;
     
-            let amount = str + greyOffset + 35;
+            let amount = settings.str + greyOffset + 35;
             
             if(amount < 0) amount = 0;
 
@@ -239,9 +244,9 @@ function process(nodes, str, checks)
         node.setAttribute("d__", this.c);
     }
 
-    //console.table(dbArr);
+    if(db) console.table(dbArr);
 
-    if(checks[2]) 
+    if(settings.advDimming) 
     {
         return css;
     }
@@ -278,16 +283,18 @@ if (!document.getElementById("_fc_"))
     let db = 0;
 
     let init = (items) => {
-        let str               = items.globalStr;
-        let size              = items.size;
 
-        let skipHeadings      = items.skipHeadings;
-        let skipColoreds      = items.skipColoreds;
-        let advDimming        = items.advDimming;
-        let boldText          = items.boldText;
-        let forcePlhdr        = items.forcePlhdr;
-
-        let checks = [skipHeadings, skipColoreds, advDimming, outline = false, boldText, forcePlhdr];
+        let settings = {
+            str:          items.globalStr,
+            size:         items.size,
+            threshold:    items.sizeLimit,
+            skipHeadings: items.skipHeadings, 
+            skipColoreds: items.skipColoreds, 
+            advDimming:   items.advDimming, 
+            outline:      outline = false, 
+            boldText:     items.boldText, 
+            forcePlhdr:   items.forcePlhdr,
+        };
 
         let domain = extractRootDomain(String(window.location));
 
@@ -297,16 +304,17 @@ if (!document.getElementById("_fc_"))
 
         if(idx > -1) 
         {
-            str       = whitelist[idx].strength;
-            size      = whitelist[idx].size;
-            sizeLimit = whitelist[idx].threshold;
+            let wlItem = whitelist[idx];
 
-            checks[0] = whitelist[idx].skipHeadings;
-            checks[1] = whitelist[idx].skipColoreds; 
-            checks[2] = whitelist[idx].advDimming;
-            checks[3] = whitelist[idx].outline;
-            checks[4] = whitelist[idx].boldText;
-            checks[5] = whitelist[idx].forcePlhdr;
+            settings.str          = wlItem.strength;
+            settings.size         = wlItem.size;
+            settings.sizeLimit    = wlItem.threshold;
+            settings.skipHeadings = wlItem.skipHeadings;
+            settings.skipColoreds = wlItem.skipColoreds; 
+            settings.advDimming   = wlItem.advDimming;
+            settings.outline      = wlItem.outline;
+            settings.boldText     = wlItem.boldText;
+            settings.forcePlhdr   = wlItem.forcePlhdr;
         } 
 
         let dbStr = "Website processed in";
@@ -315,7 +323,7 @@ if (!document.getElementById("_fc_"))
         let elems = [];
         elems = nodeListToArr(document.body.getElementsByTagName("*"));
 
-        str = parseInt(str);
+        settings.str = parseInt(settings.str);
 
         if(items.smoothEnabled)
         {
@@ -328,22 +336,22 @@ if (!document.getElementById("_fc_"))
         }
 
         let boldStr = "";
-        if(checks[4]) boldStr = "*{font-weight:bold!important}";
+        if(settings.boldText) boldStr = "*{font-weight:bold!important}";
 
         let force = "";
-        if(checks[5]) force = "color:black!important";
+        if(settings.forcePlhdr) force = "color:black!important";
 
         let plhdrStr = `::placeholder{opacity:1!important;${force}}`;
 
         let sizeStr = "";
 
-        if(size > 0) 
+        if(settings.size > 0) 
         {
             let i = 1;
 
-            while(i <= sizeLimit)
+            while(i <= settings.sizeLimit) //threshold
             {
-                sizeStr += `[s__="${i}"]{font-size: calc(${i++}px + ${size}%)!important}\n`;
+                sizeStr += `[s__="${i}"]{font-size: calc(${i++}px + ${settings.size}%)!important}\n`;
             }
         }
 
@@ -358,14 +366,14 @@ if (!document.getElementById("_fc_"))
 
         css += '[d__]{';
 
-        if(checks[2]) { //Advanced mode
+        if(settings.advDimming) {
             css += '}';
-            css += process(elems, str, checks);
+            css += process(elems, settings);
         }
         else {
             let colorStr = "color:black!important}";
             css += colorStr;
-            process(elems, str, checks);
+            process(elems, settings);
         }
 
         t.nodeValue = css;
@@ -394,17 +402,17 @@ if (!document.getElementById("_fc_"))
                             children = nodeListToArr(node.getElementsByTagName("*"));
                             children.push(node);
 
-                            if(checks[2]) {
-                                newRules += process(children, str, checks);
+                            if(settings[2]) {
+                                newRules += process(children, settings);
                             }
-                            else process(children, str, checks);
+                            else process(children, settings);
                         }
                     }
                     if(db) console.timeEnd(dbStr);
                 }
             });
 
-            if(checks[2] && newRules.length > 0)
+            if(settings[2] && newRules.length > 0)
             {
                 css += newRules;
                 t.nodeValue = css;
@@ -418,7 +426,7 @@ if (!document.getElementById("_fc_"))
         x.appendChild(t);
     };
 
-    let settings = [
+    let stored = [
         "whitelist", 
         "blacklist", 
         "globalStr",
@@ -431,7 +439,7 @@ if (!document.getElementById("_fc_"))
         "forcePlhdr"
     ];
 
-    browser.storage.local.get(settings, init);
+    browser.storage.local.get(stored, init);
 }
 else x.appendChild(t);
 
