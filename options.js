@@ -359,24 +359,24 @@ function addRow(isWhitelist, url)
 function updateSettings() 
 {
     storage.get(['globalStr', 'size', 'sizeThreshold'], (items) => {
-        strSlider.value     = items.globalStr;
-        sizeSlider.value    = items.size;
-        threshSlider.value  = items.sizeThreshold;
+        strSlider.value       = items.globalStr;
+        strLabel.innerText    = items.globalStr;
 
-
-        strLabel.innerText = items.globalStr;
-        sizeLabel.innerText = items.size;
+        sizeSlider.value      = items.size;
+        sizeLabel.innerText   = items.size;
+        
+        threshSlider.value    = items.sizeThreshold;
         threshLabel.innerText = items.sizeThreshold;
     });
 
     storage.get(['skipHeadings','skipColoreds', 'enableEverywhere', 'smoothEnabled', 'advDimming', 'boldText', 'forcePlhdr'], (items) => {
-        doc.getElementById("skipHeadings").checked = items.skipHeadings;
-        doc.getElementById("skipColoreds").checked = items.skipColoreds;
-        doc.getElementById("defaultEn").checked = items.enableEverywhere;
+        doc.getElementById("skipHeadings").checked  = items.skipHeadings;
+        doc.getElementById("skipColoreds").checked  = items.skipColoreds;
+        doc.getElementById("defaultEn").checked     = items.enableEverywhere;
         doc.getElementById("smoothEnabled").checked = items.smoothEnabled;
-        doc.getElementById("advDimming").checked = items.advDimming;
-        doc.getElementById("boldText").checked = items.boldText;
-        doc.getElementById("forcePlhdr").checked = items.forcePlhdr;
+        doc.getElementById("advDimming").checked    = items.advDimming;
+        doc.getElementById("boldText").checked      = items.boldText;
+        doc.getElementById("forcePlhdr").checked    = items.forcePlhdr;
     });
 
     storage.get(['whitelist', 'blacklist'], (items) => {

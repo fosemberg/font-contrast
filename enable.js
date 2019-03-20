@@ -170,7 +170,10 @@ function process(nodes, settings)
 
         if(settings.size > 0) 
         {
-            if(size < settings.sizeLimit) node.setAttribute("s__", size); 
+            if(size < settings.sizeLimit) 
+            {
+                node.setAttribute("s__", size); 
+            } 
         }
         
         if(color === black || color === white || color === transparent) continue;
@@ -287,7 +290,7 @@ if (!document.getElementById("_fc_"))
         let settings = {
             str:          items.globalStr,
             size:         items.size,
-            threshold:    items.sizeLimit,
+            sizeLimit:    items.sizeThreshold,
             skipHeadings: items.skipHeadings, 
             skipColoreds: items.skipColoreds, 
             advDimming:   items.advDimming, 
@@ -355,7 +358,7 @@ if (!document.getElementById("_fc_"))
         if(settings.size > 0) 
         {
             let i = 1;
-
+            
             while(i <= settings.sizeLimit) //threshold
             {
                 sizeStr += `[s__="${i}"]{font-size: calc(${i++}px + ${settings.size}%)!important}\n`;

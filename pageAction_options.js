@@ -154,8 +154,7 @@ let callback = (tabs) => {
 
     if(url.startsWith("http")) urlSpan.innerText = domain;
 
-
-    let settings = [
+    let stored = [
         "whitelist", 
         "blacklist", 
         "globalStr",
@@ -165,14 +164,20 @@ let callback = (tabs) => {
         "skipHeadings", 
         "advDimming", 
         "boldText", 
-        "forcePlhdr"];
+        "forcePlhdr"
+    ];
 
-    storage.get(settings, (items) => 
+    storage.get(stored, (items) => 
     {    
         let whitelist = items.whitelist || [];
         let blacklist = items.blacklist || [];
 
-        let globalChecks = [items.skipHeadings, items.skipColoreds, items.advDimming, items.boldText, items.forcePlhdr];
+        let globalChecks = [
+            items.skipHeadings,
+            items.skipColoreds, 
+            items.advDimming, 
+            items.boldText, 
+            items.forcePlhdr];
 
         if (blacklist.findIndex(o => o.url === domain) > -1)
         {
@@ -241,7 +246,6 @@ let callback = (tabs) => {
             wlItem.strength     = strSlider.value;
             wlItem.size         = sizeSlider.value;
             wlItem.threshold    = thresholdSlider.value;
-
             wlItem.skipColoreds = skipColoreds.checked;
             wlItem.skipHeadings = skipHeadings.checked;
             wlItem.advDimming   = advDimming.checked;
