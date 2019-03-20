@@ -331,7 +331,14 @@ if (!document.getElementById("_fc_"))
             let y = doc.createElement("style");
             doc.head.appendChild(y);
             y.setAttribute("id", "_fct_");
-            let z = doc.createTextNode("[d__],[d__][style]{transition:color 0.25s linear!important;}");
+
+            let smoothSize;
+            settings.size > 0 ? smoothSize = " font-size" : "";
+
+            let z = doc.createTextNode(`[d__],[d__][style]{
+                transition: color,${smoothSize} .25s linear!important;
+            }`);
+
             y.appendChild(z);
         }
 
@@ -436,7 +443,8 @@ if (!document.getElementById("_fc_"))
         "skipHeadings", 
         "advDimming", 
         "boldText", 
-        "forcePlhdr"
+        "forcePlhdr",
+        "smoothEnabled"
     ];
 
     browser.storage.local.get(stored, init);
