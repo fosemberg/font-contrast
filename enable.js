@@ -27,24 +27,35 @@ function calcLuma(rgbString)
     let g = colors[1];
     let b = colors[2];
 
-    let luma = 0.2126 * r + 0.7152 * g + 0.0722 * b; //itu.int/dms_pubrec/itu-r/rec/bt/R-REC-BT.709-6-201506-I!!PDF-E.pdf
-    
+    /* sRGB Luma gives more weight to green, as we perceive it to be lighter than other colors.
+     * itu.int/dms_pubrec/itu-r/rec/bt/R-REC-BT.709-6-201506-I!!PDF-E.pdf */
+    let luma = r * 0.2126 + g * 0.7152 + b * 0.0722; 
+
     luma = parseFloat(luma.toFixed(1));
     
     return luma;
 }
 
+function calcLightness(luma) 
+{
+    lightness = luma / 255;
+
+    lightness = parseFloat(lightness.toFixed(2));
+
+    return lightness; //> .6 is light
+}
+
 function calcDelta(rgbString) {
     let colors = getRGBarr(rgbString);
 
-    let r, g, b, a;
+    let r, g, b;
     r = colors[0];
     g = colors[1];
     b = colors[2];
-    a = colors[3];
 
     let delta = 0;
-    delta += Math.abs(r-g);  //Naive as hell, but works okayish
+
+    delta += Math.abs(r-g);
     delta += Math.abs(g-b);
 
     return delta;
@@ -144,12 +155,16 @@ function process(nodes, settings)
         tagsToSkip = tagsToSkip.concat(headings);
     }
 
-    let db = false; //debug
+    let db = true; //debug
     let dbArr = [];
 
     for(let i = 0, len = nodes.length; i < len; ++i)
     {
         let node = nodes[i];
+
+        let debugObj = {};
+
+        dbArr.push(debugObj);
 
         let tag = String(node.localName), classe = String(node.className), id = String(node.id);
 
@@ -175,19 +190,12 @@ function process(nodes, settings)
                 node.setAttribute("s__", size); 
             } 
         }
-        
+
         if(color === black || color === white || color === transparent) continue;
-       
+
         let colorfulness = calcDelta(color);
 
-        if(settings.skipColoreds)
-        {
-            let offset = 0;
-            if(tag === "a") offset = -32; 
-            let val = 32 + settings.str + offset;
-
-            if(colorfulness > val) continue;
-        }
+        dbArr[i].colorfulness = colorfulness;
         
         let parent = node.parentNode;
 
@@ -200,8 +208,7 @@ function process(nodes, settings)
     
             parent = parent.parentNode;
         }
-       
-        let luma = calcLuma(color);
+
         let bgLuma;
     
         if(bgColor === transparent) 
@@ -220,15 +227,49 @@ function process(nodes, settings)
             }
         }
     
-        let bgLumaOffset = bgLuma + settings.str;
+        let luma        = calcLuma(color);
+        let lightness   = calcLightness(luma);
+        let bgLightness = calcLightness(bgLuma);
 
-        if(db) 
+        /*
+        @TODO: Decide what to do with skipColoreds, now that it's a bit redundant with the better algorithm
+
+        if(settings.skipColoreds)
         {
-            let dimmed = luma < bgLumaOffset;
-            dbArr.push({tag, size, color, bgColor, luma, bgLuma, bgLumaOffset, dimmed});
-        }
+            let offset = 0;
 
-        if(luma > bgLumaOffset) continue;
+            if(tag === "a") 
+            {
+                offset = -32; 
+            }
+
+            let val = 32 + settings.str + offset;
+
+            if(colorfulness-luma > val) continue;
+        }
+        */
+
+        let isGrey     = colorfulness < 18; //@TODO: Make these values adjustable
+        let isReadable = lightness < 0.45;
+        let isBgDarker = bgLightness < lightness;
+
+        /*Logging*/
+        //dbArr[i].tag          = tag;
+        //dbArr[i].title        = node.title;
+        //dbArr[i].class        = classe;
+        //dbArr[i].color        = color;
+        //dbArr[i].bgColor      = bgColor;
+        //dbArr[i].size         = size;
+        //dbArr[i].luma         = luma;
+        //dbArr[i].bgLuma       = bgLuma;
+        dbArr[i].lightness    = lightness;
+        dbArr[i].bgLightness  = bgLightness;
+        dbArr[i].isBgDarker   = isBgDarker;
+        dbArr[i].isReadable   = isReadable;
+        dbArr[i].isGrey       = isGrey;
+        /********/
+
+        if(!isGrey && isReadable || isBgDarker) continue;
 
         if(settings.advDimming)
         {
@@ -255,17 +296,6 @@ function process(nodes, settings)
     }
 }
 
-/*Deprecated*/
-function enable() {
-    let css = t.nodeValue;
-    
-    css = css.replace(/_x_/g, "rgb");
-    css = css.replace(/_xxx_/, "black");
-    css = css.replace(/_o_/, "opacity:1");
-
-    t.nodeValue = css;
-}
-
 function createElem() {
     const doc = document;
 
@@ -277,8 +307,10 @@ function createElem() {
     t = doc.createTextNode("");
 }
 
-if (!document.getElementById("_fc_"))
+function init() 
 {
+    if (!document.getElementById("_fc_"))
+    {
     //this.isInit = true;
     createElem();
 
@@ -401,7 +433,7 @@ if (!document.getElementById("_fc_"))
                 if(mutation.addedNodes && mutation.addedNodes.length > 0)
                 {
                     if(db) console.time(dbStr);
-               
+                
                     for(let i = 0, len = mutation.addedNodes.length; i < len; ++i)
                     {
                         const node = mutation.addedNodes[i];
@@ -430,7 +462,7 @@ if (!document.getElementById("_fc_"))
         };//callback
 
         const observer = new MutationObserver(callback);
-    
+
         observer.observe(doc.body, {childList: true, subtree: true});
 
         x.appendChild(t);
@@ -451,7 +483,10 @@ if (!document.getElementById("_fc_"))
     ];
 
     browser.storage.local.get(stored, init);
+    }
+    else x.appendChild(t);
 }
-else x.appendChild(t);
+
+init();
 
 chrome.runtime.sendMessage({from: "yo", t: true});
