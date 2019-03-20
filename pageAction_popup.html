@@ -3,99 +3,102 @@
     <head> 
         <meta charset="utf-8"/>
         <link rel="stylesheet" type="text/css" href="css/pageAction.css">
+        <link href="https://fonts.googleapis.com/css?family=Crimson+Text:400" rel="stylesheet"> 
         <title>Font Contrast</title>
     </head>
-    <body>
-        <div id="sliderContainer" >
-            <span class ="sliderDesc">Strength:</span>
-            <span class = "val" id = "strLabel"></span>
-            <input type = "range" class = "slider" id = "strSlider" min = "-100" max = "100" value = "35">
-        </div>
-
-        <div id="sliderContainer" style="margin-top:0.35em">
-            <span class ="sliderDesc">Increase size (%):</span>
-            <span class = "val" id = "sizeLabel"></span>
-            <input type = "range" class = "slider" id ="sizeSlider" min = "0" max = "100" value = "0">
-        </div>
-
-        <div id="sliderContainer">
-            <span class ="sliderDesc">Threshold (px):</span>
-            <span class = "val" id = "thresholdLabel"></span>
-            <input type = "range" class = "slider" id ="thresholdSlider" min = "0" max = "50" value = "14">
-        </div>
+    <body>  
+        <div id ="wrapper">
+             
+            <div class = "sliderDiv">
+                <span class ="sliderDesc">Strength:</span>
+                <span class = "val" id = "strLabel"></span>
+                <input type = "range" class = "slider" id = "strSlider" min = "-100" max = "100" value = "35">
+            </div>
+           
+            <span id ="curlyboye">[</span>
+            <div class = "sliderDiv">
+                <span class ="sliderDesc">Increase size (%):</span>
+                <span class = "val" id = "sizeLabel"></span>
+                <input type = "range" class = "slider" id ="sizeSlider" min = "0" max = "100" value = "0">
+            </div>
+            <div class = "sliderDiv" id = "threshold">
+                <span class ="sliderDesc">Threshold (px):</span>
+                <span class = "val" id = "thresholdLabel"></span>
+                <input type = "range" class = "slider" id ="thresholdSlider" min = "0" max = "50" value = "14">
+            </div>
         
-        <div class="urlContainer">
-            <span id ="url"></span>
-            <button id="refreshBtn">Refresh</button>
-        </div>
+            <div id="urlContainer">
+                <span id ="url"></span>
+                <button id="refreshBtn">Refresh</button>
+            </div>
         
-        <div id="optionsContainer">
-            
-            <div class="option">
-                <span>Whitelist</span>
-                <label class="container">
-                    <input type="checkbox" id="addWL">
-                    <span class="checkmark"></span>
-                </label>
-            </div>
-            
-            <div class="option" style="margin-bottom:0.2em">
-                <span>Blacklist</span>
-                <label class="container">
-                    <input type="checkbox" id="addBL">
-                    <span class="checkmark"></span>
-                </label>
-            </div>
+            <div id="checksContainer">
+                <div class="option">
+                    <span>Whitelist</span>
+                    <label class="container">
+                        <input type="checkbox" id="addWL">
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+                
+                <div class="option">
+                    <span>Blacklist</span>
+                    <label class="container">
+                        <input type="checkbox" id="addBL">
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
 
-            <div class ="option">
-                <span>Bold text</span>
-                <label class="container">
-                    <input type="checkbox" id="boldText">
-                    <span class="checkmark"></span>
-                </label>
-            </div>
+                <div class ="option">
+                    <span>Bold text</span>
+                    <label class="container">
+                        <input type="checkbox" id="boldText">
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
 
-            <div class ="option">
-                <span>Skip colored text</span>
-                <label class="container">
-                    <input type="checkbox" id="skipColoreds">
-                    <span class="checkmark"></span>
-                </label>
-            </div>
-            
-            <div class ="option">
-                <span>Skip headings</span>
-                <label class="container">
-                    <input type="checkbox" id="skipHeadings">
-                    <span class="checkmark"></span>
-                </label>
-            </div>
-            
-            <div class ="option">
-                <span>Advanced dimming</span>
-                <label class="container">
-                    <input type="checkbox" id="advDimming">
-                    <span class="checkmark"></span>
-                </label>
-            </div>
+                <div class ="option">
+                    <span>Skip colored text</span>
+                    <label class="container">
+                        <input type="checkbox" id="skipColoreds">
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+                
+                <div class ="option">
+                    <span>Skip headings</span>
+                    <label class="container">
+                        <input type="checkbox" id="skipHeadings">
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+                
+                <div class ="option">
+                    <span>Advanced dimming</span>
+                    <label class="container">
+                        <input type="checkbox" id="advDimming">
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
 
-            <div class ="option">
-                <span>Force placeholder dimming</span>
-                <label class="container">
-                    <input type="checkbox" id="forcePlhdr">
-                    <span class="checkmark"></span>
-                </label>
-            </div>
-            
-            <div class ="option">
-                <span>Form outline</span>
-                <label class="container">
-                    <input type="checkbox" id="outline">
-                    <span class="checkmark"></span>
-                </label>
-            </div>
-        </div>
+                <div class ="option">
+                    <span>Force placeholder dimming</span>
+                    <label class="container">
+                        <input type="checkbox" id="forcePlhdr">
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+                
+                <div class ="option">
+                    <span>Form outline</span>
+                    <label class="container">
+                        <input type="checkbox" id="outline">
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+            </div><!--checks-->
         <button id="optionsBtn">More options</button>
+        </div> <!--wrapper-->
         <script src="pageAction_options.js"></script>
     </body>
 </html>

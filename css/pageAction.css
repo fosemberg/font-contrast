@@ -18,30 +18,50 @@ body
     font-family: 'Lato', sans-serif;
     background-color: rgb(251, 251, 251);
     color:black;
-    font-size: 20px;
-    display:flex;
-    flex-direction:column;
-    width:450px; /*386px*/
+    font-size: 18px;
+    width:450px;
     height:100%;
     margin:auto;
-    padding:10px;
 }
-#sliderContainer {
-    align-items:baseline;
+#wrapper
+{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    margin: 0.7em;
 }
-.val {
-    font-family:"Calisto MT", "Liberation Serif", serif;
-    font-size:125%;
+#wrapper div 
+{
+    margin-top: 0.17em;
+}
+
+/*******/
+
+.val 
+{
+    font-family: 'Crimson Text', serif;
+    font-weight:400;
+    font-size:1.35em;
     display: inline-block; 
+
     width: 35px;
     max-width: 35px;
 }
-.sliderDesc {
-    font-size:0.8em;
+#curlyboye
+{
+    font-size:2.5em;
+    position:absolute;
+    top:65px;
+    left:-2px;
+    color:rgb(88, 88, 88);
+    pointer-events:none;
 }
+/* Sliders */
+
 .slider {
     float:right;
     padding:0;
+    padding-top:10px;
     padding-left:10px;
     margin:0;
     width: 235px;
@@ -67,30 +87,18 @@ body
     border-radius: 1em;
     border: 2px solid black;
 }
-.urlContainer {
+.sliderDiv{
+}
+#threshold{
+    margin-bottom:0.35em;
+}
+
+#urlContainer {
     display:flex;
-    flex-flow:row;
     justify-content:center;
-    margin-top:10px;
-    margin-bottom:20px;
-    /*border: 2px solid rgb(128, 0, 0);*/
+    margin-bottom:0.35em;
 }
-#refreshBtn{
-    cursor: context-menu;
-    opacity: 0;
-    position:absolute;
-    color:navy;
-    border: 2px solid navy;
-    font-size:18px;
-    transition: opacity ease-in 0.3s;
-}
-#refreshBtn:hover{
-    transition: color ease-out 0.1s;
-    transition: background-color ease-out 0.1s;
-    color:white;
-    background-color:navy;
-}
-#url{
+#url {
     opacity: 1;
     font-size: 100%;
     font-family: 'Cambria', 'Ubuntu';
@@ -98,8 +106,18 @@ body
     color: navy;
     transition: opacity ease-out 0.1s;
 }
+
+/*Checkboxes*/
+
+
+#checksContainer div
+{
+    margin-bottom: 0.17em;
+}
+
+/*Buttons/checkmarks*/
 button {
-    font-size: 0.7em;
+    font-size: 15px;
     padding: 0.35em 1em;
     cursor: pointer;
     font-family:"Lato";
@@ -112,6 +130,29 @@ button {
 button:hover {
     color: white;
     background-color: black;
+}
+#refreshBtn
+{
+    font-size:18px;
+    cursor: context-menu;
+    opacity: 0;
+    position:absolute;
+    color:navy;
+    border: 2px solid navy;
+    transition: opacity ease-in 0.3s;
+}
+#refreshBtn:hover 
+{
+    transition: color ease-out 0.1s;
+    transition: background-color ease-out 0.1s;
+    color:white;
+    background-color:navy;
+}
+#optionsBtn
+{
+    margin-top:0.35em;
+    width:125px;
+    align-self:flex-end;
 }
 input[type='checkbox'] {
     float: right;
@@ -161,18 +202,4 @@ input[type='checkbox'] {
     border: solid white;
     border-width: 0 2px 2px 0;
     transform: rotate(45deg);
-}
-#optionsContainer{
-    display:flex;
-    flex-direction:column;
-    flex-wrap:wrap;
-}
-.option{
-    width:100%;
-}
-#optionsBtn{
-    margin-top: 10px;
-    font-size: 15px;
-    width:125px;
-    align-self:flex-end;
 }

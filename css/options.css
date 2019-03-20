@@ -25,7 +25,7 @@ body {
     width:100%;
     font-size:2.5vw;
 }
-#strOption {
+.settings {
     display:flex;
     align-items:center;
     justify-content:space-between;
@@ -37,16 +37,19 @@ body {
 .checkboxes > * {
     margin-bottom: 1.35em;
 }
-.slider {
+.slider 
+{
     width: 35%;
     font-size: 0.5em;
     background: transparent;
     float:right;
 }
-.slider:focus {
+.slider:focus 
+{
     outline: none;
 }
-.slider::-moz-range-thumb {
+.slider::-moz-range-thumb 
+{
     height: 2.35em;
     width: 1em;
     border-radius: 50%;
@@ -55,7 +58,8 @@ body {
     background: black;
     transition: 0.07s ease-in;
 }
-.slider::-moz-range-track {
+.slider::-moz-range-track 
+{
     width: 100%;
     height: 0.6em;
     cursor: pointer;
@@ -63,11 +67,12 @@ body {
     border-radius: 1em;
     border: 0.35vw solid black;
 }
-.sliderLabel{
+.sliderLabel 
+{
     position:absolute;
     right:35vw;
-    font-size:1.25em;
-    font-family:"Calisto MT", "Liberation Serif", serif;
+    font-size:1.7em;
+    font-family: 'Crimson Text', serif;
 }
 button {
     font-size: 0.7em;
@@ -92,9 +97,9 @@ button.remove {
 textarea {
     width: 100%;
     resize: none; 
-    font-family: 'Calisto MT', 'Liberation Serif'; 
+    font-family: 'Crimson Text', serif; 
     font-style: italic; 
-    font-size: 1.5em;
+    font-size: 1.7em;
     border: 0.07em solid black;
     border-radius: 0.15em;
     white-space: nowrap;
@@ -121,9 +126,10 @@ table th:nth-child(2) { /*Strength label*/
     text-align: center;
 }
 #whitelist td:nth-child(2) { /*Strength value*/
-    font-family:"Calisto MT", "Liberation Serif";
+    font-family: 'Crimson Text', serif;
     text-align: center;
-    font-size:1.35em;
+    position:relative;
+    font-size:1.7em;
 }
 th {
     font-size: 0.75em;
