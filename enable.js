@@ -155,8 +155,10 @@ function process(nodes, settings)
         tagsToSkip = tagsToSkip.concat(headings);
     }
 
-    let db = true; //debug
+    let db = false; //debug
     let dbArr = [];
+
+    let str = settings.str;    
 
     for(let i = 0, len = nodes.length; i < len; ++i)
     {
@@ -176,7 +178,6 @@ function process(nodes, settings)
         if(!containsText(node) || !tag || ~tagsToSkip.indexOf(tag) || classe.startsWith("ytp") || ~classesToSkip.indexOf(classe)) continue;
      
         let style   = getComputedStyle(node, null);
-
         let color   = style.getPropertyValue("color");
         let bgColor = style.getPropertyValue("background-color");
         let size    = style.getPropertyValue("font-size");
@@ -191,11 +192,9 @@ function process(nodes, settings)
             } 
         }
 
-        if(color === black || color === white || color === transparent) continue;
+        if(color === black || /*color === white*/  color === transparent) continue;
 
         let colorfulness = calcDelta(color);
-
-        dbArr[i].colorfulness = colorfulness;
         
         let parent = node.parentNode;
 
@@ -249,27 +248,58 @@ function process(nodes, settings)
         }
         */
 
-        let isGrey     = colorfulness < 18; //@TODO: Make these values adjustable
-        let isReadable = lightness < 0.45;
-        let isBgDarker = bgLightness < lightness;
+        let contrast = Math.abs(bgLightness - lightness);
+        contrast = contrast.toFixed(2);
+
+        let bgColorfulness = calcDelta(bgColor);
+
+        let isBgGrey = bgColorfulness < 18;
+        let isBgDark = bgLightness + str < 0.4;
+
+        let isGrey   = colorfulness < 20 + str;
+        let isColorfulReadable = !isGrey && contrast > 0.5;
 
         /*Logging*/
-        //dbArr[i].tag          = tag;
-        //dbArr[i].title        = node.title;
-        //dbArr[i].class        = classe;
-        //dbArr[i].color        = color;
-        //dbArr[i].bgColor      = bgColor;
-        //dbArr[i].size         = size;
-        //dbArr[i].luma         = luma;
-        //dbArr[i].bgLuma       = bgLuma;
-        dbArr[i].lightness    = lightness;
-        dbArr[i].bgLightness  = bgLightness;
-        dbArr[i].isBgDarker   = isBgDarker;
-        dbArr[i].isReadable   = isReadable;
-        dbArr[i].isGrey       = isGrey;
-        /********/
+        let d = dbArr[i];
+        //d.tag          = tag;
+        //d.title        = node.title;
+        //d.class        = classe;
+        //d.color        = color;
+        //d.bgColor      = bgColor;
+        //d.size         = size;
+        //d.luma           = luma;
+        //d.bgLuma         = bgLuma;
+        //d.lightness      = lightness;
+        //d.bgLightness    = bgLightness;
+        //d.colorfulness   = colorfulness;
+        //d.bgColorfulness = bgColorfulness;
+        //d.contrast       = contrast;
+        d.isGrey       = isGrey;
+        d.isBgGrey     = isBgGrey;
+        d.isBgDark     = isBgDark;
+        d.isColorfulReadable = isColorfulReadable;
 
-        if(!isGrey && isReadable || isBgDarker) continue;
+        d.dimmed = true;
+       
+        /*
+        Prevents most of the wrong dimmings, 
+        but also avoids dimming some fonts 
+        that would be more readable otherwise. 
+        Can be improved with user offset though. */
+        let isFontLighter = lightness > bgLightness + str; 
+
+        if(isFontLighter || isColorfulReadable)  
+        {
+            d.dimmed = false;
+            continue;
+        }
+
+        /*
+        if(isBgGrey && isBgDark || isColorfulReadable)  
+        {
+            d.dimmed = false;
+            continue;
+        }*/
 
         if(settings.advDimming)
         {
@@ -329,6 +359,7 @@ function init()
             outline:      outline = false, 
             boldText:     items.boldText, 
             forcePlhdr:   items.forcePlhdr,
+            forceOpacity: items.forceOpacity,
         };
 
         let domain = extractRootDomain(String(window.location));
@@ -350,6 +381,7 @@ function init()
             settings.outline      = wlItem.outline;
             settings.boldText     = wlItem.boldText;
             settings.forcePlhdr   = wlItem.forcePlhdr;
+            settings.forceOpacity = wlItem.forceOpacity;
         } 
 
         let dbStr = "Website processed in";
@@ -358,7 +390,7 @@ function init()
         let elems = [];
         elems = nodeListToArr(document.body.getElementsByTagName("*"));
 
-        settings.str = parseInt(settings.str);
+        settings.str = parseFloat(settings.str);
 
         if(items.smoothEnabled)
         {
@@ -377,15 +409,24 @@ function init()
             y.appendChild(z);
         }
 
-        let boldStr = "";
-        if(settings.boldText) boldStr = "*{font-weight:bold!important}";
+        let opacityStr = "", boldStr = "", forceBlack = "", sizeStr = "";
 
-        let force = "";
-        if(settings.forcePlhdr) force = "color:black!important";
+        if(settings.forceOpacity) 
+        {
+            opacityStr = "*,*[style]{opacity:1!important}"
+        }
+        
+        if(settings.boldText) 
+        {
+            boldStr = "*{font-weight:bold!important}";
+        }
+        
+        if(settings.forcePlhdr) 
+        {
+            forceBlack = "color:black!important";
+        }
 
-        let plhdrStr = `::placeholder{opacity:1!important;${force}}`;
-
-        let sizeStr = "";
+        let plhdrStr = `::placeholder{opacity:1!important;${forceBlack}}`;
 
         if(settings.size > 0) 
         {
@@ -397,10 +438,10 @@ function init()
             }
         }
 
-        let borderStr = "[b__]{border:1px solid black!important}";
+        let borderStr = "[b__]{border:1px solid black!important}"; //Doesn't hurt to put it even if form borders are disabled
         
         let css = `
-        ${allStr}
+        ${opacityStr}
         ${sizeStr}
         ${boldStr}
         ${plhdrStr}
@@ -409,12 +450,14 @@ function init()
 
         css += '[d__]{';
 
-        if(settings.advDimming) {
+        if(settings.advDimming) 
+        {
             css += '}';
             css += process(elems, settings);
         }
-        else {
-            let colorStr = "color:black!important}";
+        else 
+        {
+            let colorStr = "color:black!important;opacity:1!important}";
             css += colorStr;
             process(elems, settings);
         }
@@ -460,7 +503,7 @@ function init()
                 css += newRules;
                 t.nodeValue = css;
             }
-        };//callback
+        };
 
         const observer = new MutationObserver(callback);
 
@@ -471,7 +514,7 @@ function init()
 
     let stored = [
         "whitelist", 
-        "blacklist", 
+        //"blacklist", 
         "globalStr",
         "size",
         "sizeThreshold", 
@@ -479,6 +522,7 @@ function init()
         "skipHeadings", 
         "advDimming", 
         "boldText", 
+        "forceOpacity",
         "forcePlhdr",
         "smoothEnabled"
     ];
