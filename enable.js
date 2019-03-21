@@ -194,8 +194,6 @@ function process(nodes, settings)
 
         if(color === black || /*color === white*/  color === transparent) continue;
 
-        let colorfulness = calcDelta(color);
-        
         let parent = node.parentNode;
 
         while (bgColor === transparent && parent)
@@ -209,7 +207,7 @@ function process(nodes, settings)
         }
 
         let bgLuma;
-    
+
         if(bgColor === transparent) 
         {
             bgLuma = 236; //@TODO: Figure out how to approximate color in this case (if there is a way). We assume a light color for now.
@@ -226,60 +224,52 @@ function process(nodes, settings)
             }
         }
     
-        let luma        = calcLuma(color);
-        let lightness   = calcLightness(luma);
-        let bgLightness = calcLightness(bgLuma);
-
-        /*
-        @TODO: Decide what to do with skipColoreds, now that it's a bit redundant with the better algorithm
-
-        if(settings.skipColoreds)
-        {
-            let offset = 0;
-
-            if(tag === "a") 
-            {
-                offset = -32; 
-            }
-
-            let val = 32 + settings.str + offset;
-
-            if(colorfulness-luma > val) continue;
-        }
-        */
+        let luma           = calcLuma(color);
+        let lightness      = calcLightness(luma);
+        let bgLightness    = calcLightness(bgLuma);
+        let colorfulness   = calcDelta(color);
+        let bgColorfulness = calcDelta(bgColor);
 
         let contrast = Math.abs(bgLightness - lightness);
         contrast = contrast.toFixed(2);
 
-        let bgColorfulness = calcDelta(bgColor);
+        let isGrey = colorfulness < 48 + str;
+        let isColorfulReadable = false;
+
+        if(settings.skipColoreds)
+        {
+            let val = 0.5;
+
+            if(tag === "a") val = 0.4 + str;
+
+            isColorfulReadable = !isGrey && contrast > val;
+        }
 
         let isBgGrey = bgColorfulness < 18;
         let isBgDark = bgLightness + str < 0.4;
 
-        let isGrey   = colorfulness < 20 + str;
-        let isColorfulReadable = !isGrey && contrast > 0.5;
-
-        /*Logging*/
-        let d = dbArr[i];
-        //d.tag          = tag;
-        //d.title        = node.title;
-        //d.class        = classe;
-        //d.color        = color;
-        //d.bgColor      = bgColor;
-        //d.size         = size;
-        //d.luma           = luma;
-        //d.bgLuma         = bgLuma;
-        //d.lightness      = lightness;
-        //d.bgLightness    = bgLightness;
-        //d.colorfulness   = colorfulness;
-        //d.bgColorfulness = bgColorfulness;
-        //d.contrast       = contrast;
-        d.isGrey       = isGrey;
-        d.isBgGrey     = isBgGrey;
-        d.isBgDark     = isBgDark;
-        d.isColorfulReadable = isColorfulReadable;
-
-        d.dimmed = true;
+        if(db)
+        {
+            let d = dbArr[i];
+            //d.tag          = tag;
+            //d.title        = node.title;
+            //d.class        = classe;
+            //d.color        = color;
+            //d.bgColor      = bgColor;
+            //d.size         = size;
+            //d.luma           = luma;
+            //d.bgLuma         = bgLuma;
+            //d.lightness      = lightness;
+            //d.bgLightness    = bgLightness;
+            //d.colorfulness   = colorfulness;
+            //d.bgColorfulness = bgColorfulness;
+            //d.contrast       = contrast;
+            d.isGrey       = isGrey;
+            d.isBgGrey     = isBgGrey;
+            d.isBgDark     = isBgDark;
+            d.isColorfulReadable = isColorfulReadable;
+            d.dimmed = true;  
+        }
        
         /*
         Prevents most of the wrong dimmings, 
@@ -290,7 +280,7 @@ function process(nodes, settings)
 
         if(isFontLighter || isColorfulReadable)  
         {
-            d.dimmed = false;
+            if(db) d.dimmed = false;
             continue;
         }
 
