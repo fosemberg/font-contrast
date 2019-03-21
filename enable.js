@@ -3,7 +3,7 @@
  * License: https://github.com/Fushko/font-contrast#license
  */
 
-//"use strict";
+"use strict";
 var x, t;
 
 function getRGBarr(rgbString) 
@@ -36,16 +36,16 @@ function calcLuma(rgbString)
     return luma;
 }
 
-function calcLightness(luma) 
+function getLightness(luma) 
 {
-    lightness = luma / 255;
+    let lightness = luma / 255;
 
     lightness = parseFloat(lightness.toFixed(2));
 
-    return lightness; //> .6 is light
+    return lightness;
 }
 
-function calcDelta(rgbString) {
+function calcColorfulness(rgbString) {
     let colors = getRGBarr(rgbString);
 
     let r, g, b;
@@ -141,7 +141,7 @@ function adjustBrightness(rgbStr, str)
 
 function process(nodes, settings)
 {
-    if(typeof this.c === "undefined") this.c = 0;
+    //if(typeof this.c === "undefined") this.c = 0; //Doesn't work in strict mode
 
     const black = "rgb(0, 0, 0)", white = "rgb(255, 255, 255)", transparent = "rgba(0, 0, 0, 0)";
     let tagsToSkip = ["script", "link", "meta", "style", "img", "video", "#comment"];
@@ -157,8 +157,6 @@ function process(nodes, settings)
 
     let db = false; //debug
     let dbArr = [];
-
-    let str = settings.str;    
 
     for(let i = 0, len = nodes.length; i < len; ++i)
     {
@@ -192,12 +190,20 @@ function process(nodes, settings)
             } 
         }
 
-        if(color === black || /*color === white*/  color === transparent) continue;
+        if(color === black || color === transparent) continue;
+
+        if(color === white) 
+        {
+            //White colors are usually used behind images where the app has trouble detecting the appropriate bgColor.
+            //But skipping them isn't always a good idea, because they might still be better readable as black.
+            //continue;
+        }
 
         let parent = node.parentNode;
 
         while (bgColor === transparent && parent)
         {
+
             if(parent instanceof HTMLElement) 
             {
                 bgColor = getComputedStyle(parent, null).getPropertyValue("background-color");
@@ -210,6 +216,7 @@ function process(nodes, settings)
 
         if(bgColor === transparent) 
         {
+            if(color === white) continue;
             bgLuma = 236; //@TODO: Figure out how to approximate color in this case (if there is a way). We assume a light color for now.
         }
         else
@@ -225,37 +232,43 @@ function process(nodes, settings)
         }
     
         let luma           = calcLuma(color);
-        let lightness      = calcLightness(luma);
-        let bgLightness    = calcLightness(bgLuma);
-        let colorfulness   = calcDelta(color);
-        let bgColorfulness = calcDelta(bgColor);
+        let lightness      = getLightness(luma);
+        let bgLightness    = getLightness(bgLuma);
+        let colorfulness   = calcColorfulness(color);
+        //let bgColorfulness = calcDelta(bgColor);
 
         let contrast = Math.abs(bgLightness - lightness);
         contrast = contrast.toFixed(2);
 
-        let isGrey = colorfulness < 48 + str;
-        let isColorfulReadable = false;
+        let offset      = settings.str;
+        let isFontLight = lightness >= 0.15;
+        let isBgDark    = bgLightness <= 0.6;
 
-        if(settings.skipColoreds)
-        {
-            let val = 0.5;
+        colorfulness = colorfulness / 255;
 
-            if(tag === "a") val = 0.4 + str;
+        let whiteOffset = 0;
+        if(color === white) whiteOffset = -0.5;
 
-            isColorfulReadable = !isGrey && contrast > val;
-        }
+        let isColorful  = colorfulness > 0.6 + offset + whiteOffset;
+      
+        //let isGrey     = colorfulness < 48;
+        //let isReadable = contrast > 0.6;
 
-        let isBgGrey = bgColorfulness < 18;
-        let isBgDark = bgLightness + str < 0.4;
+        let linkOffset = 0;
+    
+        let d = dbArr[i];
 
         if(db)
         {
-            let d = dbArr[i];
-            //d.tag          = tag;
+            d.tag          = tag;
             //d.title        = node.title;
             //d.class        = classe;
-            //d.color        = color;
-            //d.bgColor      = bgColor;
+            d.color        = color;
+            d.bgColor      = bgColor;
+            d.isFontLight  = isFontLight;
+            d.isBgDark     = isBgDark;
+            //d.offset       = offset;
+            //d.linkOffset    = linkOffset;
             //d.size         = size;
             //d.luma           = luma;
             //d.bgLuma         = bgLuma;
@@ -264,25 +277,25 @@ function process(nodes, settings)
             //d.colorfulness   = colorfulness;
             //d.bgColorfulness = bgColorfulness;
             //d.contrast       = contrast;
-            d.isGrey       = isGrey;
-            d.isBgGrey     = isBgGrey;
-            d.isBgDark     = isBgDark;
-            d.isColorfulReadable = isColorfulReadable;
-            d.dimmed = true;  
+            //d.isGrey       = isGrey;
+            //d.isBgGrey     = isBgGrey;
+            //d.isBgDark     = isBgDark;
+            //d.isColorfulReadable = isColorfulReadable;
+            //d.dimmed = true;  
         }
        
-        /*
-        Prevents most of the wrong dimmings, 
-        but also avoids dimming some fonts 
-        that would be more readable otherwise. 
-        Can be improved with user offset though. */
-        let isFontLighter = lightness > bgLightness + str; 
+        if(isFontLight && !isBgDark) 
+        {
+            if(isColorful) continue; //Colorful is an user preference
 
-        if(isFontLighter || isColorfulReadable)  
+            node.setAttribute("d__", 0);
+        }
+/*
+        if(isFontLighter || (isReadable && !isGrey))  
         {
             if(db) d.dimmed = false;
             continue;
-        }
+        }*/
 
         /*
         if(isBgGrey && isBgDark || isColorfulReadable)  
@@ -305,7 +318,7 @@ function process(nodes, settings)
             css += `[d__="${++this.c}"]{color:${color}!important}\n`;
         }
 
-        node.setAttribute("d__", this.c);
+       // node.setAttribute("d__", this.c);
     }
 
     if(db) console.table(dbArr);
@@ -346,7 +359,7 @@ function init()
             skipHeadings: items.skipHeadings, 
             skipColoreds: items.skipColoreds, 
             advDimming:   items.advDimming, 
-            outline:      outline = false, 
+            outline:      false, 
             boldText:     items.boldText, 
             forcePlhdr:   items.forcePlhdr,
             forceOpacity: items.forceOpacity,
