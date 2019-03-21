@@ -12,7 +12,7 @@
             <div class = "sliderDiv">
                 <span class ="sliderDesc">Strength:</span>
                 <span class = "val" id = "strLabel"></span>
-                <input type = "range" class = "slider" id = "strSlider" min = "-100" max = "100" value = "35">
+                <input type = "range" class = "slider" id = "strSlider" min = "-1" max = "1" step = "0.01">
             </div>
            
             <span id ="curlyboye">[</span>
@@ -80,6 +80,14 @@
                         <span class="checkmark"></span>
                     </label>
                 </div>
+
+                <div class ="option">
+                        <span>Force max opacity</span>
+                        <label class="container">
+                            <input type="checkbox" id="forceOpacity">
+                            <span class="checkmark"></span>
+                        </label>
+                    </div>
 
                 <div class ="option">
                     <span>Force placeholder dimming</span>
