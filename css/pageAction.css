@@ -94,6 +94,7 @@ body
 }
 
 #urlContainer {
+    margin-top:0.35em;
     display:flex;
     justify-content:center;
     margin-bottom:0.35em;
@@ -112,7 +113,7 @@ body
 
 #checksContainer div
 {
-    margin-bottom: 0.17em;
+    margin-bottom: 0.35em;
 }
 
 /*Buttons/checkmarks*/
