@@ -400,6 +400,7 @@ function init()
         let borderStr = "[b__]{border:1px solid black!important}";
         
         let css = `
+        ${allStr}
         ${sizeStr}
         ${boldStr}
         ${plhdrStr}
