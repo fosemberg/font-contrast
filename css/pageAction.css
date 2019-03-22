@@ -16,10 +16,12 @@ html
 body
 {
     font-family: 'Lato', sans-serif;
-    background-color: rgb(251, 251, 251);
+    background-color: rgb(255, 255, 255);
     color:black;
     font-size: 18px;
-    width:450px;
+    margin:0;
+    padding:0;
+    width:470px;
     height:100%;
     margin:auto;
 }
@@ -28,49 +30,53 @@ body
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    margin: 0.7em;
+    margin: 17px;
+    margin-top: 10px;
 }
 #wrapper div 
 {
-    margin-top: 0.17em;
 }
 
 /*******/
-
-.val 
-{
-    font-family: 'Crimson Text', serif;
-    font-weight:400;
-    font-size:1.35em;
-    display: inline-block; 
-
-    width: 35px;
-    max-width: 35px;
-}
 #curlyboye
 {
+    opacity:0.0;
     font-size:2.5em;
     position:absolute;
-    top:65px;
-    left:-2px;
-    color:rgb(88, 88, 88);
+    top:45px;
+    left:-3px;
     pointer-events:none;
 }
 /* Sliders */
 
-.slider {
-    float:right;
-    padding:0;
-    padding-top:10px;
-    padding-left:10px;
-    margin:0;
+.sliderDiv
+{
+    display:flex;
+    justify-content: space-between;
+    align-items:baseline;
+}
+.sliderDesc 
+{
+    
+}
+.val 
+{
+    font-size:26px;
+    font-family: 'Crimson Text', serif;
+    font-weight: 400;
+    margin-right: 7px;
+}
+.slider 
+{
     width: 235px;
     border-radius: 5px;
 }
+
 .slider:focus {
     outline: none;
 }
-.slider::-moz-range-thumb {
+.slider::-moz-range-thumb 
+{
     width: 10px;
     height: 20px;
     border-radius: 50%;
@@ -79,7 +85,8 @@ body
     background: black;
     transition: 0.07s ease-in;
 }
-.slider::-moz-range-track {
+.slider::-moz-range-track 
+{
     width: 100%;
     height: 5px;
     cursor: pointer;
@@ -87,17 +94,12 @@ body
     border-radius: 1em;
     border: 2px solid black;
 }
-.sliderDiv{
-}
-#threshold{
-    margin-bottom:0.35em;
-}
-
-#urlContainer {
-    margin-top:0.35em;
+#urlContainer 
+{
     display:flex;
     justify-content:center;
-    margin-bottom:0.35em;
+    margin-top:17px;
+    margin-bottom:17px;
 }
 #url {
     opacity: 1;
@@ -110,13 +112,13 @@ body
 
 /*Checkboxes*/
 
-
 #checksContainer div
 {
     margin-bottom: 0.35em;
 }
 
 /*Buttons/checkmarks*/
+
 button {
     font-size: 15px;
     padding: 0.35em 1em;
