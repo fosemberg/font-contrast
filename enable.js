@@ -3,7 +3,7 @@
  * License: https://github.com/Fushko/font-contrast#license
  */
 
-"use strict";
+//"use strict";
 var x, t;
 
 function getRGBarr(rgbString) 
@@ -45,7 +45,8 @@ function getLightness(luma)
     return lightness;
 }
 
-function calcColorfulness(rgbString) {
+function calcColorfulness(rgbString) 
+{
     let colors = getRGBarr(rgbString);
 
     let r, g, b;
@@ -53,12 +54,9 @@ function calcColorfulness(rgbString) {
     g = colors[1];
     b = colors[2];
 
-    let delta = 0;
-
-    delta += Math.abs(r-g);
-    delta += Math.abs(g-b);
-
-    return delta;
+    let colorfulness = Math.abs(r-g);
+    colorfulness += Math.abs(g-b);
+    return colorfulness;
 }
 
 function extractHostname(url) {
@@ -155,7 +153,7 @@ function process(nodes, settings)
         tagsToSkip = tagsToSkip.concat(headings);
     }
 
-    let db = false; //debug
+    let db = 1; //debug
     let dbArr = [];
 
     for(let i = 0, len = nodes.length; i < len; ++i)
@@ -173,37 +171,40 @@ function process(nodes, settings)
             node.setAttribute("b__", "");
         }
     
-        if(!containsText(node) || !tag || ~tagsToSkip.indexOf(tag) || classe.startsWith("ytp") || ~classesToSkip.indexOf(classe)) continue;
+        if(!containsText(node)) continue;
+
+        if(!tag || ~tagsToSkip.indexOf(tag)) continue;
+
+        if(classe.startsWith("ytp") || ~classesToSkip.indexOf(classe)) continue;
      
         let style   = getComputedStyle(node, null);
         let color   = style.getPropertyValue("color");
         let bgColor = style.getPropertyValue("background-color");
-        let size    = style.getPropertyValue("font-size");
-
-        size = parseInt(size);
-
+       
         if(settings.size > 0) 
         {
+            let size = style.getPropertyValue("font-size");
+            size = parseInt(size);    
+
             if(size < settings.sizeLimit) 
             {
                 node.setAttribute("s__", size); 
             } 
         }
 
-        if(color === black || color === transparent) continue;
-
         if(color === white) 
         {
-            //White colors are usually used behind images where the app has trouble detecting the appropriate bgColor.
+            //White colors are usually used behind videos, images, etc. where we have trouble detecting the appropriate bgColor.
             //But skipping them isn't always a good idea, because they might still be better readable as black.
-            //continue;
+            continue;
         }
+
+        if(color === black || color === transparent) continue;
 
         let parent = node.parentNode;
 
         while (bgColor === transparent && parent)
         {
-
             if(parent instanceof HTMLElement) 
             {
                 bgColor = getComputedStyle(parent, null).getPropertyValue("background-color");
@@ -216,7 +217,7 @@ function process(nodes, settings)
 
         if(bgColor === transparent) 
         {
-            if(color === white) continue;
+            //if(color === white) continue;
             bgLuma = 236; //@TODO: Figure out how to approximate color in this case (if there is a way). We assume a light color for now.
         }
         else
@@ -230,43 +231,42 @@ function process(nodes, settings)
                 bgLuma += 127; //This can provide OK results with the strength slider. @TODO: Less naive method.
             }
         }
-    
-        let luma           = calcLuma(color);
-        let lightness      = getLightness(luma);
-        let bgLightness    = getLightness(bgLuma);
-        let colorfulness   = calcColorfulness(color);
-        //let bgColorfulness = calcDelta(bgColor);
-
-        let contrast = Math.abs(bgLightness - lightness);
-        contrast = contrast.toFixed(2);
-
-        let offset      = settings.str;
-        let isFontLight = lightness >= 0.15;
-        let isBgDark    = bgLightness <= 0.6;
-
-        colorfulness = colorfulness / 255;
-
-        let whiteOffset = 0;
-        if(color === white) whiteOffset = -0.5;
-
-        let isColorful  = colorfulness > 0.6 + offset + whiteOffset;
-      
-        //let isGrey     = colorfulness < 48;
-        //let isReadable = contrast > 0.6;
-
-        let linkOffset = 0;
-    
         let d = dbArr[i];
+        let minBgLuma = 160;
+
+        if(settings.skipColoreds) 
+        {
+            let luma = calcLuma(color);
+            let contrast = Math.abs(bgLuma - luma);
+
+            let minContrast     = 143;
+            let minColorfulness = 20;
+
+            if(tag === "a")
+            {
+                minContrast = 96;
+            }
+
+            let colorfulness = calcColorfulness(color);
+
+            d.contrast = contrast;
+            d.colorfulness = colorfulness;
+
+            if(contrast > minContrast && colorfulness > 20)
+            {
+                continue;
+            }
+        }
 
         if(db)
         {
-            d.tag          = tag;
+            //d.tag          = tag;
             //d.title        = node.title;
             //d.class        = classe;
             d.color        = color;
-            d.bgColor      = bgColor;
-            d.isFontLight  = isFontLight;
-            d.isBgDark     = isBgDark;
+            //d.bgColor      = bgColor;
+            //d.isFontLight  = isFontLight;
+            //d.isBgDark     = isBgDark;
             //d.offset       = offset;
             //d.linkOffset    = linkOffset;
             //d.size         = size;
@@ -274,35 +274,19 @@ function process(nodes, settings)
             //d.bgLuma         = bgLuma;
             //d.lightness      = lightness;
             //d.bgLightness    = bgLightness;
-            //d.colorfulness   = colorfulness;
             //d.bgColorfulness = bgColorfulness;
             //d.contrast       = contrast;
             //d.isGrey       = isGrey;
             //d.isBgGrey     = isBgGrey;
-            //d.isBgDark     = isBgDark;
+            //d.isBgLight    = isBgLight;
             //d.isColorfulReadable = isColorfulReadable;
             //d.dimmed = true;  
         }
        
-        if(isFontLight && !isBgDark) 
+        if(bgLuma < minBgLuma)
         {
-            if(isColorful) continue; //Colorful is an user preference
-
-            node.setAttribute("d__", 0);
+            continue;
         }
-/*
-        if(isFontLighter || (isReadable && !isGrey))  
-        {
-            if(db) d.dimmed = false;
-            continue;
-        }*/
-
-        /*
-        if(isBgGrey && isBgDark || isColorfulReadable)  
-        {
-            d.dimmed = false;
-            continue;
-        }*/
 
         if(settings.advDimming)
         {
@@ -318,7 +302,7 @@ function process(nodes, settings)
             css += `[d__="${++this.c}"]{color:${color}!important}\n`;
         }
 
-       // node.setAttribute("d__", this.c);
+       node.setAttribute("d__", "0");
     }
 
     if(db) console.table(dbArr);
@@ -348,7 +332,7 @@ function init()
     createElem();
 
     const doc = document;
-    let db = 0;
+    let dbTime = 1;
 
     let init = (items) => {
 
@@ -388,7 +372,7 @@ function init()
         } 
 
         let dbStr = "Website processed in";
-        if(db) console.time(dbStr);
+        if(dbTime) console.time(dbStr);
 
         let elems = [];
         elems = nodeListToArr(document.body.getElementsByTagName("*"));
@@ -441,7 +425,7 @@ function init()
             }
         }
 
-        let borderStr = "[b__]{border:1px solid black!important}"; //Doesn't hurt to put it even if form borders are disabled
+        let borderStr = "[b__]{border:1px solid black!important}"; //Doesn't hurt to put it in, even if form borders are disabled
         
         let css = `
         ${opacityStr}
@@ -467,7 +451,7 @@ function init()
 
         t.nodeValue = css;
 
-        if(db) console.timeEnd(dbStr);
+        if(dbTime) console.timeEnd(dbStr);
 
         /* New elements */
         dbStr = "New elements processed in";
@@ -479,7 +463,7 @@ function init()
             mutationsList.forEach((mutation) => {
                 if(mutation.addedNodes && mutation.addedNodes.length > 0)
                 {
-                    if(db) console.time(dbStr);
+                    if(dbTime) console.time(dbStr);
                 
                     for(let i = 0, len = mutation.addedNodes.length; i < len; ++i)
                     {
@@ -497,7 +481,7 @@ function init()
                             else process(children, settings);
                         }
                     }
-                    if(db) console.timeEnd(dbStr);
+                    if(dbTime) console.timeEnd(dbStr);
                 }
             });
 
