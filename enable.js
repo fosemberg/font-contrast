@@ -207,21 +207,20 @@ function process(nodes, settings)
 
         let parent = node.parentNode;
 
+        let bgLuma;
+
         while (bgColor === transparent && parent)
         {
             if(parent instanceof HTMLElement) 
             {
                 bgColor = getComputedStyle(parent, null).getPropertyValue("background-color");
             }
-    
+
             parent = parent.parentNode;
         }
 
-        let bgLuma;
-
         if(bgColor === transparent) 
         {
-            //if(color === white) continue;
             bgLuma = 236; //@TODO: Figure out how to approximate color in this case (if there is a way). We assume a light color for now.
         }
         else
@@ -236,19 +235,19 @@ function process(nodes, settings)
             }
         }
         let d = dbArr[i];
-        
+
         let offset = settings.str;
 
         let minBgLuma = 160 - offset;
+        let luma = calcLuma(color);
 
         if(settings.skipColoreds) 
-        {
-            let luma = calcLuma(color);
+        { 
             let contrast = Math.abs(bgLuma - luma);
 
-            let minContrast     = 127.5;
+            let minContrast     = 132;
             let minLinkContrast = 96;
-            let minColorfulness = 20;
+            let minColorfulness = 32;
 
             if(tag === "a")
             {
@@ -336,7 +335,11 @@ function createElem() {
 
 function init() 
 {
-    if(document.getElementById("_fc_")) return;
+    if(document.getElementById("_fc_")) 
+    {
+        x.appendChild(t);
+        return;
+    }
 
     createElem();
 
@@ -401,7 +404,9 @@ function init()
             y.appendChild(z);
         }
 
-        let opacityStr = "", boldStr = "", forceBlack = "", sizeStr = "";
+        let opacityStr = "", boldStr = "", forceBlack = "", sizeStr = "", underlineStr = "";
+
+        underlineStr = "[u__]{text-decoration:underline!important}";
 
         if(settings.forceOpacity) 
         {
@@ -438,6 +443,7 @@ function init()
         ${boldStr}
         ${plhdrStr}
         ${borderStr}
+        ${underlineStr}
         `;
 
         css += '[d__],[d__][style]{';
@@ -512,8 +518,6 @@ function init()
     ];
 
     browser.storage.local.get(stored, init);
-
-    x.appendChild(t);
 }
 
 init();
