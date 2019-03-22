@@ -139,7 +139,7 @@ function adjustBrightness(rgbStr, str)
 
 function process(nodes, settings)
 {
-    //if(typeof this.c === "undefined") this.c = 0; //Doesn't work in strict mode
+    if(typeof this.c === "undefined") this.c = 0; //Doesn't work in strict mode
 
     const black = "rgb(0, 0, 0)", white = "rgb(255, 255, 255)", transparent = "rgba(0, 0, 0, 0)";
     let tagsToSkip = ["script", "link", "meta", "style", "img", "video", "#comment"];
@@ -153,8 +153,12 @@ function process(nodes, settings)
         tagsToSkip = tagsToSkip.concat(headings);
     }
 
-    let db = 1; //debug
     let dbArr = [];
+    let dbValues = 0;
+    let dbTime = 1;
+    let dbTimeStr = "Process " + c++ + " time";
+
+    if(dbTime) console.time(dbTimeStr);
 
     for(let i = 0, len = nodes.length; i < len; ++i)
     {
@@ -177,10 +181,10 @@ function process(nodes, settings)
 
         if(classe.startsWith("ytp") || ~classesToSkip.indexOf(classe)) continue;
      
-        let style   = getComputedStyle(node, null);
+        let style   = getComputedStyle(node);
         let color   = style.getPropertyValue("color");
         let bgColor = style.getPropertyValue("background-color");
-       
+
         if(settings.size > 0) 
         {
             let size = style.getPropertyValue("font-size");
@@ -232,19 +236,23 @@ function process(nodes, settings)
             }
         }
         let d = dbArr[i];
-        let minBgLuma = 160;
+        
+        let offset = settings.str;
+
+        let minBgLuma = 160 - offset;
 
         if(settings.skipColoreds) 
         {
             let luma = calcLuma(color);
             let contrast = Math.abs(bgLuma - luma);
 
-            let minContrast     = 143;
+            let minContrast     = 127.5;
+            let minLinkContrast = 96;
             let minColorfulness = 20;
 
             if(tag === "a")
             {
-                minContrast = 96;
+                minContrast = minLinkContrast;
             }
 
             let colorfulness = calcColorfulness(color);
@@ -252,13 +260,13 @@ function process(nodes, settings)
             d.contrast = contrast;
             d.colorfulness = colorfulness;
 
-            if(contrast > minContrast && colorfulness > 20)
+            if(contrast > minContrast && colorfulness > minColorfulness)
             {
                 continue;
             }
         }
 
-        if(db)
+        if(dbValues)
         {
             //d.tag          = tag;
             //d.title        = node.title;
@@ -305,7 +313,9 @@ function process(nodes, settings)
        node.setAttribute("d__", "0");
     }
 
-    if(db) console.table(dbArr);
+    if(dbTime) console.timeEnd(dbTimeStr);
+
+    if(dbValues) console.table(dbArr);
 
     if(settings.advDimming) 
     {
@@ -326,13 +336,11 @@ function createElem() {
 
 function init() 
 {
-    if (!document.getElementById("_fc_"))
-    {
-    //this.isInit = true;
+    if(document.getElementById("_fc_")) return;
+
     createElem();
 
     const doc = document;
-    let dbTime = 1;
 
     let init = (items) => {
 
@@ -369,10 +377,7 @@ function init()
             settings.boldText     = wlItem.boldText;
             settings.forcePlhdr   = wlItem.forcePlhdr;
             settings.forceOpacity = wlItem.forceOpacity;
-        } 
-
-        let dbStr = "Website processed in";
-        if(dbTime) console.time(dbStr);
+        }
 
         let elems = [];
         elems = nodeListToArr(document.body.getElementsByTagName("*"));
@@ -435,7 +440,7 @@ function init()
         ${borderStr}
         `;
 
-        css += '[d__]{';
+        css += '[d__],[d__][style]{';
 
         if(settings.advDimming) 
         {
@@ -451,20 +456,13 @@ function init()
 
         t.nodeValue = css;
 
-        if(dbTime) console.timeEnd(dbStr);
-
-        /* New elements */
-        dbStr = "New elements processed in";
-
         let callback = (mutationsList) => {
 
             let newRules = "";
 
             mutationsList.forEach((mutation) => {
                 if(mutation.addedNodes && mutation.addedNodes.length > 0)
-                {
-                    if(dbTime) console.time(dbStr);
-                
+                {           
                     for(let i = 0, len = mutation.addedNodes.length; i < len; ++i)
                     {
                         const node = mutation.addedNodes[i];
@@ -481,7 +479,6 @@ function init()
                             else process(children, settings);
                         }
                     }
-                    if(dbTime) console.timeEnd(dbStr);
                 }
             });
 
@@ -515,8 +512,8 @@ function init()
     ];
 
     browser.storage.local.get(stored, init);
-    }
-    else x.appendChild(t);
+
+    x.appendChild(t);
 }
 
 init();
