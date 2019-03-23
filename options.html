@@ -10,25 +10,59 @@
     </head>
 <body>
     <div class ="wrapper">
-        <h3>Global options:</h2>
+        
         <div class ="checkboxes">
             
+                <h3>General:</h3>
+
+                <div class="settings">
+                    <span>Activate on all websites</span>
+                    
+                    <div class="help-tip" id="defaultEnTip">
+                        <p>
+                            Toggles the add-on automatically on every website possible.
+                            <br>When this is disabled, the app will enable only on whitelisted websites, or when pressing the "C" icon in the add-on bar.
+                        </p>
+                    </div>
+        
+                    <label class="container">
+                        <input type="checkbox" id="defaultEn">
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+
+                    <div class ="settings">
+                            <span>Smooth transitions</span>
+            
+                            <div class="help-tip" id="smoothTip">
+                                <p>
+                                    Makes the text color and font size change gradually, rather than instantly. May not work on all sites.
+                                </p>
+                            </div>
+            
+                            <label class="container">
+                                <input type="checkbox" id="smoothEnabled">
+                                <span class="checkmark"></span>
+                            </label>
+                        </div>
+
+                <h3>Global options:</h2>
+
             <div class ="settings" id ="strOption">
                 <span>Strength</span>
                 <div class="help-tip" id="strTip">
                     <p>
-                        Higher strength may detect more grey text, but may also dim light fonts against dark backgrounds.
-                        <br>This value is overridden by the Strength of a whitelisted website.
+                        Adjusts the detection of dark backgrounds. Lower this value when the app dims light text against dark backgrounds.
                         <br><br>When advanced dimming is enabled, this value also controls font dimming amount.
                     </p>
                 </div>
 
                 <span class ="sliderLabel" id = "strLabel"></span>
-                <input type = "range" min = "-1" max = "1" step = "0.01" class="slider" id = "strSlider">
+                <input type = "range" min = "-100" max = "100" class="slider" id = "strSlider">
             </div>
 
             <div class ="settings" id ="sizeOption">
-                <span>Increase size (%)</span>
+                <span>Increase font (%)</span>
 
                 <div class="help-tip" id="sizeTip">
                     <p>
@@ -45,7 +79,7 @@
 
                 <div class="help-tip" id="thrTip">
                     <p>
-                        Determines the minimum size a font has to be (in pixels) for it to be affected by a size increase. By default, only small fonts are affected.
+                        Determines the minimum size a font has to be (in pixels) for it to be affected by an increase in size. By default, only small fonts are affected.
                     </p>
                 </div>
     
@@ -53,19 +87,47 @@
                 <input type = "range" min = "0" max = "50" value = "0" class="slider" id = "threshSlider">
             </div>
 
+            <div class ="settings">
+                <span>Avoid colorful text</span>
 
-            <div class="settings">
-                <span>Activate on all websites</span>
-                
-                <div class="help-tip" id="defaultEnTip">
+                <div class="help-tip" id="advTip">
                     <p>
-                        Toggles the add-on automatically on every website possible.
-                        <br>When this is disabled, the app will enable only on whitelisted websites, or when pressing the "C" icon in the add-on bar.
+                        Attempts to avoid colorful text and links, if they are considered readable. <br><br>Links have a slightly higher threshold, i.e. the same color might not be dimmed if it's a link.<br>Can be adjusted with strength.
                     </p>
                 </div>
 
                 <label class="container">
-                    <input type="checkbox" id="defaultEn">
+                    <input type="checkbox" id="skipColoreds">
+                    <span class="checkmark"></span>
+                </label>
+            </div>
+
+            <div class ="settings">
+                <span>Bold text</span>
+                
+                <div class="help-tip" id="boldTip">
+                    <p>
+                        Changes the font weight of all text to bold.
+                    </p>
+                </div>
+
+                <label class="container">
+                    <input type="checkbox" id="boldText">
+                    <span class="checkmark"></span>
+                </label>
+            </div>
+
+            <div class ="settings">
+                <span>Skip headings</span>
+                
+                <div class="help-tip" id="skipHdnTip">
+                    <p>
+                        Avoids dimming all big headings. (&lth1&gt, &lth2&gt, &lth3&gt)
+                    </p>
+                </div>
+
+                <label class="container">
+                    <input type="checkbox" id="skipHeadings">
                     <span class="checkmark"></span>
                 </label>
             </div>
@@ -89,51 +151,6 @@
             </div>
 
             <div class ="settings">
-                <span>Avoid readable text</span>
-
-                <div class="help-tip" id="skipTip">
-                    <p>
-                        Attempts to avoid readable text and links.<br>Affected by strength.
-                    </p>
-                </div>
-
-                <label class="container">
-                    <input type="checkbox" id="skipColoreds">
-                    <span class="checkmark"></span>
-                </label>
-            </div>
-
-            <div class ="settings">
-                <span>Skip headings</span>
-                
-                <div class="help-tip" id="skipHdnTip">
-                    <p>
-                        Avoids dimming all big headings. (&lth1&gt, &lth2&gt, &lth3&gt)
-                    </p>
-                </div>
-
-                <label class="container">
-                    <input type="checkbox" id="skipHeadings">
-                    <span class="checkmark"></span>
-                </label>
-            </div>
-
-            <div class ="settings">
-                <span>Bold text</span>
-                
-                <div class="help-tip" id="boldTip">
-                    <p>
-                        Changes the font weight of all text to bold.
-                    </p>
-                </div>
-
-                <label class="container">
-                    <input type="checkbox" id="boldText">
-                    <span class="checkmark"></span>
-                </label>
-            </div>
-
-            <div class ="settings">
                 <span>Force max opacity</span>
                     
                 <div class="help-tip" id="thrTip">
@@ -150,7 +167,7 @@
 
 
             <div class ="settings">
-                <span>Force placeholder dimming</span>
+                <span>Force black placeholder</span>
                 
                 <div class="help-tip" id="plhdlrTip">
                     <p>
@@ -164,20 +181,7 @@
                 </label>
             </div>
     
-            <div class ="settings">
-                <span>Smooth transitions</span>
-
-                <div class="help-tip" id="smoothTip">
-                    <p>
-                        Makes the text color and font size change gradually, rather than instantly. May not work on all sites.
-                    </p>
-                </div>
-
-                <label class="container">
-                    <input type="checkbox" id="smoothEnabled">
-                    <span class="checkmark"></span>
-                </label>
-            </div>
+            
         </div>
 
         <div>
