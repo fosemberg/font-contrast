@@ -141,9 +141,14 @@ function process(nodes, settings)
 {
     if(typeof this.c === "undefined") this.c = 0; //Doesn't work in strict mode
 
-    const black = "rgb(0, 0, 0)", white = "rgb(255, 255, 255)", transparent = "rgba(0, 0, 0, 0)";
+    const black       = "rgb(0, 0, 0)";
+    const white       = "rgb(255, 255, 255)";
+    const transparent = "rgba(0, 0, 0, 0)";
+
     let tagsToSkip = ["script", "link", "meta", "style", "img", "video", "#comment"];
+
     const classesToSkip = ["home_featured_story-date"]; //genius
+
     const headings = ["h1", "h2", "h3"];
 
     let css = "";
@@ -155,7 +160,7 @@ function process(nodes, settings)
 
     let dbArr = [];
     let dbValues = 0;
-    let dbTime = 1;
+    let dbTime = 0;
     let dbTimeStr = "Process " + c++ + " time";
 
     if(dbTime) console.time(dbTimeStr);
@@ -182,7 +187,11 @@ function process(nodes, settings)
         if(classe.startsWith("ytp") || ~classesToSkip.indexOf(classe)) continue;
      
         let style   = getComputedStyle(node);
+
         let color   = style.getPropertyValue("color");
+
+        if(color === "") continue; //@TODO: look into this further
+
         let bgColor = style.getPropertyValue("background-color");
 
         if(settings.size > 0) 
@@ -238,23 +247,23 @@ function process(nodes, settings)
 
         let offset = settings.str;
 
-        let minBgLuma = 160 - offset;
+      
         let luma = calcLuma(color);
+
+        let colorfulness = calcColorfulness(color);
 
         if(settings.skipColoreds) 
         { 
             let contrast = Math.abs(bgLuma - luma);
 
-            let minContrast     = 132;
-            let minLinkContrast = 96;
+            let minContrast     = 132 + (offset / 2);
+            let minLinkContrast = 96 + (offset / 3);
             let minColorfulness = 32;
 
             if(tag === "a")
             {
                 minContrast = minLinkContrast;
             }
-
-            let colorfulness = calcColorfulness(color);
 
             d.contrast = contrast;
             d.colorfulness = colorfulness;
@@ -290,6 +299,8 @@ function process(nodes, settings)
             //d.dimmed = true;  
         }
        
+        let minBgLuma = 160 - offset;
+
         if(bgLuma < minBgLuma)
         {
             continue;
@@ -297,19 +308,20 @@ function process(nodes, settings)
 
         if(settings.advDimming)
         {
-            let greyOffset = 16;
-            greyOffset -= colorfulness;
+            if(typeof this.id === "undefined") this.id = 0;
+
+            let greyOffset = -colorfulness;
     
-            let amount = settings.str + greyOffset + 35;
+            let amount = settings.str + greyOffset + 48;
             
             if(amount < 0) amount = 0;
 
             color = adjustBrightness(color, amount);
 
-            css += `[d__="${++this.c}"]{color:${color}!important}\n`;
+            css += `[d__="${++this.id}"]{color:${color}!important}\n`;
         }
 
-       node.setAttribute("d__", "0");
+       node.setAttribute("d__", this.id);
     }
 
     if(dbTime) console.timeEnd(dbTimeStr);
