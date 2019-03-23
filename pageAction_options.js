@@ -164,7 +164,8 @@ let callback = (tabs) => {
         "skipHeadings", 
         "advDimming", 
         "boldText", 
-        "forcePlhdr"
+        "forcePlhdr",
+        "forceOpacity"
     ];
 
     storage.get(stored, (items) => 
@@ -177,7 +178,9 @@ let callback = (tabs) => {
             items.skipColoreds, 
             items.advDimming, 
             items.boldText, 
-            items.forcePlhdr];
+            items.forcePlhdr,
+            items.forceOpacity
+        ];
 
         if (blacklist.findIndex(o => o.url === domain) > -1)
         {
@@ -193,10 +196,8 @@ let callback = (tabs) => {
 
                 strSlider.value           = wlItem.strength;
                 strLabel.innerText        = wlItem.strength;
-
                 sizeSlider.value          = wlItem.size;
                 sizeLabel.innerText       = wlItem.size;
-
                 thresholdSlider.value     = wlItem.threshold;
                 thresholdLabel.innerText  = wlItem.threshold;
 
@@ -206,7 +207,8 @@ let callback = (tabs) => {
                 outline.checked           = wlItem.outline;
                 boldText.checked          = wlItem.boldText;
                 forcePlhdr.checked        = wlItem.forcePlhdr;
-    
+                forceOpacity.checked      = wlItem.forceOpacity;
+
                 WLcheck.checked = true;
                 BLcheck.checked = false;
             }
@@ -224,6 +226,7 @@ let callback = (tabs) => {
                 advDimming.checked        = globalChecks[2];
                 boldText.checked          = globalChecks[3];
                 forcePlhdr.checked        = globalChecks[4];
+                forceOpacity.checked      = globalChecks[5];
             }
         }
 
@@ -238,6 +241,7 @@ let callback = (tabs) => {
             advDimming:     globalChecks[2],
             boldText:       globalChecks[3],
             forcePlhdr:     globalChecks[4],
+            forceOpacity:   globalChecks[5],
             outline:        false, //The outline cannot be set globally for now
    
         };
@@ -252,6 +256,7 @@ let callback = (tabs) => {
             wlItem.outline      = outline.checked;
             wlItem.boldText     = boldText.checked;
             wlItem.forcePlhdr   = forcePlhdr.checked;
+            wlItem.forceOpacity = forceOpacity.checked;
         };
 
         strSlider.oninput = () =>
@@ -373,6 +378,14 @@ let callback = (tabs) => {
         });
 
         forcePlhdr.addEventListener("click", () => {
+            updateWLItem();
+
+            whitelist = updateWL(wlItem, whitelist, domain, true);
+
+            if(BLcheck.checked) blacklist = updateBL(blacklist, domain, false);
+        });
+
+        forceOpacity.addEventListener("click", () => {
             updateWLItem();
 
             whitelist = updateWL(wlItem, whitelist, domain, true);

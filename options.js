@@ -34,13 +34,13 @@ threshSlider.oninput = () => {
 
 //Options
 let skipHeadings    = doc.querySelector('#skipHeadings');
-let skipLinks       = doc.querySelector('#skipLinks');
-//let skipColoreds  = doc.querySelector('#skipColoreds');
+let skipColoreds    = doc.querySelector('#skipColoreds');
 let globalEnabled   = doc.querySelector('#defaultEn');
 let smoothEnabled   = doc.querySelector('#smoothEnabled');
 let advDimming      = doc.querySelector('#advDimming');
 let boldText        = doc.querySelector('#boldText');
 let forcePlhdr      = doc.querySelector('#forcePlhdr');
+let forceOpacity    = doc.querySelector('#forceOpacity');
 
 globalEnabled = addEventListener('click', () => {
     storage.set({'enableEverywhere': isChecked("defaultEn")});
@@ -68,6 +68,10 @@ boldText = addEventListener('click', () => {
 
 forcePlhdr = addEventListener('click', () => {
     storage.set({'forcePlhdr': isChecked("forcePlhdr")});
+})
+
+forceOpacity = addEventListener('click', () => {
+    storage.set({'forceOpacity': isChecked("forceOpacity")});
 })
 
 function isChecked(arg) {
@@ -369,7 +373,7 @@ function updateSettings()
         threshLabel.innerText = items.sizeThreshold;
     });
 
-    storage.get(['skipHeadings','skipColoreds', 'enableEverywhere', 'smoothEnabled', 'advDimming', 'boldText', 'forcePlhdr'], (items) => {
+    storage.get(['skipHeadings','skipColoreds', 'enableEverywhere', 'smoothEnabled', 'advDimming', 'boldText', 'forcePlhdr', 'forceOpacity'], (items) => {
         doc.getElementById("skipHeadings").checked  = items.skipHeadings;
         doc.getElementById("skipColoreds").checked  = items.skipColoreds;
         doc.getElementById("defaultEn").checked     = items.enableEverywhere;
@@ -377,6 +381,7 @@ function updateSettings()
         doc.getElementById("advDimming").checked    = items.advDimming;
         doc.getElementById("boldText").checked      = items.boldText;
         doc.getElementById("forcePlhdr").checked    = items.forcePlhdr;
+        doc.getElementById("forceOpacity").checked  = items.forceOpacity;
     });
 
     storage.get(['whitelist', 'blacklist'], (items) => {

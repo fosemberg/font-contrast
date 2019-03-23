@@ -8,25 +8,44 @@
     </head>
     <body>  
         <div id ="wrapper">
-             
-            <div class = "sliderDiv">
-                <span class ="sliderDesc">Strength:</span>
-                <span class = "val" id = "strLabel"></span>
-                <input type = "range" class = "slider" id = "strSlider" min = "-100" max = "100" value = "35">
+             <div class ="sliders">
+               
+                <div class = "sliderDiv">
+                    <span class ="sliderDesc">Strength</span>
+                    <div>
+                    <span class = "val" id = "strLabel"></span>
+                    <input type = "range" class = "slider" id = "strSlider" min = "-100" max = "100" step = "1">
+                    </div>
+                </div>
+
+               <!-- <div class = "sliderDiv">
+                    <div class ="sliderDesc">Colorful text offset:  <span class = "val" id = "colLabel">144</span></div>
+                    <input type = "range" class = "slider" id = "colorSlider" min = "-100" max = "100" step = "1">
+                </div>
+
+                <div class = "sliderDiv">
+                    <div class ="sliderDesc">Link offset:<span class = "val" id = "linkLabel">132</span></div>   
+                    <input type = "range" class = "slider" id = "linkSlider" min = "-100" max = "100" step = "1">
+                </div>-->
+            
+                <div class = "sliderDiv">
+                    <span id ="curlyboye">[</span>
+                    <span class ="sliderDesc">Increase font (%)</span>
+                    <div>
+                    <span class = "val" id = "sizeLabel">43</span>
+                    <input type = "range" class = "slider" id ="sizeSlider" min = "0" max = "100" value = "0">
+                    </div>
+                </div>
+
+                <div class = "sliderDiv">
+                    <span class ="sliderDesc">Threshold (px)</span>
+                    <div>
+                    <span class = "val" id = "thresholdLabel"></span>
+                    <input type = "range" class = "slider" id ="thresholdSlider" min = "0" max = "50" value = "14">
+                    </div>
+                </div>
             </div>
-           
-            <span id ="curlyboye">[</span>
-            <div class = "sliderDiv">
-                <span class ="sliderDesc">Increase size (%):</span>
-                <span class = "val" id = "sizeLabel"></span>
-                <input type = "range" class = "slider" id ="sizeSlider" min = "0" max = "100" value = "0">
-            </div>
-            <div class = "sliderDiv" id = "threshold">
-                <span class ="sliderDesc">Threshold (px):</span>
-                <span class = "val" id = "thresholdLabel"></span>
-                <input type = "range" class = "slider" id ="thresholdSlider" min = "0" max = "50" value = "14">
-            </div>
-        
+
             <div id="urlContainer">
                 <span id ="url"></span>
                 <button id="refreshBtn">Refresh</button>
@@ -50,6 +69,14 @@
                 </div>
 
                 <div class ="option">
+                    <span>Avoid colorful text</span>
+                    <label class="container">
+                        <input type="checkbox" id="skipColoreds">
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+
+                <div class ="option">
                     <span>Bold text</span>
                     <label class="container">
                         <input type="checkbox" id="boldText">
@@ -57,14 +84,6 @@
                     </label>
                 </div>
 
-                <div class ="option">
-                    <span>Skip colored text</span>
-                    <label class="container">
-                        <input type="checkbox" id="skipColoreds">
-                        <span class="checkmark"></span>
-                    </label>
-                </div>
-                
                 <div class ="option">
                     <span>Skip headings</span>
                     <label class="container">
@@ -82,20 +101,30 @@
                 </div>
 
                 <div class ="option">
-                    <span>Force placeholder dimming</span>
+                    <span>Force max opacity</span>
+                    <label class="container">
+                        <input type="checkbox" id="forceOpacity">
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+
+                <div class ="option">
+                    <span>Force black placeholder</span>
                     <label class="container">
                         <input type="checkbox" id="forcePlhdr">
                         <span class="checkmark"></span>
                     </label>
                 </div>
-                
+
                 <div class ="option">
-                    <span>Form outline</span>
+                    <span>Form border</span>
                     <label class="container">
                         <input type="checkbox" id="outline">
                         <span class="checkmark"></span>
                     </label>
                 </div>
+
+          
             </div><!--checks-->
         <button id="optionsBtn">More options</button>
         </div> <!--wrapper-->

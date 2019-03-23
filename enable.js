@@ -27,27 +27,36 @@ function calcLuma(rgbString)
     let g = colors[1];
     let b = colors[2];
 
-    let luma = 0.2126 * r + 0.7152 * g + 0.0722 * b; //itu.int/dms_pubrec/itu-r/rec/bt/R-REC-BT.709-6-201506-I!!PDF-E.pdf
-    
+    /* sRGB Luma gives more weight to green, as we perceive it to be lighter than other colors.
+     * itu.int/dms_pubrec/itu-r/rec/bt/R-REC-BT.709-6-201506-I!!PDF-E.pdf */
+    let luma = r * 0.2126 + g * 0.7152 + b * 0.0722; 
+
     luma = parseFloat(luma.toFixed(1));
     
     return luma;
 }
 
-function calcDelta(rgbString) {
+function getLightness(luma) 
+{
+    let lightness = luma / 255;
+
+    lightness = parseFloat(lightness.toFixed(2));
+
+    return lightness;
+}
+
+function calcColorfulness(rgbString) 
+{
     let colors = getRGBarr(rgbString);
 
-    let r, g, b, a;
+    let r, g, b;
     r = colors[0];
     g = colors[1];
     b = colors[2];
-    a = colors[3];
 
-    let delta = 0;
-    delta += Math.abs(r-g);  //Naive as hell, but works okayish
-    delta += Math.abs(g-b);
-
-    return delta;
+    let colorfulness = Math.abs(r-g);
+    colorfulness += Math.abs(g-b);
+    return colorfulness;
 }
 
 function extractHostname(url) {
@@ -130,11 +139,16 @@ function adjustBrightness(rgbStr, str)
 
 function process(nodes, settings)
 {
-    if(typeof this.c === "undefined") this.c = 0;
+    if(typeof this.c === "undefined") this.c = 0; //Doesn't work in strict mode
 
-    const black = "rgb(0, 0, 0)", white = "rgb(255, 255, 255)", transparent = "rgba(0, 0, 0, 0)";
+    const black       = "rgb(0, 0, 0)";
+    const white       = "rgb(255, 255, 255)";
+    const transparent = "rgba(0, 0, 0, 0)";
+
     let tagsToSkip = ["script", "link", "meta", "style", "img", "video", "#comment"];
+
     const classesToSkip = ["home_featured_story-date"]; //genius
+
     const headings = ["h1", "h2", "h3"];
 
     let css = "";
@@ -144,12 +158,20 @@ function process(nodes, settings)
         tagsToSkip = tagsToSkip.concat(headings);
     }
 
-    let db = false; //debug
     let dbArr = [];
+    let dbValues = 0;
+    let dbTime = 0;
+    let dbTimeStr = "Process " + c++ + " time";
+
+    if(dbTime) console.time(dbTimeStr);
 
     for(let i = 0, len = nodes.length; i < len; ++i)
     {
         let node = nodes[i];
+
+        let debugObj = {};
+
+        dbArr.push(debugObj);
 
         let tag = String(node.localName), classe = String(node.className), id = String(node.id);
 
@@ -158,38 +180,43 @@ function process(nodes, settings)
             node.setAttribute("b__", "");
         }
     
-        if(!containsText(node) || !tag || ~tagsToSkip.indexOf(tag) || classe.startsWith("ytp") || ~classesToSkip.indexOf(classe)) continue;
+        if(!containsText(node)) continue;
+
+        if(!tag || ~tagsToSkip.indexOf(tag)) continue;
+
+        if(classe.startsWith("ytp") || ~classesToSkip.indexOf(classe)) continue;
      
-        let style   = getComputedStyle(node, null);
+        let style   = getComputedStyle(node);
 
         let color   = style.getPropertyValue("color");
-        let bgColor = style.getPropertyValue("background-color");
-        let size    = style.getPropertyValue("font-size");
 
-        size = parseInt(size);
+        if(color === "") continue; //@TODO: look into this further
+
+        let bgColor = style.getPropertyValue("background-color");
 
         if(settings.size > 0) 
         {
+            let size = style.getPropertyValue("font-size");
+            size = parseInt(size);    
+
             if(size < settings.sizeLimit) 
             {
                 node.setAttribute("s__", size); 
             } 
         }
-        
-        if(color === black || color === white || color === transparent) continue;
-       
-        let colorfulness = calcDelta(color);
 
-        if(settings.skipColoreds)
+        if(color === white) 
         {
-            let offset = 0;
-            if(tag === "a") offset = -32; 
-            let val = 32 + settings.str + offset;
-
-            if(colorfulness > val) continue;
+            //White colors are usually used behind videos, images, etc. where we have trouble detecting the appropriate bgColor.
+            //But skipping them isn't always a good idea, because they might still be better readable as black.
+            continue;
         }
-        
+
+        if(color === black || color === transparent) continue;
+
         let parent = node.parentNode;
+
+        let bgLuma;
 
         while (bgColor === transparent && parent)
         {
@@ -197,13 +224,10 @@ function process(nodes, settings)
             {
                 bgColor = getComputedStyle(parent, null).getPropertyValue("background-color");
             }
-    
+
             parent = parent.parentNode;
         }
-       
-        let luma = calcLuma(color);
-        let bgLuma;
-    
+
         if(bgColor === transparent) 
         {
             bgLuma = 236; //@TODO: Figure out how to approximate color in this case (if there is a way). We assume a light color for now.
@@ -219,51 +243,95 @@ function process(nodes, settings)
                 bgLuma += 127; //This can provide OK results with the strength slider. @TODO: Less naive method.
             }
         }
-    
-        let bgLumaOffset = bgLuma + settings.str;
+        let d = dbArr[i];
 
-        if(db) 
-        {
-            let dimmed = luma < bgLumaOffset;
-            dbArr.push({tag, size, color, bgColor, luma, bgLuma, bgLumaOffset, dimmed});
+        let offset = settings.str;
+
+      
+        let luma = calcLuma(color);
+
+        let colorfulness = calcColorfulness(color);
+
+        if(settings.skipColoreds) 
+        { 
+            let contrast = Math.abs(bgLuma - luma);
+
+            let minContrast     = 132 + (offset / 2);
+            let minLinkContrast = 96 + (offset / 3);
+            let minColorfulness = 32;
+
+            if(tag === "a")
+            {
+                minContrast = minLinkContrast;
+            }
+
+            d.contrast = contrast;
+            d.colorfulness = colorfulness;
+
+            if(contrast > minContrast && colorfulness > minColorfulness)
+            {
+                continue;
+            }
         }
 
-        if(luma > bgLumaOffset) continue;
+        if(dbValues)
+        {
+            //d.tag          = tag;
+            //d.title        = node.title;
+            //d.class        = classe;
+            d.color        = color;
+            //d.bgColor      = bgColor;
+            //d.isFontLight  = isFontLight;
+            //d.isBgDark     = isBgDark;
+            //d.offset       = offset;
+            //d.linkOffset    = linkOffset;
+            //d.size         = size;
+            //d.luma           = luma;
+            //d.bgLuma         = bgLuma;
+            //d.lightness      = lightness;
+            //d.bgLightness    = bgLightness;
+            //d.bgColorfulness = bgColorfulness;
+            //d.contrast       = contrast;
+            //d.isGrey       = isGrey;
+            //d.isBgGrey     = isBgGrey;
+            //d.isBgLight    = isBgLight;
+            //d.isColorfulReadable = isColorfulReadable;
+            //d.dimmed = true;  
+        }
+       
+        let minBgLuma = 160 - offset;
+
+        if(bgLuma < minBgLuma)
+        {
+            continue;
+        }
 
         if(settings.advDimming)
         {
-            let greyOffset = 16;
-            greyOffset -= colorfulness;
+            if(typeof this.id === "undefined") this.id = 0;
+
+            let greyOffset = -colorfulness;
     
-            let amount = settings.str + greyOffset + 35;
+            let amount = settings.str + greyOffset + 48;
             
             if(amount < 0) amount = 0;
 
             color = adjustBrightness(color, amount);
 
-            css += `[d__="${++this.c}"]{color:${color}!important}\n`;
+            css += `[d__="${++this.id}"]{color:${color}!important}\n`;
         }
 
-        node.setAttribute("d__", this.c);
+       node.setAttribute("d__", this.id);
     }
 
-    if(db) console.table(dbArr);
+    if(dbTime) console.timeEnd(dbTimeStr);
+
+    if(dbValues) console.table(dbArr);
 
     if(settings.advDimming) 
     {
         return css;
     }
-}
-
-/*Deprecated*/
-function enable() {
-    let css = t.nodeValue;
-    
-    css = css.replace(/_x_/g, "rgb");
-    css = css.replace(/_xxx_/, "black");
-    css = css.replace(/_o_/, "opacity:1");
-
-    t.nodeValue = css;
 }
 
 function createElem() {
@@ -277,13 +345,17 @@ function createElem() {
     t = doc.createTextNode("");
 }
 
-if (!document.getElementById("_fc_"))
+function init() 
 {
-    //this.isInit = true;
+    if(document.getElementById("_fc_")) 
+    {
+        x.appendChild(t);
+        return;
+    }
+
     createElem();
 
     const doc = document;
-    let db = 0;
 
     let init = (items) => {
 
@@ -294,9 +366,10 @@ if (!document.getElementById("_fc_"))
             skipHeadings: items.skipHeadings, 
             skipColoreds: items.skipColoreds, 
             advDimming:   items.advDimming, 
-            outline:      outline = false, 
+            outline:      false, 
             boldText:     items.boldText, 
             forcePlhdr:   items.forcePlhdr,
+            forceOpacity: items.forceOpacity,
         };
 
         let domain = extractRootDomain(String(window.location));
@@ -318,15 +391,13 @@ if (!document.getElementById("_fc_"))
             settings.outline      = wlItem.outline;
             settings.boldText     = wlItem.boldText;
             settings.forcePlhdr   = wlItem.forcePlhdr;
-        } 
-
-        let dbStr = "Website processed in";
-        if(db) console.time(dbStr);
+            settings.forceOpacity = wlItem.forceOpacity;
+        }
 
         let elems = [];
         elems = nodeListToArr(document.body.getElementsByTagName("*"));
 
-        settings.str = parseInt(settings.str);
+        settings.str = parseFloat(settings.str);
 
         if(items.smoothEnabled)
         {
@@ -345,15 +416,26 @@ if (!document.getElementById("_fc_"))
             y.appendChild(z);
         }
 
-        let boldStr = "";
-        if(settings.boldText) boldStr = "*{font-weight:bold!important}";
+        let opacityStr = "", boldStr = "", forceBlack = "", sizeStr = "", underlineStr = "";
 
-        let force = "";
-        if(settings.forcePlhdr) force = "color:black!important";
+        underlineStr = "[u__]{text-decoration:underline!important}";
 
-        let plhdrStr = `::placeholder{opacity:1!important;${force}}`;
+        if(settings.forceOpacity) 
+        {
+            opacityStr = "*,*[style]{opacity:1!important}"
+        }
+        
+        if(settings.boldText) 
+        {
+            boldStr = "*{font-weight:bold!important}";
+        }
+        
+        if(settings.forcePlhdr) 
+        {
+            forceBlack = "color:black!important";
+        }
 
-        let sizeStr = "";
+        let plhdrStr = `::placeholder{opacity:1!important;${forceBlack}}`;
 
         if(settings.size > 0) 
         {
@@ -365,33 +447,32 @@ if (!document.getElementById("_fc_"))
             }
         }
 
-        let borderStr = "[b__]{border:1px solid black!important}";
+        let borderStr = "[b__]{border:1px solid black!important}"; //Doesn't hurt to put it in, even if form borders are disabled
         
         let css = `
+        ${opacityStr}
         ${sizeStr}
         ${boldStr}
         ${plhdrStr}
         ${borderStr}
+        ${underlineStr}
         `;
 
-        css += '[d__]{';
+        css += '[d__],[d__][style]{';
 
-        if(settings.advDimming) {
+        if(settings.advDimming) 
+        {
             css += '}';
             css += process(elems, settings);
         }
-        else {
-            let colorStr = "color:black!important}";
+        else 
+        {
+            let colorStr = "color:black!important;opacity:1!important}";
             css += colorStr;
             process(elems, settings);
         }
 
         t.nodeValue = css;
-
-        if(db) console.timeEnd(dbStr);
-
-        /* New elements */
-        dbStr = "New elements processed in";
 
         let callback = (mutationsList) => {
 
@@ -399,9 +480,7 @@ if (!document.getElementById("_fc_"))
 
             mutationsList.forEach((mutation) => {
                 if(mutation.addedNodes && mutation.addedNodes.length > 0)
-                {
-                    if(db) console.time(dbStr);
-               
+                {           
                     for(let i = 0, len = mutation.addedNodes.length; i < len; ++i)
                     {
                         const node = mutation.addedNodes[i];
@@ -418,7 +497,6 @@ if (!document.getElementById("_fc_"))
                             else process(children, settings);
                         }
                     }
-                    if(db) console.timeEnd(dbStr);
                 }
             });
 
@@ -427,10 +505,10 @@ if (!document.getElementById("_fc_"))
                 css += newRules;
                 t.nodeValue = css;
             }
-        };//callback
+        };
 
         const observer = new MutationObserver(callback);
-    
+
         observer.observe(doc.body, {childList: true, subtree: true});
 
         x.appendChild(t);
@@ -438,7 +516,7 @@ if (!document.getElementById("_fc_"))
 
     let stored = [
         "whitelist", 
-        "blacklist", 
+        //"blacklist", 
         "globalStr",
         "size",
         "sizeThreshold", 
@@ -446,12 +524,14 @@ if (!document.getElementById("_fc_"))
         "skipHeadings", 
         "advDimming", 
         "boldText", 
+        "forceOpacity",
         "forcePlhdr",
         "smoothEnabled"
     ];
 
     browser.storage.local.get(stored, init);
 }
-else x.appendChild(t);
+
+init();
 
 chrome.runtime.sendMessage({from: "yo", t: true});
