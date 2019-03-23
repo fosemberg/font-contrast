@@ -186,7 +186,7 @@ input[type='checkbox'] {
 }
 .checkmark {
     position: absolute;
-    top: 0;
+    top: -1.7vw;
     left: 0;
     height: 1.1em;
     width: 1.1em;
@@ -210,13 +210,8 @@ input[type='checkbox'] {
 .container input:checked ~ .checkmark:after {
     display: block;
 }
-.container .checkmark:after {
-    /* 
-    left: 9px;
-    top: 5px;
-    width: 5px;
-    height: 10px;
-    */
+.container .checkmark:after 
+{
     left: 0.41em;
     top: 0.3em;
     width: 0.17em;
@@ -226,13 +221,16 @@ input[type='checkbox'] {
     border-width: 0 0.15em 0.15em 0;
     transform: rotate(45deg);
 }
-.settings{
+.settings
+{
+    display:flex;
+    flex-direction: row;
     position:relative;
 }
-.help-tip {
+.help-tip 
+{
     position:absolute;
-    top: -3px;
-    left: 35em;
+    left: 12em;
     text-align: center;
     background-color: black;
     border-radius: 50%;
@@ -242,6 +240,7 @@ input[type='checkbox'] {
     line-height: 1.6em;
     cursor: default;
 }
+/*
 #strTip{
     left: 10.5vw;
 }
@@ -272,6 +271,7 @@ input[type='checkbox'] {
 #plhdlrTip {
     left: 30.5vw;
 }
+*/
 .help-tip:before{
     content:'?';
     color:#fff;
