@@ -13,20 +13,12 @@ browser.runtime.onInstalled.addListener((details) => {
 
     if(details.reason === "install") 
     {
-        storage.set({"globalStr": 0.1});
+        storage.set({"globalStr": 0});
         storage.set({"size": 0});
-        storage.set({"sizeThreshold": 11});
-
+        storage.set({"sizeThreshold": 12});
         storage.set({"skipColoreds": true});
         browser.tabs.create({url: "Welcome.html"});
         //storage.set({"enableEverywhere": true});
-    }
-
-    if(details.reason === "update") 
-    {
-      storage.get("globalStr", (items) => {
-        if(items.globalStr > 1 || items.globalStr < 1) storage.set({"globalStr": 0.1});
-      });
     }
 });
 
