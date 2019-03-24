@@ -31,7 +31,7 @@ function calcLuma(rgbString)
      * itu.int/dms_pubrec/itu-r/rec/bt/R-REC-BT.709-6-201506-I!!PDF-E.pdf */
     let luma = r * 0.2126 + g * 0.7152 + b * 0.0722; 
 
-    luma = parseFloat(luma.toFixed(1));
+    luma = +luma.toFixed(1);
     
     return luma;
 }
@@ -116,7 +116,7 @@ function nodeListToArr(nl)
     return arr;
 }
 
-function adjustBrightness(rgbStr, str)
+function adjustBrightness(rgbStr, amount)
 {
     let colors = getRGBarr(rgbStr);
 
@@ -124,20 +124,21 @@ function adjustBrightness(rgbStr, str)
     {
         let col = colors[i];
 
-        col -= str;
+        col += amount;
+        col = parseInt(col);
 
         if (col > 255) col = 255;
         else if (col < 0) col = 0;
 
         colors[i] = col;
-	}
+    }
     
     let newStr = `rgb(${colors[0]}, ${colors[1]}, ${colors[2]})`;
 
     return newStr;
 }
 
-function process(nodes, settings, count)
+function process(nodes, settings)
 {
     ++process.c || (process.c = 1);
 
@@ -159,10 +160,9 @@ function process(nodes, settings, count)
     }
 
     /* Debugging */
-    let dbValues = 0;
-    let dbTime = 0;
     let dbArr = [];
-
+    let dbValues = 1;
+    let dbTime = 0;
     let dbTimeStr = "Process " + process.c + " time";
 
     if(dbTime) console.time(dbTimeStr);
@@ -215,12 +215,12 @@ function process(nodes, settings, count)
         let parent = node.parentNode;
 
         let bgLuma;
-        let bgIterations = 0;
+        //let bgIterations = 0;
         let minBgLuma = 160;
 
         while (bgColor === transparent && parent)
         {
-            ++bgIterations;
+            //++bgIterations;
    
             if(parent instanceof HTMLElement) 
             {
@@ -245,7 +245,6 @@ function process(nodes, settings, count)
                 bgLuma += 127; //This can provide OK results with the strength slider. @TODO: Less naive method.
             }
         }
-        let d = dbArr[i];
 
         let offset = settings.str;
 
@@ -260,26 +259,27 @@ function process(nodes, settings, count)
         if(dbValues)
         {
             debugObj = {
-                //tag,
+                tag,
                 classe,
                 luma,
                 bgLuma,
-                bgIterations,
+                colorfulness,
                 minBgLuma,
             };
 
             dbArr.push(debugObj);
         }
 
+        let contrast = Math.abs(bgLuma - luma);
+        contrast = +contrast.toFixed(2);
+
         if(settings.skipColoreds) 
         { 
-            let contrast = Math.abs(bgLuma - luma);
-
             let minContrast     = 132 + (offset / 2);
             let minLinkContrast = 96 + (offset / 3);
             let minColorfulness = 32;
 
-            Object.assign(debugObj, {contrast, minContrast, minLinkContrast});
+            if(dbValues) Object.assign(debugObj, {contrast, minContrast, minLinkContrast});
 
             if(tag === "a")
             {
@@ -301,11 +301,10 @@ function process(nodes, settings, count)
         {
             ++process.advDimmingCount || (process.advDimmingCount = 1);
 
-            let greyOffset = -colorfulness;
-    
-            let amount = settings.str + greyOffset + 48;
-            
-            if(amount < 0) amount = 0;
+            let greyOffset = 0;
+            if(colorfulness <= 32) greyOffset = 32;
+
+            let amount = -offset - greyOffset - contrast / 6;
 
             color = adjustBrightness(color, amount);
 
