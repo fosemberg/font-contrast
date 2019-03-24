@@ -3,7 +3,7 @@
  * License: https://github.com/Fushko/font-contrast#license
  */
 
-//"use strict";
+"use strict";
 var x, t;
 
 function getRGBarr(rgbString) 
@@ -137,9 +137,9 @@ function adjustBrightness(rgbStr, str)
     return newStr;
 }
 
-function process(nodes, settings)
+function process(nodes, settings, count)
 {
-    if(typeof this.c === "undefined") this.c = 0; //Doesn't work in strict mode
+    ++process.c || (process.c = 1);
 
     const black       = "rgb(0, 0, 0)";
     const white       = "rgb(255, 255, 255)";
@@ -158,20 +158,18 @@ function process(nodes, settings)
         tagsToSkip = tagsToSkip.concat(headings);
     }
 
-    let dbArr = [];
+    /* Debugging */
     let dbValues = 0;
     let dbTime = 0;
-    let dbTimeStr = "Process " + c++ + " time";
+    let dbArr = [];
+
+    let dbTimeStr = "Process " + process.c + " time";
 
     if(dbTime) console.time(dbTimeStr);
 
     for(let i = 0, len = nodes.length; i < len; ++i)
     {
         let node = nodes[i];
-
-        let debugObj = {};
-
-        dbArr.push(debugObj);
 
         let tag = String(node.localName), classe = String(node.className), id = String(node.id);
 
@@ -186,11 +184,11 @@ function process(nodes, settings)
 
         if(classe.startsWith("ytp") || ~classesToSkip.indexOf(classe)) continue;
      
-        let style   = getComputedStyle(node);
+        let style = getComputedStyle(node);
 
-        let color   = style.getPropertyValue("color");
+        let color = style.getPropertyValue("color");
 
-        if(color === "") continue; //@TODO: look into this further
+        if(color === "") continue; //@TODO: look into when this happens
 
         let bgColor = style.getPropertyValue("background-color");
 
@@ -217,9 +215,13 @@ function process(nodes, settings)
         let parent = node.parentNode;
 
         let bgLuma;
+        let bgIterations = 0;
+        let minBgLuma = 160;
 
         while (bgColor === transparent && parent)
         {
+            ++bgIterations;
+   
             if(parent instanceof HTMLElement) 
             {
                 bgColor = getComputedStyle(parent, null).getPropertyValue("background-color");
@@ -247,10 +249,27 @@ function process(nodes, settings)
 
         let offset = settings.str;
 
-      
         let luma = calcLuma(color);
 
         let colorfulness = calcColorfulness(color);
+
+        minBgLuma -= offset;
+
+        let debugObj = {};
+
+        if(dbValues)
+        {
+            debugObj = {
+                //tag,
+                classe,
+                luma,
+                bgLuma,
+                bgIterations,
+                minBgLuma,
+            };
+
+            dbArr.push(debugObj);
+        }
 
         if(settings.skipColoreds) 
         { 
@@ -260,46 +279,18 @@ function process(nodes, settings)
             let minLinkContrast = 96 + (offset / 3);
             let minColorfulness = 32;
 
+            Object.assign(debugObj, {contrast, minContrast, minLinkContrast});
+
             if(tag === "a")
             {
                 minContrast = minLinkContrast;
             }
-
-            d.contrast = contrast;
-            d.colorfulness = colorfulness;
 
             if(contrast > minContrast && colorfulness > minColorfulness)
             {
                 continue;
             }
         }
-
-        if(dbValues)
-        {
-            //d.tag          = tag;
-            //d.title        = node.title;
-            //d.class        = classe;
-            d.color        = color;
-            //d.bgColor      = bgColor;
-            //d.isFontLight  = isFontLight;
-            //d.isBgDark     = isBgDark;
-            //d.offset       = offset;
-            //d.linkOffset    = linkOffset;
-            //d.size         = size;
-            //d.luma           = luma;
-            //d.bgLuma         = bgLuma;
-            //d.lightness      = lightness;
-            //d.bgLightness    = bgLightness;
-            //d.bgColorfulness = bgColorfulness;
-            //d.contrast       = contrast;
-            //d.isGrey       = isGrey;
-            //d.isBgGrey     = isBgGrey;
-            //d.isBgLight    = isBgLight;
-            //d.isColorfulReadable = isColorfulReadable;
-            //d.dimmed = true;  
-        }
-       
-        let minBgLuma = 160 - offset;
 
         if(bgLuma < minBgLuma)
         {
@@ -308,7 +299,7 @@ function process(nodes, settings)
 
         if(settings.advDimming)
         {
-            if(typeof this.id === "undefined") this.id = 0;
+            ++process.advDimmingCount || (process.advDimmingCount = 1);
 
             let greyOffset = -colorfulness;
     
@@ -318,10 +309,10 @@ function process(nodes, settings)
 
             color = adjustBrightness(color, amount);
 
-            css += `[d__="${++this.id}"]{color:${color}!important}\n`;
+            css += `[d__="${process.advDimmingCount}"]{color:${color}!important}\n`;
         }
 
-       node.setAttribute("d__", this.id);
+       node.setAttribute("d__", process.advDimmingCount);
     }
 
     if(dbTime) console.timeEnd(dbTimeStr);
@@ -395,6 +386,7 @@ function init()
         }
 
         let elems = [];
+        
         elems = nodeListToArr(document.body.getElementsByTagName("*"));
 
         settings.str = parseFloat(settings.str);
