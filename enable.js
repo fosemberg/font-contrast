@@ -194,6 +194,27 @@ function getSelectors(forceOpacity, boldText, forcePlhdr, size, sizeLimit)
     `;
 }
 
+function filter(elems, tagsToSkip, url)
+{
+    elems = elems.filter(containsText);
+    elems = elems.filter((node) => !tagsToSkip.includes(node.localName));
+    
+    /* Temporary url exceptions */
+    switch(url)
+    {
+        case "youtube.com": {
+            //Filters youtube player. It doesn't get dimmed anyways, but it's to make sure it stays untouched by the one offset I have for now.
+            elems = elems.filter((node) => !node.className.startsWith("ytp")); 
+        }
+        case "genius.com": {
+            elems = elems.filter((node) => node.className !== "home_featured_story-date"); 
+        }
+    }
+
+    return elems;
+}
+
+
 function init() 
 {
     if(document.getElementById("_fc_")) 
@@ -207,16 +228,64 @@ function init()
     const doc = document;
 
     let init = (items) => {
+  
+        let {whitelist, globalStr: strength, size, sizeLimit, skipHeadings, skipColoreds, advDimming, outline, boldText, forcePlhdr, forceOpacity, smoothEnabled} = items;
 
-        let {whitelist, str, size, sizeLimit, skipHeadings, skipColoreds, advDimming, outline, boldText, forcePlhdr, forceOpacity, smoothEnabled} = items;
+        let url = extractRootDomain(String(window.location));
 
+        if(whitelist) 
+        {
+            let idx = whitelist.findIndex(o => o.url === url);
+
+            if(idx > -1) 
+            {
+                let wlItem = whitelist[idx];
+
+                strength     = wlItem.strength;
+                size         = wlItem.size;
+                sizeLimit    = wlItem.threshold;
+                skipHeadings = wlItem.skipHeadings;
+                skipColoreds = wlItem.skipColoreds; 
+                advDimming   = wlItem.advDimming;
+                outline      = wlItem.outline;
+                boldText     = wlItem.boldText;
+                forcePlhdr   = wlItem.forcePlhdr;
+                forceOpacity = wlItem.forceOpacity;
+            }
+        }
+
+        if(smoothEnabled)
+        {
+            const doc = document;
+            let y = doc.createElement("style");
+            doc.head.appendChild(y);
+            y.setAttribute("id", "_fct_");
+
+            let smoothSize;
+            size > 0 ? smoothSize = " font-size" : "";
+
+            let z = doc.createTextNode(`[d__],[d__][style]{
+                transition: color,${smoothSize} .25s linear!important;
+            }`);
+
+            y.appendChild(z);
+        }
+
+        let tagsToSkip = ["script", "link", "meta", "style", "img", "video", "#comment"];
+    
+        if(skipHeadings)
+        {  
+            tagsToSkip = tagsToSkip.concat(["h1", "h2", "h3"]);
+        }
+
+        let elems = [];
+        elems = nodeListToArr(document.body.getElementsByTagName("*"));
+
+        elems = filter(elems, tagsToSkip, url);  
+        
         const black       = "rgb(0, 0, 0)";
         const white       = "rgb(255, 255, 255)";
         const transparent = "rgba(0, 0, 0, 0)";
-    
-        let tagsToSkip = ["script", "link", "meta", "style", "img", "video", "#comment"];
-    
-        const classesToSkip = ["home_featured_story-date"]; //genius
 
         let callCount = 0;
         let advDimmingCount = 0;
@@ -225,16 +294,12 @@ function init()
         {
             let css = "";
         
-            if(skipHeadings)
-            {  
-                tagsToSkip = tagsToSkip.concat(["h1", "h2", "h3"]);
-            }
-        
             /* Debugging */
             let dbArr = [];
             let dbValues = 0;
-            let dbTime = 0;
-            let dbTimeStr = "Process " + callCount++ + " time";
+            
+            let dbTime = 1;
+            let dbTimeStr = "Process " + ++callCount + " time";
         
             if(dbTime) console.time(dbTimeStr);
         
@@ -245,18 +310,11 @@ function init()
                 let tag    = String(node.localName);
                 let classe = String(node.className);
                 let id     = String(node.id);
-
+ 
                 if(outline)
                 {
                     if(tag === "input" && node.type != "submit") node.setAttribute("b__", "");
                 }
-            
-                if(!containsText(node)       
-                  || !tag                  
-                  || ~tagsToSkip.indexOf(tag) 
-                  || classe.startsWith("ytp") 
-                  || ~classesToSkip.indexOf(classe)
-                ) continue;
         
                 let style = getComputedStyle(node);
         
@@ -288,12 +346,10 @@ function init()
         
                 let bgLuma;
                 let minBgLuma = 160;
-                //let bgIterations = 0;
                 let parent = node.parentNode;
 
                 while (bgColor === transparent && parent)
                 {
-                    //++bgIterations;
            
                     if(parent instanceof HTMLElement) 
                     {
@@ -318,14 +374,12 @@ function init()
                         bgLuma += 127; //This can provide OK results with the strength slider. @TODO: Less naive method.
                     }
                 }
-        
-                let offset = str;
-        
+
                 let luma = calcLuma(color);
         
                 let colorfulness = calcColorfulness(color);
         
-                minBgLuma -= offset;
+                minBgLuma -= strength;
         
                 let debugObj = {};
         
@@ -348,8 +402,8 @@ function init()
         
                 if(skipColoreds) 
                 { 
-                    let minContrast     = 132 + (offset / 2);
-                    let minLinkContrast = 96 + (offset / 3);
+                    let minContrast     = 132 + (strength / 2);
+                    let minLinkContrast = 96 + (strength / 3);
                     let minColorfulness = 32;
         
                     if(dbValues) Object.assign(debugObj, {contrast, minContrast, minLinkContrast});
@@ -369,16 +423,16 @@ function init()
                 {
                     continue;
                 }
-        
+
                 if(advDimming)
                 {
                     let greyOffset = 0;
                     if(colorfulness <= 32) greyOffset = 32;
         
-                    let amount = -offset - greyOffset - contrast / 6;
+                    let amount = -strength - greyOffset - contrast / 6;
         
                     color = adjustBrightness(color, amount);
-        
+
                     css += `[d__="${++advDimmingCount}"]{color:${color}!important}\n`;
                 }
         
@@ -389,50 +443,11 @@ function init()
         
             if(dbValues) console.table(dbArr);
         
-            if(advDimming) 
+            if(advDimmingCount) 
             {
                 return css;
             }
         };
-        
-        let idx = whitelist.findIndex(o => o.url === extractRootDomain(String(window.location)));
-
-        if(idx > -1) 
-        {
-            let wlItem = whitelist[idx];
-
-            str          = wlItem.strength;
-            size         = wlItem.size;
-            sizeLimit    = wlItem.threshold;
-            skipHeadings = wlItem.skipHeadings;
-            skipColoreds = wlItem.skipColoreds; 
-            advDimming   = wlItem.advDimming;
-            outline      = wlItem.outline;
-            boldText     = wlItem.boldText;
-            forcePlhdr   = wlItem.forcePlhdr;
-            forceOpacity = wlItem.forceOpacity;
-        }
-
-        let elems = [];
-        
-        elems = nodeListToArr(document.body.getElementsByTagName("*"));
-
-        if(smoothEnabled)
-        {
-            const doc = document;
-            let y = doc.createElement("style");
-            doc.head.appendChild(y);
-            y.setAttribute("id", "_fct_");
-
-            let smoothSize;
-            size > 0 ? smoothSize = " font-size" : "";
-
-            let z = doc.createTextNode(`[d__],[d__][style]{
-                transition: color,${smoothSize} .25s linear!important;
-            }`);
-
-            y.appendChild(z);
-        }
 
         let css = getSelectors(forceOpacity, boldText, forcePlhdr, size, sizeLimit)
 
@@ -466,7 +481,10 @@ function init()
                         if(node instanceof HTMLElement)
                         {
                             let children = [];
+
                             children = nodeListToArr(node.getElementsByTagName("*"));
+                            children = filter(children, tagsToSkip, url);  
+                            
                             children.push(node);
 
                             if(advDimming) 
