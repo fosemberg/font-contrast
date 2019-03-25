@@ -138,192 +138,6 @@ function adjustBrightness(rgbStr, amount)
     return newStr;
 }
 
-function process(nodes, settings)
-{
-    ++process.c || (process.c = 1);
-
-    const black       = "rgb(0, 0, 0)";
-    const white       = "rgb(255, 255, 255)";
-    const transparent = "rgba(0, 0, 0, 0)";
-
-    let tagsToSkip = ["script", "link", "meta", "style", "img", "video", "#comment"];
-
-    const classesToSkip = ["home_featured_story-date"]; //genius
-
-    const headings = ["h1", "h2", "h3"];
-
-    let css = "";
-
-    if(settings.skipHeadings)
-    {  
-        tagsToSkip = tagsToSkip.concat(headings);
-    }
-
-    /* Debugging */
-    let dbArr = [];
-    let dbValues = 1;
-    let dbTime = 0;
-    let dbTimeStr = "Process " + process.c + " time";
-
-    if(dbTime) console.time(dbTimeStr);
-
-    for(let i = 0, len = nodes.length; i < len; ++i)
-    {
-        let node = nodes[i];
-
-        let tag = String(node.localName), classe = String(node.className), id = String(node.id);
-
-        if(settings.outline && tag === "input" && node.type != "submit") 
-        {
-            node.setAttribute("b__", "");
-        }
-    
-        if(!containsText(node)) continue;
-
-        if(!tag || ~tagsToSkip.indexOf(tag)) continue;
-
-        if(classe.startsWith("ytp") || ~classesToSkip.indexOf(classe)) continue;
-     
-        let style = getComputedStyle(node);
-
-        let color = style.getPropertyValue("color");
-
-        if(color === "") continue; //@TODO: look into when this happens
-
-        let bgColor = style.getPropertyValue("background-color");
-
-        if(settings.size > 0) 
-        {
-            let size = style.getPropertyValue("font-size");
-            size = parseInt(size);    
-
-            if(size < settings.sizeLimit) 
-            {
-                node.setAttribute("s__", size); 
-            } 
-        }
-
-        if(color === white) 
-        {
-            //White colors are usually used behind videos, images, etc. where we have trouble detecting the appropriate bgColor.
-            //But skipping them isn't always a good idea, because they might still be better readable as black.
-            continue;
-        }
-
-        if(color === black || color === transparent) continue;
-
-        let parent = node.parentNode;
-
-        let bgLuma;
-        //let bgIterations = 0;
-        let minBgLuma = 160;
-
-        while (bgColor === transparent && parent)
-        {
-            //++bgIterations;
-   
-            if(parent instanceof HTMLElement) 
-            {
-                bgColor = getComputedStyle(parent, null).getPropertyValue("background-color");
-            }
-
-            parent = parent.parentNode;
-        }
-
-        if(bgColor === transparent) 
-        {
-            bgLuma = 236; //@TODO: Figure out how to approximate color in this case (if there is a way). We assume a light color for now.
-        }
-        else
-        {
-            bgLuma = calcLuma(bgColor);
-
-            if(bgLuma < 48 && bgColor.startsWith("rgba")) 
-            {
-                //The background color can sometimes be an rgba string such as: 'rgba(0, 0, 0, 0.01)', so we need to account for it. 
-                
-                bgLuma += 127; //This can provide OK results with the strength slider. @TODO: Less naive method.
-            }
-        }
-
-        let offset = settings.str;
-
-        let luma = calcLuma(color);
-
-        let colorfulness = calcColorfulness(color);
-
-        minBgLuma -= offset;
-
-        let debugObj = {};
-
-        if(dbValues)
-        {
-            debugObj = {
-                tag,
-                classe,
-                luma,
-                bgLuma,
-                colorfulness,
-                minBgLuma,
-            };
-
-            dbArr.push(debugObj);
-        }
-
-        let contrast = Math.abs(bgLuma - luma);
-        contrast = +contrast.toFixed(2);
-
-        if(settings.skipColoreds) 
-        { 
-            let minContrast     = 132 + (offset / 2);
-            let minLinkContrast = 96 + (offset / 3);
-            let minColorfulness = 32;
-
-            if(dbValues) Object.assign(debugObj, {contrast, minContrast, minLinkContrast});
-
-            if(tag === "a")
-            {
-                minContrast = minLinkContrast;
-            }
-
-            if(contrast > minContrast && colorfulness > minColorfulness)
-            {
-                continue;
-            }
-        }
-
-        if(bgLuma < minBgLuma)
-        {
-            continue;
-        }
-
-        if(settings.advDimming)
-        {
-            ++process.advDimmingCount || (process.advDimmingCount = 1);
-
-            let greyOffset = 0;
-            if(colorfulness <= 32) greyOffset = 32;
-
-            let amount = -offset - greyOffset - contrast / 6;
-
-            color = adjustBrightness(color, amount);
-
-            css += `[d__="${process.advDimmingCount}"]{color:${color}!important}\n`;
-        }
-
-       node.setAttribute("d__", process.advDimmingCount);
-    }
-
-    if(dbTime) console.timeEnd(dbTimeStr);
-
-    if(dbValues) console.table(dbArr);
-
-    if(settings.advDimming) 
-    {
-        return css;
-    }
-}
-
 function createElem() {
     const doc = document;
 
@@ -333,6 +147,51 @@ function createElem() {
     x.setAttribute("id", "_fc_");
 
     t = doc.createTextNode("");
+}
+
+function getSelectors(forceOpacity, boldText, forcePlhdr, size, sizeLimit)
+{
+    let opacityStr = "", boldStr = "", forceBlack = "", sizeStr = "", underlineStr = "";
+
+    underlineStr = "[u__]{text-decoration:underline!important}";
+
+    if(forceOpacity) 
+    {
+        opacityStr = "*,*[style]{opacity:1!important}"
+    }
+    
+    if(boldText) 
+    {
+        boldStr = "*{font-weight:bold!important}";
+    }
+    
+    if(forcePlhdr) 
+    {
+        forceBlack = "color:black!important";
+    }
+
+    let plhdrStr = `::placeholder{opacity:1!important;${forceBlack}}`;
+
+    if(size > 0) 
+    {
+        let i = 1;
+        
+        while(i <= sizeLimit) //threshold
+        {
+            sizeStr += `[s__="${i}"]{font-size: calc(${i++}px + ${size}%)!important}\n`;
+        }
+    }
+
+    let borderStr = "[b__]{border:1px solid black!important}"; //Doesn't hurt to put it in, even if form borders are disabled
+    
+    return `
+    ${opacityStr}
+    ${sizeStr}
+    ${boldStr}
+    ${plhdrStr}
+    ${borderStr}
+    ${underlineStr}
+    `;
 }
 
 function init() 
@@ -349,48 +208,216 @@ function init()
 
     let init = (items) => {
 
-        let settings = {
-            str:          items.globalStr,
-            size:         items.size,
-            sizeLimit:    items.sizeThreshold,
-            skipHeadings: items.skipHeadings, 
-            skipColoreds: items.skipColoreds, 
-            advDimming:   items.advDimming, 
-            outline:      false, 
-            boldText:     items.boldText, 
-            forcePlhdr:   items.forcePlhdr,
-            forceOpacity: items.forceOpacity,
-        };
+        let {whitelist, str, size, sizeLimit, skipHeadings, skipColoreds, advDimming, outline, boldText, forcePlhdr, forceOpacity, smoothEnabled} = items;
 
-        let domain = extractRootDomain(String(window.location));
+        const black       = "rgb(0, 0, 0)";
+        const white       = "rgb(255, 255, 255)";
+        const transparent = "rgba(0, 0, 0, 0)";
+    
+        let tagsToSkip = ["script", "link", "meta", "style", "img", "video", "#comment"];
+    
+        const classesToSkip = ["home_featured_story-date"]; //genius
 
-        let whitelist = items.whitelist || [];
+        let callCount = 0;
+        let advDimmingCount = 0;
+
+        let process = (nodes) => 
+        {
+            let css = "";
         
-        let idx = whitelist.findIndex(o => o.url === domain);
+            if(skipHeadings)
+            {  
+                tagsToSkip = tagsToSkip.concat(["h1", "h2", "h3"]);
+            }
+        
+            /* Debugging */
+            let dbArr = [];
+            let dbValues = 0;
+            let dbTime = 0;
+            let dbTimeStr = "Process " + callCount++ + " time";
+        
+            if(dbTime) console.time(dbTimeStr);
+        
+            for(let i = 0, len = nodes.length; i < len; ++i)
+            {
+                let node = nodes[i];
+        
+                let tag    = String(node.localName);
+                let classe = String(node.className);
+                let id     = String(node.id);
+
+                if(outline)
+                {
+                    if(tag === "input" && node.type != "submit") node.setAttribute("b__", "");
+                }
+            
+                if(!containsText(node)       
+                  || !tag                  
+                  || ~tagsToSkip.indexOf(tag) 
+                  || classe.startsWith("ytp") 
+                  || ~classesToSkip.indexOf(classe)
+                ) continue;
+        
+                let style = getComputedStyle(node);
+        
+                let color = style.getPropertyValue("color");
+        
+                if(color === "") continue; //@TODO: look into when this happens
+        
+                let bgColor = style.getPropertyValue("background-color");
+        
+                if(size > 0) 
+                {
+                    let size = style.getPropertyValue("font-size");
+                    size = parseInt(size);    
+        
+                    if(size < sizeLimit) 
+                    {
+                        node.setAttribute("s__", size); 
+                    } 
+                }
+        
+                if(color === white) 
+                {
+                    //White colors are usually used behind videos, images, etc. where we have trouble detecting the appropriate bgColor.
+                    //But skipping them isn't always a good idea, because they might still be better readable as black.
+                    continue;
+                }
+        
+                if(color === black || color === transparent) continue;
+        
+                let bgLuma;
+                let minBgLuma = 160;
+                //let bgIterations = 0;
+                let parent = node.parentNode;
+
+                while (bgColor === transparent && parent)
+                {
+                    //++bgIterations;
+           
+                    if(parent instanceof HTMLElement) 
+                    {
+                        bgColor = getComputedStyle(parent, null).getPropertyValue("background-color");
+                    }
+        
+                    parent = parent.parentNode;
+                }
+        
+                if(bgColor === transparent) 
+                {
+                    bgLuma = 236; //@TODO: Figure out how to approximate color in this case (if there is a way). We assume a light color for now.
+                }
+                else
+                {
+                    bgLuma = calcLuma(bgColor);
+        
+                    if(bgLuma < 48 && bgColor.startsWith("rgba")) 
+                    {
+                        //The background color can sometimes be an rgba string such as: 'rgba(0, 0, 0, 0.01)', so we need to account for it. 
+                        
+                        bgLuma += 127; //This can provide OK results with the strength slider. @TODO: Less naive method.
+                    }
+                }
+        
+                let offset = str;
+        
+                let luma = calcLuma(color);
+        
+                let colorfulness = calcColorfulness(color);
+        
+                minBgLuma -= offset;
+        
+                let debugObj = {};
+        
+                if(dbValues)
+                {
+                    debugObj = {
+                        tag,
+                        classe,
+                        luma,
+                        bgLuma,
+                        colorfulness,
+                        minBgLuma,
+                    };
+        
+                    dbArr.push(debugObj);
+                }
+        
+                let contrast = Math.abs(bgLuma - luma);
+                contrast = +contrast.toFixed(2);
+        
+                if(skipColoreds) 
+                { 
+                    let minContrast     = 132 + (offset / 2);
+                    let minLinkContrast = 96 + (offset / 3);
+                    let minColorfulness = 32;
+        
+                    if(dbValues) Object.assign(debugObj, {contrast, minContrast, minLinkContrast});
+        
+                    if(tag === "a")
+                    {
+                        minContrast = minLinkContrast;
+                    }
+        
+                    if(contrast > minContrast && colorfulness > minColorfulness)
+                    {
+                        continue;
+                    }
+                }
+        
+                if(bgLuma < minBgLuma)
+                {
+                    continue;
+                }
+        
+                if(advDimming)
+                {
+                    let greyOffset = 0;
+                    if(colorfulness <= 32) greyOffset = 32;
+        
+                    let amount = -offset - greyOffset - contrast / 6;
+        
+                    color = adjustBrightness(color, amount);
+        
+                    css += `[d__="${++advDimmingCount}"]{color:${color}!important}\n`;
+                }
+        
+               node.setAttribute("d__", advDimmingCount);
+            }
+        
+            if(dbTime) console.timeEnd(dbTimeStr);
+        
+            if(dbValues) console.table(dbArr);
+        
+            if(advDimming) 
+            {
+                return css;
+            }
+        };
+        
+        let idx = whitelist.findIndex(o => o.url === extractRootDomain(String(window.location)));
 
         if(idx > -1) 
         {
             let wlItem = whitelist[idx];
 
-            settings.str          = wlItem.strength;
-            settings.size         = wlItem.size;
-            settings.sizeLimit    = wlItem.threshold;
-            settings.skipHeadings = wlItem.skipHeadings;
-            settings.skipColoreds = wlItem.skipColoreds; 
-            settings.advDimming   = wlItem.advDimming;
-            settings.outline      = wlItem.outline;
-            settings.boldText     = wlItem.boldText;
-            settings.forcePlhdr   = wlItem.forcePlhdr;
-            settings.forceOpacity = wlItem.forceOpacity;
+            str          = wlItem.strength;
+            size         = wlItem.size;
+            sizeLimit    = wlItem.threshold;
+            skipHeadings = wlItem.skipHeadings;
+            skipColoreds = wlItem.skipColoreds; 
+            advDimming   = wlItem.advDimming;
+            outline      = wlItem.outline;
+            boldText     = wlItem.boldText;
+            forcePlhdr   = wlItem.forcePlhdr;
+            forceOpacity = wlItem.forceOpacity;
         }
 
         let elems = [];
         
         elems = nodeListToArr(document.body.getElementsByTagName("*"));
 
-        settings.str = parseFloat(settings.str);
-
-        if(items.smoothEnabled)
+        if(smoothEnabled)
         {
             const doc = document;
             let y = doc.createElement("style");
@@ -398,7 +425,7 @@ function init()
             y.setAttribute("id", "_fct_");
 
             let smoothSize;
-            settings.size > 0 ? smoothSize = " font-size" : "";
+            size > 0 ? smoothSize = " font-size" : "";
 
             let z = doc.createTextNode(`[d__],[d__][style]{
                 transition: color,${smoothSize} .25s linear!important;
@@ -407,60 +434,20 @@ function init()
             y.appendChild(z);
         }
 
-        let opacityStr = "", boldStr = "", forceBlack = "", sizeStr = "", underlineStr = "";
-
-        underlineStr = "[u__]{text-decoration:underline!important}";
-
-        if(settings.forceOpacity) 
-        {
-            opacityStr = "*,*[style]{opacity:1!important}"
-        }
-        
-        if(settings.boldText) 
-        {
-            boldStr = "*{font-weight:bold!important}";
-        }
-        
-        if(settings.forcePlhdr) 
-        {
-            forceBlack = "color:black!important";
-        }
-
-        let plhdrStr = `::placeholder{opacity:1!important;${forceBlack}}`;
-
-        if(settings.size > 0) 
-        {
-            let i = 1;
-            
-            while(i <= settings.sizeLimit) //threshold
-            {
-                sizeStr += `[s__="${i}"]{font-size: calc(${i++}px + ${settings.size}%)!important}\n`;
-            }
-        }
-
-        let borderStr = "[b__]{border:1px solid black!important}"; //Doesn't hurt to put it in, even if form borders are disabled
-        
-        let css = `
-        ${opacityStr}
-        ${sizeStr}
-        ${boldStr}
-        ${plhdrStr}
-        ${borderStr}
-        ${underlineStr}
-        `;
+        let css = getSelectors(forceOpacity, boldText, forcePlhdr, size, sizeLimit)
 
         css += '[d__],[d__][style]{';
 
-        if(settings.advDimming) 
+        if(advDimming) 
         {
             css += '}';
-            css += process(elems, settings);
+            css += process(elems);
         }
         else 
         {
             let colorStr = "color:black!important;opacity:1!important}";
             css += colorStr;
-            process(elems, settings);
+            process(elems);
         }
 
         t.nodeValue = css;
@@ -482,25 +469,24 @@ function init()
                             children = nodeListToArr(node.getElementsByTagName("*"));
                             children.push(node);
 
-                            if(settings[2]) {
-                                newRules += process(children, settings);
+                            if(advDimming) 
+                            {
+                                newRules += process(children);
                             }
-                            else process(children, settings);
+                            else process(children);
                         }
                     }
                 }
             });
 
-            if(settings[2] && newRules.length > 0)
+            if(advDimming && newRules.length > 0)
             {
                 css += newRules;
                 t.nodeValue = css;
             }
         };
 
-        const observer = new MutationObserver(callback);
-
-        observer.observe(doc.body, {childList: true, subtree: true});
+        new MutationObserver(callback).observe(doc.body, {childList: true, subtree: true});
 
         x.appendChild(t);
     };
