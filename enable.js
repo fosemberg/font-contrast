@@ -100,14 +100,7 @@ function extractRootDomain(url)
     return domain;
 }
 
-function containsText(node) {
-    //stackoverflow.com/a/27011142
-    return Array.prototype.some.call(node.childNodes, (child) => {
-        return child.nodeType === Node.TEXT_NODE && /\S/.test(child.nodeValue);
-    });
-}
-
-function nodeListToArr(nl)
+function nlToArr(nl)
 {
     let arr = [];
 
@@ -194,26 +187,12 @@ function getSelectors(forceOpacity, boldText, forcePlhdr, size, sizeLimit)
     `;
 }
 
-function filter(elems, tagsToSkip, url)
-{
-    elems = elems.filter(containsText);
-    elems = elems.filter((node) => !tagsToSkip.includes(node.localName));
-    
-    /* Temporary url exceptions */
-    switch(url)
-    {
-        case "youtube.com": {
-            //Filters youtube player. It doesn't get dimmed anyways, but it's to make sure it stays untouched by the one offset I have for now.
-            elems = elems.filter((node) => !node.className.startsWith("ytp")); 
-        }
-        case "genius.com": {
-            elems = elems.filter((node) => node.className !== "home_featured_story-date"); 
-        }
-    }
-
-    return elems;
+function containsText(node) {
+    //stackoverflow.com/a/27011142
+    return Array.prototype.some.call(node.childNodes, (child) => {
+        return child.nodeType === Node.TEXT_NODE && /\S/.test(child.nodeValue);
+    });
 }
-
 
 function init() 
 {
@@ -229,7 +208,7 @@ function init()
 
     let init = (items) => {
   
-        let {whitelist, globalStr: strength, size, sizeLimit, skipHeadings, skipColoreds, advDimming, outline, boldText, forcePlhdr, forceOpacity, smoothEnabled} = items;
+        let {whitelist, globalStr: strength, size, sizeLimit, skipHeadings, skipColoreds: avoidReadable, advDimming, outline, boldText, forcePlhdr, forceOpacity, smoothEnabled} = items;
 
         let url = extractRootDomain(String(window.location));
 
@@ -264,14 +243,14 @@ function init()
             let smoothSize;
             size > 0 ? smoothSize = " font-size" : "";
 
-            let z = doc.createTextNode(`[d__],[d__][style]{
+            let z = doc.createTextNode(`[d__],[d__][style*]{
                 transition: color,${smoothSize} .25s linear!important;
             }`);
 
             y.appendChild(z);
         }
 
-        let tagsToSkip = ["script", "link", "meta", "style", "img", "video", "#comment"];
+        let tagsToSkip = ["script", "link", "meta", "style", "img", "video", "source", "#comment", "br"];
     
         if(skipHeadings)
         {  
@@ -279,16 +258,65 @@ function init()
         }
 
         let elems = [];
-        elems = nodeListToArr(document.body.getElementsByTagName("*"));
 
-        elems = filter(elems, tagsToSkip, url);  
-        
-        const black       = "rgb(0, 0, 0)";
-        const white       = "rgb(255, 255, 255)";
-        const transparent = "rgba(0, 0, 0, 0)";
+        elems = nlToArr(document.body.getElementsByTagName("*"));
+
+        const colorsToSkip = ["rgb(0, 0, 0)", "rgb(255, 255, 255)", "rgba(0, 0, 0, 0)", ""];
+
+        const [black, white, transparent] = colorsToSkip;
 
         let callCount = 0;
         let advDimmingCount = 0;
+
+        let filterElems = (elems) => {
+            elems = elems.filter(containsText)
+                         .filter((node) => !tagsToSkip.includes(node.localName))
+
+            /* Temporary url exceptions */
+            switch(url)
+            {
+                case "youtube.com": {
+                    //Filters youtube player. It doesn't get dimmed anyways, but it's to make sure it stays untouched by the one offset I have for now.
+                    elems = elems.filter((node) => !node.className.startsWith("ytp"));
+                    break;
+                }
+                case "genius.com": {
+                    elems = elems.filter((node) => node.className !== "home_featured_story-date"); 
+                    break;
+                }
+            }
+        
+            return elems;
+        };
+
+        let getBgLuma = (bgColor, parent) => {
+
+            let bgLuma = 236;
+
+            while (bgColor === transparent && parent)
+            {
+                if(parent instanceof HTMLElement) 
+                {
+                    bgColor = getComputedStyle(parent, null).getPropertyValue("background-color");
+                }
+    
+                parent = parent.parentNode;
+            }
+    
+            if(bgColor !== transparent) 
+            {
+                bgLuma = calcLuma(bgColor);
+    
+                if(bgLuma < 48 && bgColor.startsWith("rgba")) 
+                {
+                    /*The background color can sometimes be an rgba string such as: 'rgba(0, 0, 0, 0.01)', so we need to account for it. 
+                     *This can provide OK results with the strength slider. @TODO: Less naive method.*/
+                    bgLuma += 127; 
+                }
+            }
+
+            return bgLuma;
+        };
 
         let process = (nodes) => 
         {
@@ -297,33 +325,26 @@ function init()
             /* Debugging */
             let dbArr = [];
             let dbValues = 0;
-            
             let dbTime = 1;
-            let dbTimeStr = "Process " + ++callCount + " time";
-        
+
+            let dbTimeStr = `Process ${callCount++} time`;
             if(dbTime) console.time(dbTimeStr);
+
+            nodes = filterElems(nodes);
         
             for(let i = 0, len = nodes.length; i < len; ++i)
             {
                 let node = nodes[i];
         
-                let tag    = String(node.localName);
+                let tag = String(node.localName);
                 let classe = String(node.className);
-                let id     = String(node.id);
+                //let id = String(node.id);
  
                 if(outline)
                 {
                     if(tag === "input" && node.type != "submit") node.setAttribute("b__", "");
                 }
-        
-                let style = getComputedStyle(node);
-        
-                let color = style.getPropertyValue("color");
-        
-                if(color === "") continue; //@TODO: look into when this happens
-        
-                let bgColor = style.getPropertyValue("background-color");
-        
+
                 if(size > 0) 
                 {
                     let size = style.getPropertyValue("font-size");
@@ -335,51 +356,14 @@ function init()
                     } 
                 }
         
-                if(color === white) 
-                {
-                    //White colors are usually used behind videos, images, etc. where we have trouble detecting the appropriate bgColor.
-                    //But skipping them isn't always a good idea, because they might still be better readable as black.
-                    continue;
-                }
+                let style = getComputedStyle(node);
+                let color = style.getPropertyValue("color");
         
-                if(color === black || color === transparent) continue;
+                if(colorsToSkip.includes(color)) continue;
         
-                let bgLuma;
-                let minBgLuma = 160;
-                let parent = node.parentNode;
-
-                while (bgColor === transparent && parent)
-                {
-           
-                    if(parent instanceof HTMLElement) 
-                    {
-                        bgColor = getComputedStyle(parent, null).getPropertyValue("background-color");
-                    }
-        
-                    parent = parent.parentNode;
-                }
-        
-                if(bgColor === transparent) 
-                {
-                    bgLuma = 236; //@TODO: Figure out how to approximate color in this case (if there is a way). We assume a light color for now.
-                }
-                else
-                {
-                    bgLuma = calcLuma(bgColor);
-        
-                    if(bgLuma < 48 && bgColor.startsWith("rgba")) 
-                    {
-                        //The background color can sometimes be an rgba string such as: 'rgba(0, 0, 0, 0.01)', so we need to account for it. 
-                        
-                        bgLuma += 127; //This can provide OK results with the strength slider. @TODO: Less naive method.
-                    }
-                }
-
-                let luma = calcLuma(color);
-        
-                let colorfulness = calcColorfulness(color);
-        
-                minBgLuma -= strength;
+                let bgColor = style.getPropertyValue("background-color");
+                let bgLuma = getBgLuma(bgColor, node.parentNode);
+                let minBgLuma = 160 - strength;
         
                 let debugObj = {};
         
@@ -397,10 +381,15 @@ function init()
                     dbArr.push(debugObj);
                 }
         
+                if(bgLuma < minBgLuma) continue;
+
+                let luma = calcLuma(color);
+                let colorfulness = calcColorfulness(color);
+
                 let contrast = Math.abs(bgLuma - luma);
                 contrast = +contrast.toFixed(2);
-        
-                if(skipColoreds) 
+               
+                if(avoidReadable)
                 { 
                     let minContrast     = 132 + (strength / 2);
                     let minLinkContrast = 96 + (strength / 3);
@@ -418,11 +407,6 @@ function init()
                         continue;
                     }
                 }
-        
-                if(bgLuma < minBgLuma)
-                {
-                    continue;
-                }
 
                 if(advDimming)
                 {
@@ -430,10 +414,8 @@ function init()
                     if(colorfulness <= 32) greyOffset = 32;
         
                     let amount = -strength - greyOffset - contrast / 6;
-        
-                    color = adjustBrightness(color, amount);
 
-                    css += `[d__="${++advDimmingCount}"]{color:${color}!important}\n`;
+                    css += `[d__="${++advDimmingCount}"]{color:${adjustBrightness(color, amount)}!important}\n`;
                 }
         
                node.setAttribute("d__", advDimmingCount);
@@ -482,8 +464,7 @@ function init()
                         {
                             let children = [];
 
-                            children = nodeListToArr(node.getElementsByTagName("*"));
-                            children = filter(children, tagsToSkip, url);  
+                            children = nlToArr(node.getElementsByTagName("*")); 
                             
                             children.push(node);
 
