@@ -142,11 +142,16 @@ function createElem() {
     t = doc.createTextNode("");
 }
 
-function getSelectors(forceOpacity, boldText, forcePlhdr, size, sizeLimit)
+function buildCSS(advDimming, forceOpacity, boldText, forcePlhdr, size, sizeLimit)
 {
-    let opacityStr = "", boldStr = "", forceBlack = "", sizeStr = "", underlineStr = "";
+    let dimStr = "", opacityStr = "", boldStr = "", forceBlack = "", sizeStr = "", underlineStr = "";
 
     underlineStr = "[u__]{text-decoration:underline!important}";
+
+    if(!advDimming) 
+    {
+        dimStr = "[d__],[d__][style]{color:black!important;opacity:1!important}";
+    }
 
     if(forceOpacity) 
     {
@@ -176,8 +181,9 @@ function getSelectors(forceOpacity, boldText, forcePlhdr, size, sizeLimit)
     }
 
     let borderStr = "[b__]{border:1px solid black!important}"; //Doesn't hurt to put it in, even if form borders are disabled
-    
+
     return `
+    ${dimStr}
     ${opacityStr}
     ${sizeStr}
     ${boldStr}
@@ -224,7 +230,7 @@ function init()
                 size         = wlItem.size;
                 sizeLimit    = wlItem.threshold;
                 skipHeadings = wlItem.skipHeadings;
-                skipColoreds = wlItem.skipColoreds; 
+                avoidReadable = wlItem.skipColoreds; 
                 advDimming   = wlItem.advDimming;
                 outline      = wlItem.outline;
                 boldText     = wlItem.boldText;
@@ -250,52 +256,49 @@ function init()
             y.appendChild(z);
         }
 
-        let tagsToSkip = ["script", "link", "meta", "style", "img", "video", "source", "#comment", "br"];
-    
-        if(skipHeadings)
-        {  
-            tagsToSkip = tagsToSkip.concat(["h1", "h2", "h3"]);
-        }
+        let nodes = [];
 
-        let elems = [];
+        nodes = nlToArr(document.body.getElementsByTagName("*"));
 
-        elems = nlToArr(document.body.getElementsByTagName("*"));
-
+        let tagsToSkip = ["SCRIPT", "LINK", "SECTION", "STYLE", "IMG", "VIDEO", "SOURCE"];
         const colorsToSkip = ["rgb(0, 0, 0)", "rgb(255, 255, 255)", "rgba(0, 0, 0, 0)", ""];
 
-        const [black, white, transparent] = colorsToSkip;
+        if(skipHeadings)
+        {  
+            tagsToSkip = tagsToSkip.concat(["H1", "H2", "H3"]);
+        }
 
-        let callCount = 0;
-        let advDimmingCount = 0;
+        const transparent = colorsToSkip[2];
 
-        let filterElems = (elems) => {
-            elems = elems.filter(containsText)
-                         .filter((node) => !tagsToSkip.includes(node.localName))
+        let filterNodes = (nodes) => {
+
+            nodes = nodes.filter(node => { return !tagsToSkip.includes(String(node.nodeName)) });
+            //nodes = nodes.filter(containsText);  //We can't add form borders if we do this now
 
             /* Temporary url exceptions */
             switch(url)
             {
                 case "youtube.com": {
                     //Filters youtube player. It doesn't get dimmed anyways, but it's to make sure it stays untouched by the one offset I have for now.
-                    elems = elems.filter((node) => !node.className.startsWith("ytp"));
+                    nodes = nodes.filter(node => {return !String(node.className).startsWith("ytp")});
                     break;
                 }
                 case "genius.com": {
-                    elems = elems.filter((node) => node.className !== "home_featured_story-date"); 
+                    nodes = nodes.filter(node => node.className !== "home_featured_story-date"); 
                     break;
                 }
             }
         
-            return elems;
+            return nodes;
         };
 
         let getBgLuma = (bgColor, parent) => {
 
-            let bgLuma = 236;
+            let bgLuma = 236; //assume light-ish color if we can't find it
 
             while (bgColor === transparent && parent)
             {
-                if(parent instanceof HTMLElement) 
+                if(parent instanceof Element) 
                 {
                     bgColor = getComputedStyle(parent, null).getPropertyValue("background-color");
                 }
@@ -316,7 +319,10 @@ function init()
             }
 
             return bgLuma;
-        };
+        }
+
+        let callCount = 0
+        let advDimmingCount = 0;
 
         let process = (nodes) => 
         {
@@ -325,25 +331,27 @@ function init()
             /* Debugging */
             let dbArr = [];
             let dbValues = 0;
-            let dbTime = 1;
+            let dbTime = 0;
 
             let dbTimeStr = `Process ${callCount++} time`;
             if(dbTime) console.time(dbTimeStr);
+  
+            nodes = filterNodes(nodes);
 
-            nodes = filterElems(nodes);
-        
             for(let i = 0, len = nodes.length; i < len; ++i)
             {
-                let node = nodes[i];
-        
-                let tag = String(node.localName);
+                let node   = nodes[i];
+                let tag    = String(node.nodeName); 
                 let classe = String(node.className);
-                //let id = String(node.id);
  
                 if(outline)
                 {
-                    if(tag === "input" && node.type != "submit") node.setAttribute("b__", "");
+                    if(tag === "INPUT" && node.type !== "submit") node.setAttribute("b__", "");
                 }
+
+                if(!containsText(node)) continue;
+              
+                let style = getComputedStyle(node);
 
                 if(size > 0) 
                 {
@@ -356,15 +364,17 @@ function init()
                     } 
                 }
         
-                let style = getComputedStyle(node);
                 let color = style.getPropertyValue("color");
         
                 if(colorsToSkip.includes(color)) continue;
         
                 let bgColor = style.getPropertyValue("background-color");
                 let bgLuma = getBgLuma(bgColor, node.parentNode);
-                let minBgLuma = 160 - strength;
-        
+                let minBgLuma = 160 - strength; 
+
+                let luma = calcLuma(color);
+                let colorfulness = calcColorfulness(color);
+
                 let debugObj = {};
         
                 if(dbValues)
@@ -372,19 +382,14 @@ function init()
                     debugObj = {
                         tag,
                         classe,
-                        luma,
-                        bgLuma,
-                        colorfulness,
-                        minBgLuma,
+                        //luma,
+                        //bgLuma,
+                        //colorfulness,
+                        //minBgLuma,
                     };
         
                     dbArr.push(debugObj);
                 }
-        
-                if(bgLuma < minBgLuma) continue;
-
-                let luma = calcLuma(color);
-                let colorfulness = calcColorfulness(color);
 
                 let contrast = Math.abs(bgLuma - luma);
                 contrast = +contrast.toFixed(2);
@@ -397,7 +402,7 @@ function init()
         
                     if(dbValues) Object.assign(debugObj, {contrast, minContrast, minLinkContrast});
         
-                    if(tag === "a")
+                    if(tag === "A")
                     {
                         minContrast = minLinkContrast;
                     }
@@ -407,6 +412,8 @@ function init()
                         continue;
                     }
                 }
+
+                if(bgLuma < minBgLuma) continue;
 
                 if(advDimming)
                 {
@@ -421,31 +428,16 @@ function init()
                node.setAttribute("d__", advDimmingCount);
             }
         
-            if(dbTime) console.timeEnd(dbTimeStr);
-        
+            if(dbTime) console.timeEnd(dbTimeStr);     
             if(dbValues) console.table(dbArr);
         
-            if(advDimmingCount) 
-            {
-                return css;
-            }
+            return css;
         };
 
-        let css = getSelectors(forceOpacity, boldText, forcePlhdr, size, sizeLimit)
+        let css = "";
 
-        css += '[d__],[d__][style]{';
-
-        if(advDimming) 
-        {
-            css += '}';
-            css += process(elems);
-        }
-        else 
-        {
-            let colorStr = "color:black!important;opacity:1!important}";
-            css += colorStr;
-            process(elems);
-        }
+        css += process(nodes);
+        css += buildCSS(advDimming, forceOpacity, boldText, forcePlhdr, size, sizeLimit)
 
         t.nodeValue = css;
 
