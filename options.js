@@ -3,6 +3,7 @@
  * License: https://github.com/Fushko/font-contrast#license
  */
 
+"use strict";
 const storage = chrome.storage.local;
 const doc = document;
 
@@ -114,67 +115,49 @@ doc.getElementById("welcome").addEventListener("click", () => {
 
 updateSettings();
 
-function isInputValid(domain, whitelist, blacklist, isWhitelist) 
+function updateSettings() 
 {
-    if(domain.length < 3) {
-        message("Input is too short.", isWhitelist);
-        return false;
-    }
-    else if(domain.length > 80) {
-        message("Exceeded limit of 80 characters.", isWhitelist);
-        return false;
-    }
- 
-    if(isWhitelist) 
-    {
-        if(whitelist.length > 255) {
-            message('Exceeded limit of 256 items.', isWhitelist);
-            return false;
-        }
+    storage.get(['globalStr', 'size', 'sizeThreshold'], (items) => {
+        strSlider.value       = items.globalStr;
+        strLabel.innerText    = items.globalStr;
 
-        if(whitelist.findIndex(o => o.url === domain) > -1) {
-            message("It's already there.", isWhitelist);
-            return false;
-        }
+        sizeSlider.value      = items.size;
+        sizeLabel.innerText   = items.size;
+        
+        threshSlider.value    = items.sizeThreshold;
+        threshLabel.innerText = items.sizeThreshold;
+    });
 
-        let idx = blacklist.findIndex(o => o.url === domain);
+    storage.get(['skipHeadings','skipColoreds', 'enableEverywhere', 'smoothEnabled', 'advDimming', 'boldText', 'forcePlhdr', 'forceOpacity'], (items) => {
+        doc.getElementById("skipHeadings").checked  = items.skipHeadings;
+        doc.getElementById("skipColoreds").checked  = items.skipColoreds;
+        doc.getElementById("defaultEn").checked     = items.enableEverywhere;
+        doc.getElementById("smoothEnabled").checked = items.smoothEnabled;
+        doc.getElementById("advDimming").checked    = items.advDimming;
+        doc.getElementById("boldText").checked      = items.boldText;
+        doc.getElementById("forcePlhdr").checked    = items.forcePlhdr;
+        doc.getElementById("forceOpacity").checked  = items.forceOpacity;
+    });
 
-        if(idx > -1) 
+    storage.get(['whitelist', 'blacklist'], (items) => {
+        let len;
+        
+        if(items.whitelist) 
         {
-            blacklist.splice(idx, 1);
-            storage.set({"blacklist": blacklist});
-
-            BLtbody.deleteRow(idx);
-            BLrowCount--;
-            if(!BLrowCount) BLheader.style.display = "none";
-        }
-    }
-    else 
-    {
-        if(blacklist.length > 255) {
-            message('Exceeded limit of 256 items.', isWhitelist);
-            return false;
+            len = items.whitelist.length;
+            len > 0 ? header.style.display = "table-row" : header.style.display = "none";
+            
+            for(let i = 0, len = items.whitelist.length; i < len; i++) addRow(true, items.whitelist[i].url);
         }
 
-        if(blacklist.findIndex(o => o.url === domain) > -1) {
-            message("It's already there.", isWhitelist);
-            return false;
-        }
-
-        let idx = whitelist.findIndex(o => o.url === domain);
-
-        if(idx > -1)
+        if(items.blacklist) 
         {
-            whitelist.splice(idx, 1);
-            storage.set({"whitelist": whitelist});
-
-            WLtbody.deleteRow(idx);
-            rowCount--;
-            if(!rowCount) header.style.display = "none";
+            len = items.blacklist.length;
+            len > 0 ? BLheader.style.display = "table-row": BLheader.style.display = "none";
+            
+            for(let i = 0, len = items.blacklist.length; i < len; i++) addRow(false, items.blacklist[i].url);
         }
-    }
-
-    return true;
+    });
 }
 
 function addDomain(isWhitelist) 
@@ -261,7 +244,6 @@ function addRow(isWhitelist, url)
             });
 
             strCell.addEventListener("keyup", (e) => {
-                //console.log("which: " + e.which + " keyCode: " + e.keyCode + " charCode: " + e.charCode);
                 let newStr = strCell.innerText;
 
                 newStr = parseInt(newStr);
@@ -295,11 +277,11 @@ function addRow(isWhitelist, url)
 
                 let allowedKeys = [8, 37, 39, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 173];
 
-                let isAllowed = allowedKeys.indexOf(e.keyCode) > -1 || allowedKeys.indexOf(e.which) > -1;
+                let isAllowed = allowedKeys.includes(e.keyCode) || allowedKeys.includes(e.which);
             
-                if(!isAllowed) {
-                //console.log("Key not allowed");
-                e.preventDefault();
+                if(!isAllowed)
+                {
+                    e.preventDefault();
                 }
             });
 
@@ -360,49 +342,67 @@ function addRow(isWhitelist, url)
     }
 }
 
-function updateSettings() 
+function isInputValid(domain, whitelist, blacklist, isWhitelist) 
 {
-    storage.get(['globalStr', 'size', 'sizeThreshold'], (items) => {
-        strSlider.value       = items.globalStr;
-        strLabel.innerText    = items.globalStr;
-
-        sizeSlider.value      = items.size;
-        sizeLabel.innerText   = items.size;
-        
-        threshSlider.value    = items.sizeThreshold;
-        threshLabel.innerText = items.sizeThreshold;
-    });
-
-    storage.get(['skipHeadings','skipColoreds', 'enableEverywhere', 'smoothEnabled', 'advDimming', 'boldText', 'forcePlhdr', 'forceOpacity'], (items) => {
-        doc.getElementById("skipHeadings").checked  = items.skipHeadings;
-        doc.getElementById("skipColoreds").checked  = items.skipColoreds;
-        doc.getElementById("defaultEn").checked     = items.enableEverywhere;
-        doc.getElementById("smoothEnabled").checked = items.smoothEnabled;
-        doc.getElementById("advDimming").checked    = items.advDimming;
-        doc.getElementById("boldText").checked      = items.boldText;
-        doc.getElementById("forcePlhdr").checked    = items.forcePlhdr;
-        doc.getElementById("forceOpacity").checked  = items.forceOpacity;
-    });
-
-    storage.get(['whitelist', 'blacklist'], (items) => {
-        let len;
-        
-        if(items.whitelist) 
-        {
-            len = items.whitelist.length;
-            len > 0 ? header.style.display = "table-row" : header.style.display = "none";
-            
-            for(let i = 0, len = items.whitelist.length; i < len; i++) addRow(true, items.whitelist[i].url);
+    if(domain.length < 3) {
+        message("Input is too short.", isWhitelist);
+        return false;
+    }
+    else if(domain.length > 80) {
+        message("Exceeded limit of 80 characters.", isWhitelist);
+        return false;
+    }
+ 
+    if(isWhitelist) 
+    {
+        if(whitelist.length > 255) {
+            message('Exceeded limit of 256 items.', isWhitelist);
+            return false;
         }
 
-        if(items.blacklist) 
-        {
-            len = items.blacklist.length;
-            len > 0 ? BLheader.style.display = "table-row": BLheader.style.display = "none";
-            
-            for(let i = 0, len = items.blacklist.length; i < len; i++) addRow(false, items.blacklist[i].url);
+        if(whitelist.find(o => o.url === domain)) {
+            message("It's already there.", isWhitelist);
+            return false;
         }
-    });
+
+        let idx = blacklist.findIndex(o => o.url === domain);
+
+        if(idx > -1) 
+        {
+            blacklist.splice(idx, 1);
+            storage.set({"blacklist": blacklist});
+
+            BLtbody.deleteRow(idx);
+            BLrowCount--;
+            if(!BLrowCount) BLheader.style.display = "none";
+        }
+    }
+    else 
+    {
+        if(blacklist.length > 255) {
+            message('Exceeded limit of 256 items.', isWhitelist);
+            return false;
+        }
+
+        if(blacklist.find(o => o.url === domain)) {
+            message("It's already there.", isWhitelist);
+            return false;
+        }
+
+        let idx = whitelist.findIndex(o => o.url === domain);
+
+        if(idx > -1)
+        {
+            whitelist.splice(idx, 1);
+            storage.set({"whitelist": whitelist});
+
+            WLtbody.deleteRow(idx);
+            rowCount--;
+            if(!rowCount) header.style.display = "none";
+        }
+    }
+
+    return true;
 }
 
 function reset(isWhitelist) {
