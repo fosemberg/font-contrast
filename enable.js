@@ -186,7 +186,7 @@ function init(items)
     let applyFilters = (nodes) => 
     {
         nodes = nodes.filter(node => { return !tagsToSkip.includes(String(node.nodeName)) });
-        nodes = nodes.filter(containsText);
+        //nodes = nodes.filter(containsText);
 
         /* Temporary url exceptions */
         switch(url)
@@ -259,28 +259,28 @@ function init(items)
             } );
         }
 
-        nodes = applyFilters(nodes);
-        
-        let css = "";
-        let elemsToSkip = [];
+        let nodesToSkip = [];
 
-        for(let node of nodes)
-        {
+        nodes = applyFilters(nodes, nodesToSkip);
+
+        let css = "";
+
+        let dimNode = (node) => {
             let tag = String(node.nodeName); 
             let classe = String(node.className);
 
             let style = getComputedStyle(node);
 
-            let bgImage = style.getPropertyValue("background-image");
+            let imgPresent = style.getPropertyValue("background-image") !== "none";
 
-            if(bgImage !== "none") 
+            if(imgPresent) //Skip all descendants
             {            
-                elemsToSkip = nlToArr(node.getElementsByTagName("*"));
+                nodesToSkip = nodesToSkip.concat(nlToArr(node.getElementsByTagName("*")));
             }
 
-            if(elemsToSkip.includes(node)) continue;
+            if(nodesToSkip.includes(node)) return;
 
-            //if(!containsText(node)) continue;
+            if(!containsText(node)) return;
 
             if(size)
             {
@@ -295,7 +295,7 @@ function init(items)
     
             let color = style.getPropertyValue("color");
             
-            if(colorsToSkip.includes(color)) continue;
+            if(colorsToSkip.includes(color)) return;
 
             let bgColor = style.getPropertyValue("background-color");
             let bgLuma = getBgLuma(node.parentNode, bgColor);
@@ -322,7 +322,7 @@ function init(items)
 
             let minBgLuma = 160 - strength;
 
-            if(bgLuma < minBgLuma) continue;
+            if(bgLuma < minBgLuma) return;
 
             let contrast = Math.abs(bgLuma - luma);
 
@@ -343,7 +343,7 @@ function init(items)
     
                 if(contrast > minContrast && colorfulness > minColorfulness)
                 {
-                    continue;
+                    return;
                 }
             }
 
@@ -359,6 +359,12 @@ function init(items)
             }
     
            node.setAttribute("d__", advDimmingCount);
+        };
+
+        for(let node of nodes) 
+        {
+            setTimeout(dimNode, 0, node); //This doesn't make the browser hang on pages with tens of thousands of nodes
+           // dimNode(node);
         }
 
         if(dbTime) console.timeEnd(dbTimeStr);   
@@ -388,7 +394,7 @@ function init(items)
                     {
                         let children = [];
 
-                        children = nlToArr(node.getElementsByTagName("*")); 
+                        children = Array.from(node.getElementsByTagName("*")); 
                         
                         children.push(node);
 
