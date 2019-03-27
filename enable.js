@@ -150,7 +150,7 @@ function buildCSS(advDimming, forceOpacity, boldText, forcePlhdr, size, sizeLimi
 
     if(!advDimming) 
     {
-        dimStr = "[d__],[d__][style]{color:black!important;opacity:1!important}";
+        dimStr = "[d__],[d__][style]{color:black!important}";
     }
 
     if(forceOpacity) 
@@ -261,7 +261,7 @@ function init()
         nodes = nlToArr(document.body.getElementsByTagName("*"));
 
         let tagsToSkip = ["SCRIPT", "LINK", "SECTION", "STYLE", "IMG", "VIDEO", "SOURCE"];
-        const colorsToSkip = ["rgb(0, 0, 0)", "rgb(255, 255, 255)", "rgba(0, 0, 0, 0)", ""];
+        const colorsToSkip = ["rgb(0, 0, 0)", "", "rgba(0, 0, 0, 0)", ""];
 
         if(skipHeadings)
         {  
@@ -284,7 +284,7 @@ function init()
                     break;
                 }
                 case "genius.com": {
-                    nodes = nodes.filter(node => node.className !== "home_featured_story-date"); 
+                    //nodes = nodes.filter(node => node.className !== "home_featured_story-date"); 
                     break;
                 }
             }
@@ -331,27 +331,38 @@ function init()
             /* Debugging */
             let dbArr = [];
             let dbValues = 0;
-            let dbTime = 0;
+            let dbTime = 1;
 
             let dbTimeStr = `Process ${callCount++} time`;
             if(dbTime) console.time(dbTimeStr);
   
             nodes = filterNodes(nodes);
 
+            let elemsToSkip = [];
+
             for(let i = 0, len = nodes.length; i < len; ++i)
             {
                 let node   = nodes[i];
                 let tag    = String(node.nodeName); 
                 let classe = String(node.className);
- 
+
                 if(outline)
                 {
                     if(tag === "INPUT" && node.type !== "submit") node.setAttribute("b__", "");
                 }
+                
+                let style = getComputedStyle(node);
+
+                let bgImage = style.getPropertyValue("background-image");
+
+                if(bgImage !== "none") 
+                {            
+                    elemsToSkip = nlToArr(node.getElementsByTagName("*"));
+                }
+
+                if(elemsToSkip.includes(node)) continue;
 
                 if(!containsText(node)) continue;
-              
-                let style = getComputedStyle(node);
 
                 if(size > 0) 
                 {
