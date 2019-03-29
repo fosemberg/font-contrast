@@ -347,7 +347,7 @@ function init(items)
         //https://stackoverflow.com/a/10344560
         function processLargeArray(array) 
         {
-            let chunk = 500;
+            let chunk = 350;
             let idx = 0;
             let len = array.length;
 
@@ -359,7 +359,7 @@ function init(items)
                     dimNode(array[idx++]);
                 }
 
-                if(idx < len) setTimeout(doChunk, 1);
+                if(idx < len) setTimeout(doChunk, 0);
             };
 
             doChunk();    
