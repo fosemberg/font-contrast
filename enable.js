@@ -189,7 +189,7 @@ function init(items)
                 break;
             }
             case "facebook.com": {
-                nodes = nodes.filter(node => node.className !== "home_featured_story-date"); 
+                colorsToSkip[1] = "rgb(255, 255, 255)";
                 break;
             }
         }
