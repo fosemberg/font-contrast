@@ -171,7 +171,7 @@ function init(items)
 
     nodes = nlToArr(document.body.getElementsByTagName("*"));
 
-    let tagsToSkip = ["SCRIPT", "LINK", "SECTION", "STYLE", "IMG", "VIDEO", "SOURCE"];
+    let tagsToSkip = ["SCRIPT", "LINK", "STYLE", "IMG", "VIDEO", "SOURCE"];
     const colorsToSkip = ["rgb(0, 0, 0)", "", "rgba(0, 0, 0, 0)", ""];
     const transparent = colorsToSkip[2];
 
