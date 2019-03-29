@@ -113,20 +113,12 @@ function buildCSS(advDimming, forceOpacity, boldText, forcePlhdr, size, sizeLimi
 
     let borderStr = "[b__]{border:1px solid black!important}"; //Doesn't hurt to put it in, even if form borders are disabled
 
-    return `
-    ${dimStr}
-    ${opacityStr}
-    ${sizeStr}
-    ${boldStr}
-    ${plhdrStr}
-    ${borderStr}
-    ${underlineStr}
-    `;
+    return `${dimStr}${opacityStr}${sizeStr}${boldStr}${plhdrStr}${borderStr}${underlineStr}`;
 }
 
 function containsText(node) {
     //stackoverflow.com/a/27011142
-    return Array.prototype.some.call(node.childNodes, (child) => {
+    return Array.some(node.childNodes, (child) => {
         return child.nodeType === Node.TEXT_NODE && /\S/.test(child.nodeValue);
     });
 }
@@ -196,8 +188,8 @@ function init(items)
                 nodes = nodes.filter(node => {return !String(node.className).startsWith("ytp")});
                 break;
             }
-            case "genius.com": {
-                //nodes = nodes.filter(node => node.className !== "home_featured_story-date"); 
+            case "facebook.com": {
+                nodes = nodes.filter(node => node.className !== "home_featured_story-date"); 
                 break;
             }
         }
@@ -242,7 +234,7 @@ function init(items)
         /* Debugging */
         let dbArr = [];
         let dbValues = 0;
-        let dbTime = 1;
+        let dbTime = 0;
         let dbTimeStr = `Process ${callCount++} time`;
         if(dbTime) console.time(dbTimeStr);
         /********* */
@@ -250,20 +242,13 @@ function init(items)
         if(skipHeadings)
         {  
             tagsToSkip = tagsToSkip.concat(["H1", "H2", "H3"]);
-        }    
-
-        if(outline)
-        {
-            nodes = nodes.map((node) => {
-                    if(node.nodeName === "INPUT" && node.type !== "submit") node.setAttribute("b__", "");
-            } );
         }
 
         let nodesToSkip = [];
 
         nodes = applyFilters(nodes, nodesToSkip);
 
-        let css = "";
+        let cssBuffer = [];
 
         let dimNode = (node) => {
             let tag = String(node.nodeName); 
@@ -276,32 +261,20 @@ function init(items)
             if(imgPresent) //Skip all descendants
             {            
                 nodesToSkip = nodesToSkip.concat(nlToArr(node.getElementsByTagName("*")));
+                return;
             }
 
             if(nodesToSkip.includes(node)) return;
 
+            if(outline && node.nodeName === "INPUT" && node.type !== "submit") node.setAttribute("b__", "");
             if(!containsText(node)) return;
-
-            if(size)
-            {
-                let size = style.getPropertyValue("font-size");
-                size = parseInt(size);    
-    
-                if(size < sizeLimit) 
-                {
-                    node.setAttribute("s__", size); 
-                } 
-            }    
     
             let color = style.getPropertyValue("color");
-            
             if(colorsToSkip.includes(color)) return;
 
-            let bgColor = style.getPropertyValue("background-color");
-            let bgLuma = getBgLuma(node.parentNode, bgColor);
-
-            let luma = calcLuma(color);
-
+            let bgColor      = style.getPropertyValue("background-color");
+            let bgLuma       = getBgLuma(node.parentNode, bgColor);
+            let luma         = calcLuma(color);
             let colorfulness = calcColorfulness(color);
 
             let debugObj = {};
@@ -320,12 +293,9 @@ function init(items)
                 dbArr.push(debugObj);
             }
 
-            let minBgLuma = 160 - strength;
-
-            if(bgLuma < minBgLuma) return;
+            if(bgLuma < 160 - strength) return;
 
             let contrast = Math.abs(bgLuma - luma);
-
             contrast = +contrast.toFixed(2);
            
             if(avoidReadable)
@@ -347,38 +317,72 @@ function init(items)
                 }
             }
 
+            let css = "";
             if(advDimming)
             {
                 let greyOffset = 0;
-
                 if(colorfulness <= 32) greyOffset = 32;
     
                 let amount = -strength - greyOffset - contrast / 6;
 
-                css += `[d__="${++advDimmingCount}"]{color:${adjustBrightness(color, amount)}!important}\n`;
+                css = `[d__="${++advDimmingCount}"]{color:${adjustBrightness(color, amount)}!important}\n`;
             }
-    
+
            node.setAttribute("d__", advDimmingCount);
+
+           if(size)
+           {
+               let size = style.getPropertyValue("font-size");
+               size = parseInt(size);    
+   
+               if(size < sizeLimit) 
+               {
+                   node.setAttribute("s__", size); 
+               } 
+           }
+
+           return css;
         };
 
-        for(let node of nodes) 
+        //https://stackoverflow.com/a/10344560
+        function processLargeArray(array) 
         {
-            setTimeout(dimNode, 0, node); //This doesn't make the browser hang on pages with tens of thousands of nodes
-           // dimNode(node);
+            let chunk = 500;
+            let idx = 0;
+            let len = array.length;
+
+            let doChunk = () => {
+                let count = chunk;
+
+                while (count-- && idx < len) 
+                {
+                    dimNode(array[idx++]);
+                }
+
+                if(idx < len) setTimeout(doChunk, 1);
+            };
+
+            doChunk();    
         }
 
-        if(dbTime) console.timeEnd(dbTimeStr);   
+        processLargeArray(nodes);
 
+        if(dbTime) console.timeEnd(dbTimeStr);
         if(dbValues) console.table(dbArr);
     
-        return css;
+        return cssBuffer;
     }
 
-    let css = buildCSS(advDimming, forceOpacity, boldText, forcePlhdr, size, sizeLimit)
-    css += process(nodes);
+    let css = buildCSS(advDimming, forceOpacity, boldText, forcePlhdr, size, sizeLimit);
+
+    let buf = [];
+    buf = process(nodes);
+    console.log(buf);
 
     t.nodeValue = css;
     
+    ///////////////////////////////////////////////////////////////////////////////////New elements
+
     let callback = (mutationsList) => {
 
         let newRules = "";
