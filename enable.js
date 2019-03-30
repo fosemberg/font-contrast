@@ -175,6 +175,8 @@ function start(items)
     const colorsToSkip = ["rgb(0, 0, 0)", "", "rgba(0, 0, 0, 0)", ""];
     const transparent = colorsToSkip[2];
 
+    let procImg = true;
+
     let applyExceptions = (nodes) => 
     {
         /* Temporary url exceptions */
@@ -183,10 +185,12 @@ function start(items)
             case "youtube.com": {
                 //Filters youtube player. It doesn't get dimmed anyways, but it's to make sure it stays untouched by the one offset I have for now.
                 nodes = nodes.filter(node => {return !String(node.className).startsWith("ytp")});
+                procImg = false;
                 break;
             }
             case "facebook.com": {
                 colorsToSkip[1] = "rgb(255, 255, 255)";
+                procImg = false;
                 break;
             }
         }
@@ -231,7 +235,7 @@ function start(items)
         /* Debugging */
         let dbArr = [];
         let dbValues = 0;
-        let dbTime = 1;
+        let dbTime = 0;
         let dbTimeStr = `Process ${callCount++} time`;
         if(dbTime) console.time(dbTimeStr);
         /********* */
@@ -252,15 +256,18 @@ function start(items)
             let classe = String(node.className);
 
             let style = getComputedStyle(node);
-            let imgPresent = style.getPropertyValue("background-image") !== "none";
+            
+            if(procImg) 
+            {
+                if(style.getPropertyValue("background-image") !== "none") //Skip all descendants
+                {            
+                    nodesToSkip = nodesToSkip.concat(nlToArr(node.getElementsByTagName("*")));
+                    return;
+                }
 
-            if(imgPresent) //Skip all descendants
-            {            
-                nodesToSkip = nodesToSkip.concat(nlToArr(node.getElementsByTagName("*")));
-                return;
+                if(nodesToSkip.includes(node)) return;
             }
-
-            if(nodesToSkip.includes(node)) return;
+           
             if(outline && node.nodeName === "INPUT" && node.type !== "submit") node.setAttribute("b__", "");
 
             if(!containsText(node)) return;
