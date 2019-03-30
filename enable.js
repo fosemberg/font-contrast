@@ -171,7 +171,7 @@ function start(items)
 
     nodes = nlToArr(document.body.getElementsByTagName("*"));
 
-    let tagsToSkip = ["SCRIPT", "LINK", "STYLE", "IMG", "VIDEO", "SOURCE"];
+    let tagsToSkip = ["SCRIPT", "LINK", "STYLE", "IMG", "VIDEO", "SOURCE", "CANVAS"];
     const colorsToSkip = ["rgb(0, 0, 0)", "", "rgba(0, 0, 0, 0)", ""];
     const transparent = colorsToSkip[2];
 
@@ -247,8 +247,6 @@ function start(items)
         let nodesToSkip = [];
 
         nodes = applyFilters(nodes, nodesToSkip);
-
-        let cssBuffer = [];
 
         let dimNode = (node, callback) => {
             let tag = String(node.nodeName); 
@@ -347,16 +345,17 @@ function start(items)
             let chunk = 200;
             let idx = 0;
             let len = arr.length;
+            let buf = [];
 
             let doChunk = () => {
                 let count = chunk;
 
                 while (count-- && idx < len) 
                 {
-                    dimNode(arr[idx++], (cssStr) => {
-                        cssBuffer.push(cssStr)
-                    });
+                    dimNode(arr[idx++], cssStr => buf.push(cssStr));
                 }
+
+                if(advDimming && buf.length > 0) t.nodeValue += buf.join('');
 
                 if(idx < len) setTimeout(doChunk, 0);
             };
@@ -368,44 +367,28 @@ function start(items)
 
         if(dbTime) console.timeEnd(dbTimeStr);
         if(dbValues) console.table(dbArr);
-    
-        return cssBuffer;
     }
 
     let css = buildCSS(advDimming, forceOpacity, boldText, forcePlhdr, size, sizeLimit);
-
-    let buf = [];
-    buf = process(nodes);
-
-    css += buf.join('');
     t.nodeValue = css;
-    
+
+    process(nodes);
+
     ///////////////////////////////////////////////////////////////////////////////////New elements
 
     let callback = (mutationsList) => {
-
-        let buf = [];
-
-        mutationsList.forEach((mutation) => {
-            if(mutation.addedNodes && mutation.addedNodes.length > 0)
-            {           
-                for(let i = 0, len = mutation.addedNodes.length; i < len; ++i)
+        mutationsList.forEach((mutation) => {       
+                for(let node of mutation.addedNodes)
                 {
-                    const node = mutation.addedNodes[i];
-
                     if(node instanceof Element)
                     {
                         let nodes = Array.from(node.getElementsByTagName("*"));
                         nodes.push(node);
                  
-                        buf = process(nodes);
-                        css += buf.join('');
-                        if(advDimming) t.nodeValue = css;
+                        process(nodes);
                     }
                 }
-            }
         });
-
     };
 
     new MutationObserver(callback).observe(document.body, {childList: true, subtree: true});
