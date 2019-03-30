@@ -175,11 +175,8 @@ function start(items)
     const colorsToSkip = ["rgb(0, 0, 0)", "", "rgba(0, 0, 0, 0)", ""];
     const transparent = colorsToSkip[2];
 
-    let applyFilters = (nodes) => 
+    let applyExceptions = (nodes) => 
     {
-        nodes = nodes.filter(node => { return !tagsToSkip.includes(String(node.nodeName)) });
-        //nodes = nodes.filter(containsText);
-
         /* Temporary url exceptions */
         switch(url)
         {
@@ -234,7 +231,7 @@ function start(items)
         /* Debugging */
         let dbArr = [];
         let dbValues = 0;
-        let dbTime = 0;
+        let dbTime = 1;
         let dbTimeStr = `Process ${callCount++} time`;
         if(dbTime) console.time(dbTimeStr);
         /********* */
@@ -246,10 +243,12 @@ function start(items)
 
         let nodesToSkip = [];
 
-        nodes = applyFilters(nodes, nodesToSkip);
+        nodes = applyExceptions(nodes);
 
         let dimNode = (node, callback) => {
-            let tag = String(node.nodeName); 
+            let tag = String(node.nodeName);
+            if(tagsToSkip.includes(tag)) return;
+
             let classe = String(node.className);
 
             let style = getComputedStyle(node);
@@ -377,7 +376,9 @@ function start(items)
     ///////////////////////////////////////////////////////////////////////////////////New elements
 
     let callback = (mutationsList) => {
-        mutationsList.forEach((mutation) => {       
+        mutationsList.forEach((mutation) => {
+            if(mutation.addedNodes.length > 0) 
+            {
                 for(let node of mutation.addedNodes)
                 {
                     if(node instanceof Element)
@@ -388,6 +389,7 @@ function start(items)
                         process(nodes);
                     }
                 }
+            }
         });
     };
 
