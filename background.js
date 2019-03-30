@@ -20,106 +20,107 @@ browser.runtime.onInstalled.addListener((details) => {
         browser.tabs.create({url: "Welcome.html"});
         //storage.set({"enableEverywhere": true});
     }
+    if(details.reason === "update") {
+      //Set new values if they aren't there
+    }
 });
 
 browser.runtime.onStartup.addListener(() => { storage.remove('tabs');});
 
 browser.browserAction.onClicked.addListener((tab) =>
 {
-  chrome.browserAction.getTitle({tabId: tab.id}, (title) => {
-    if (title === titleApply) {
-      chrome.browserAction.setIcon({tabId: tab.id, path: 'icons/on.png'});
-      chrome.browserAction.setTitle({title: titleRemove, tabId: tab.id});
-      chrome.tabs.executeScript(tab.id, {allFrames: false, file: 'enable.js', runAt:"document_end"});
-    }
-    else {
-      chrome.browserAction.setIcon({tabId: tab.id, path: 'icons/off.png'});
-      chrome.browserAction.setTitle({title: titleApply, tabId: tab.id});
-      chrome.tabs.executeScript(tab.id, {allFrames: false, file: 'disable.js', runAt:"document_end"});
-    }
-  });
+    chrome.browserAction.getTitle({tabId: tab.id}, (title) => {
+        if(title === titleApply) 
+        {
+            chrome.browserAction.setIcon({tabId: tab.id, path: 'icons/on.png'});
+            chrome.browserAction.setTitle({title: titleRemove, tabId: tab.id});
+
+            chrome.tabs.executeScript(tab.id, {allFrames: false, file: 'enable.js', runAt:"document_end"});
+        }
+        else 
+        {
+            chrome.browserAction.setIcon({tabId: tab.id, path: 'icons/off.png'});
+            chrome.browserAction.setTitle({title: titleApply, tabId: tab.id});
+
+            chrome.tabs.executeScript(tab.id, {allFrames: false, file: 'disable.js', runAt:"document_end"});
+        }
+    });
 });
 
 browser.tabs.onRemoved.addListener((tab) => {
-  tabs.splice(tabs.indexOf(tab.id), 1);
-  storage.set({'tabs': tabs});
+    tabs.splice(tabs.indexOf(tab.id), 1);
+    storage.set({'tabs': tabs});
 });
 
 browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
-  if (request.from === "yo" && !request.t) 
-  {
-    chrome.browserAction.setIcon({tabId: sender.tab.id, path: 'icons/off.png'});
-    chrome.browserAction.setTitle({title: titleApply, tabId: sender.tab.id});
-   
-    tabs.splice(tabs.indexOf(sender.tab.id), 1);
-    storage.set({'tabs': tabs});
-  }
-  else {
-    chrome.browserAction.setIcon({tabId: sender.tab.id, path: 'icons/on.png'});
-    chrome.browserAction.setTitle({title: titleRemove, tabId: sender.tab.id});
-
-    if (tabs.indexOf(sender.tab.id) === -1) {
-      tabs.push(sender.tab.id);
-      storage.set({'tabs': tabs});
+    if(request.from === "yo" && !request.t) 
+    {
+        chrome.browserAction.setIcon({tabId: sender.tab.id, path: 'icons/off.png'});
+        chrome.browserAction.setTitle({title: titleApply, tabId: sender.tab.id});
+    
+        tabs.splice(tabs.indexOf(sender.tab.id), 1);
+        storage.set({'tabs': tabs});
     }
-  }
+    else 
+    {
+        chrome.browserAction.setIcon({tabId: sender.tab.id, path: 'icons/on.png'});
+        chrome.browserAction.setTitle({title: titleRemove, tabId: sender.tab.id});
+
+        if(tabs.indexOf(sender.tab.id) === -1) 
+        {
+            tabs.push(sender.tab.id);
+            storage.set({'tabs': tabs});
+        }
+    }
 });
 
 browser.tabs.onUpdated.addListener((tabId,changeInfo,tab) => {
 
-  /*if(tab.url.startsWith("http"))*/browser.pageAction.show(tab.id);
+    /*if(tab.url.startsWith("http"))*/browser.pageAction.show(tab.id);
 
-  if(changeInfo.status === "complete")
-  {
-    let domain = extractRootDomain(tab.url);
+    if(changeInfo.status === "complete")
+    {
+        let domain = extractRootDomain(tab.url);
 
-    storage.get('blacklist', (items) => {
-      let blacklist = items.blacklist || [];
-      
-      let idx = blacklist.findIndex(o => o.url === domain);
+        storage.get('blacklist', (items) => {
+            let blacklist = items.blacklist || [];
 
-      if(idx > -1) {
-        chrome.browserAction.setIcon({tabId: tabId, path: 'icons/off.png'});
-        chrome.browserAction.setTitle({title: titleApply, tabId: tabId});
-        return;
-      }
-      else {
-        storage.get('enableEverywhere', (items) => {
-          
-          if(items.enableEverywhere) {
-            chrome.tabs.executeScript(tabId, {allFrames: false, file: 'enable.js', runAt:"document_end"});
-            return;
-          }
-          else 
-          {
-            let isEnteredByUser = false;
-    
-            storage.get('whitelist', (items) => {
-              if(items.whitelist)
-              {
-                let whitelist = items.whitelist || [];
-
-                let idx = whitelist.findIndex(o => o.url === domain);
-
-                if(idx > -1) isEnteredByUser = true;
-              }
-              else urls = [];
-            });
-    
-            storage.get('tabs', (items) =>
+            if(blacklist.find(o => o.url === domain)) 
             {
-              if(items.tabs) tabs = items.tabs;
-              
-              if (~tabs.indexOf(tabId) || isEnteredByUser) {
-                chrome.tabs.executeScript(tabId, {allFrames: false, file: 'enable.js', runAt:"document_end"});
-              }
-            });
-          }
+                chrome.browserAction.setIcon({tabId: tabId, path: 'icons/off.png'});
+                chrome.browserAction.setTitle({title: titleApply, tabId: tabId});
+                return;
+            }
+            else 
+            {
+                storage.get('enableEverywhere', (items) => {
+                    if(items.enableEverywhere) 
+                    {
+                        chrome.tabs.executeScript(tabId, {allFrames: false, file: 'enable.js', runAt:"document_end"});
+                        return;
+                    }
+                    else 
+                    {
+                        storage.get(['whitelist', 'tabs'], (items) => {
+                            if(items.whitelist)
+                            {
+                                let whitelist = items.whitelist || [];
+
+                                if(items.tabs) tabs = items.tabs;
+                            
+                                if (~tabs.indexOf(tabId) || whitelist.find(o => o.url === domain)) 
+                                {
+                                    chrome.tabs.executeScript(tabId, {allFrames: false, file: 'enable.js', runAt:"document_end"});
+                                }
+                            }
+                            else urls = [];
+                        });
+                    }
+                });
+            }
         });
-      }
-    });
-  }//if
+    }
 });
 
 function extractHostname(url) {

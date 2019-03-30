@@ -182,6 +182,20 @@ let callback = (tabs) => {
             items.forceOpacity
         ];
 
+        strSlider.value           = items.globalStr;
+        sizeSlider.value          = items.size;
+        thresholdSlider.value     = items.sizeThreshold;
+        strLabel.innerText        = items.globalStr;
+        sizeLabel.innerText       = items.size;
+        thresholdLabel.innerText  = items.sizeThreshold;
+
+        skipHeadings.checked      = globalChecks[0];
+        skipColoreds.checked      = globalChecks[1];
+        advDimming.checked        = globalChecks[2];
+        boldText.checked          = globalChecks[3];
+        forcePlhdr.checked        = globalChecks[4];
+        forceOpacity.checked      = globalChecks[5];
+
         if (blacklist.findIndex(o => o.url === domain) > -1)
         {
             BLcheck.checked = true;
@@ -211,23 +225,7 @@ let callback = (tabs) => {
 
                 WLcheck.checked = true;
                 BLcheck.checked = false;
-            }
-            else 
-            {
-                strSlider.value           = items.globalStr;
-                sizeSlider.value          = items.size;
-                thresholdSlider.value     = items.sizeThreshold;
-                strLabel.innerText        = items.globalStr;
-                sizeLabel.innerText       = items.size;
-                thresholdLabel.innerText  = items.sizeThreshold;
-
-                skipHeadings.checked      = globalChecks[0];
-                skipColoreds.checked      = globalChecks[1];
-                advDimming.checked        = globalChecks[2];
-                boldText.checked          = globalChecks[3];
-                forcePlhdr.checked        = globalChecks[4];
-                forceOpacity.checked      = globalChecks[5];
-            }
+            }       
         }
 
         let wlItem = {

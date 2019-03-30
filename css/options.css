@@ -74,8 +74,8 @@ body {
     font-size:1.7em;
     font-family: 'Crimson Text', serif;
 }
-button {
-    font-size: 0.7em;
+button 
+{
     padding: 0.35em 1em;
     cursor: pointer;
     font-family:"Lato";
@@ -83,15 +83,16 @@ button {
     transition: background-color 0.1s ease-out;
     color:black;
     background-color: #eee;
-    border: 0.15em solid black;
+    border: 0.32vw solid black;
 }
-button:hover {
+button:hover 
+{
     color: white;
     background-color: black;
 }
-button.remove {
+button.remove 
+{
     padding: 0.4em 0.8em;
-    font-size: 0.83em;
     word-break: keep-all;
 }
 textarea {
@@ -100,7 +101,7 @@ textarea {
     font-family: 'Crimson Text', serif; 
     font-style: italic; 
     font-size: 1.7em;
-    border: 0.07em solid black;
+    border: 0.32vw solid black;
     border-radius: 0.15em;
     white-space: nowrap;
     color:black;
@@ -116,11 +117,13 @@ table {
     overflow:scroll;
 }
 table th:nth-child(1) { /*URL*/
+    font-size: 0.9em;
     width: 90%;
     word-break: keep-all; 
     text-align: left 
 }
 table th:nth-child(2) { /*Strength label*/
+    font-size: 0.9em;
     width: 10%;
     word-break: keep-all; 
     text-align: center;
@@ -163,6 +166,7 @@ tr:hover {
     font-style: italic;
     padding-top: 0.35em;
     padding-bottom: 0.25em;
+    transition: background-color ease-out 0.1s;
     color: black
 }
 ::placeholder {
