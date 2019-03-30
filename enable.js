@@ -123,7 +123,7 @@ function containsText(node) {
     });
 }
 
-function init(items) 
+function start(items) 
 {
     let {whitelist, globalStr: strength, size, sizeLimit, skipHeadings, skipColoreds: avoidReadable, advDimming, outline, boldText, forcePlhdr, forceOpacity, smoothEnabled} = items;
 
@@ -250,12 +250,11 @@ function init(items)
 
         let cssBuffer = [];
 
-        let dimNode = (node) => {
+        let dimNode = (node, callback) => {
             let tag = String(node.nodeName); 
             let classe = String(node.className);
 
             let style = getComputedStyle(node);
-
             let imgPresent = style.getPropertyValue("background-image") !== "none";
 
             if(imgPresent) //Skip all descendants
@@ -265,8 +264,8 @@ function init(items)
             }
 
             if(nodesToSkip.includes(node)) return;
-
             if(outline && node.nodeName === "INPUT" && node.type !== "submit") node.setAttribute("b__", "");
+
             if(!containsText(node)) return;
     
             let color = style.getPropertyValue("color");
@@ -317,7 +316,6 @@ function init(items)
                 }
             }
 
-            let css = "";
             if(advDimming)
             {
                 let greyOffset = 0;
@@ -325,7 +323,7 @@ function init(items)
     
                 let amount = -strength - greyOffset - contrast / 6;
 
-                css = `[d__="${++advDimmingCount}"]{color:${adjustBrightness(color, amount)}!important}\n`;
+                callback(`[d__='${++advDimmingCount}']{color:${adjustBrightness(color, amount)}!important}`);
             }
 
            node.setAttribute("d__", advDimmingCount);
@@ -341,22 +339,23 @@ function init(items)
                } 
            }
 
-           return css;
         };
 
         //https://stackoverflow.com/a/10344560
-        function processLargeArray(array) 
+        function processLargeArray(arr) 
         {
-            let chunk = 350;
+            let chunk = 200;
             let idx = 0;
-            let len = array.length;
+            let len = arr.length;
 
             let doChunk = () => {
                 let count = chunk;
 
                 while (count-- && idx < len) 
                 {
-                    dimNode(array[idx++]);
+                    dimNode(arr[idx++], (cssStr) => {
+                        cssBuffer.push(cssStr)
+                    });
                 }
 
                 if(idx < len) setTimeout(doChunk, 0);
@@ -377,15 +376,15 @@ function init(items)
 
     let buf = [];
     buf = process(nodes);
-    console.log(buf);
 
+    css += buf.join('');
     t.nodeValue = css;
     
     ///////////////////////////////////////////////////////////////////////////////////New elements
 
     let callback = (mutationsList) => {
 
-        let newRules = "";
+        let buf = [];
 
         mutationsList.forEach((mutation) => {
             if(mutation.addedNodes && mutation.addedNodes.length > 0)
@@ -394,25 +393,19 @@ function init(items)
                 {
                     const node = mutation.addedNodes[i];
 
-                    if(node instanceof HTMLElement)
+                    if(node instanceof Element)
                     {
-                        let children = [];
-
-                        children = Array.from(node.getElementsByTagName("*")); 
-                        
-                        children.push(node);
-
-                        newRules += process(children);
+                        let nodes = Array.from(node.getElementsByTagName("*"));
+                        nodes.push(node);
+                 
+                        buf = process(nodes);
+                        css += buf.join('');
+                        if(advDimming) t.nodeValue = css;
                     }
                 }
             }
         });
 
-        if(advDimming && newRules.length > 0)
-        {
-            css += newRules;
-            t.nodeValue = css;
-        }
     };
 
     new MutationObserver(callback).observe(document.body, {childList: true, subtree: true});
@@ -420,7 +413,7 @@ function init(items)
     x.appendChild(t);
 };
 
-function start() 
+function init() 
 {
     if(document.getElementById("_fc_")) 
     {
@@ -445,10 +438,10 @@ function start()
         "smoothEnabled"
     ];
 
-    browser.storage.local.get(stored, init);
+    browser.storage.local.get(stored, start);
 }
 
-start();
+init();
 
 chrome.runtime.sendMessage({from: "yo", t: true});
 
