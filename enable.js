@@ -355,18 +355,25 @@ function start(items)
 
             let doChunk = () => {
                 let count = chunk;
-
+              
                 while (count-- && idx < len) 
                 {
                     dimNode(arr[idx++], cssStr => buf.push(cssStr));
                 }
 
-                if(advDimming && buf.length > 0) t.nodeValue += buf.join('');
+                if(advDimming) 
+                {
+                    t.nodeValue += buf.join('');
+                    buf = [];
+                }
 
-                if(idx < len) setTimeout(doChunk, 0);
+                if(idx < len) 
+                {
+                    setTimeout(doChunk, 0);
+                }
             };
 
-            doChunk();    
+            doChunk();
         }
 
         processLargeArray(nodes);
