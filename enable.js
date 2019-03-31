@@ -172,8 +172,8 @@ function start(items)
     nodes = nlToArr(document.body.getElementsByTagName("*"));
 
     let tagsToSkip = ["SCRIPT", "LINK", "STYLE", "IMG", "VIDEO", "SOURCE", "CANVAS"];
-    const colorsToSkip = ["rgb(0, 0, 0)", "", "rgba(0, 0, 0, 0)", ""];
-    const transparent = colorsToSkip[2];
+    const colorsToSkip = ["rgb(0, 0, 0)", "rgba(0, 0, 0, 0)"];
+    const transparent = colorsToSkip[1];
 
     let procImg = true;
 
@@ -189,7 +189,7 @@ function start(items)
                 break;
             }
             case "facebook.com": {
-                colorsToSkip[1] = "rgb(255, 255, 255)";
+                colorsToSkip.push("rgb(255, 255, 255)");
                 procImg = false;
                 break;
             }
