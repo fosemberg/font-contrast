@@ -257,6 +257,17 @@ function start(items)
 
             let style = getComputedStyle(node);
             
+            if(size)
+            {
+                let size = style.getPropertyValue("font-size");
+                size = parseInt(size);    
+    
+                if(size < sizeLimit) 
+                {
+                    node.setAttribute("s__", size); 
+                } 
+            }
+
             if(procImg) 
             {
                 if(style.getPropertyValue("background-image") !== "none") //Skip all descendants
@@ -331,18 +342,6 @@ function start(items)
             }
 
            node.setAttribute("d__", advDimmingCount);
-
-           if(size)
-           {
-               let size = style.getPropertyValue("font-size");
-               size = parseInt(size);    
-   
-               if(size < sizeLimit) 
-               {
-                   node.setAttribute("s__", size); 
-               } 
-           }
-
         };
 
         //https://stackoverflow.com/a/10344560
