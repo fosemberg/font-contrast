@@ -220,7 +220,7 @@ function start(items)
             {
                 /*The background color can sometimes be an rgba string such as: 'rgba(0, 0, 0, 0.01)', so we need to account for it. 
                  *This can provide OK results with the strength slider. @TODO: Less naive method.*/
-                bgLuma += 127; 
+                bgLuma += 161; 
             }
         }
     
