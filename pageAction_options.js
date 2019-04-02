@@ -183,10 +183,10 @@ let callback = (tabs) => {
         ];
 
         strSlider.value           = items.globalStr;
-        sizeSlider.value          = items.size;
-        thresholdSlider.value     = items.sizeThreshold;
         strLabel.innerText        = items.globalStr;
+        sizeSlider.value          = items.size;
         sizeLabel.innerText       = items.size;
+        thresholdSlider.value     = items.sizeThreshold;
         thresholdLabel.innerText  = items.sizeThreshold;
 
         skipHeadings.checked      = globalChecks[0];
