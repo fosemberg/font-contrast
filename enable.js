@@ -172,8 +172,8 @@ function start(items)
     nodes = nlToArr(document.body.getElementsByTagName("*"));
 
     let tagsToSkip = ["SCRIPT", "LINK", "STYLE", "IMG", "VIDEO", "SOURCE", "CANVAS"];
-    const colorsToSkip = ["rgb(0, 0, 0)", "", "rgba(0, 0, 0, 0)", ""];
-    const transparent = colorsToSkip[2];
+    const colorsToSkip = ["rgb(0, 0, 0)", "rgba(0, 0, 0, 0)"];
+    const transparent = colorsToSkip[1];
 
     let procImg = true;
 
@@ -189,7 +189,7 @@ function start(items)
                 break;
             }
             case "facebook.com": {
-                colorsToSkip[1] = "rgb(255, 255, 255)";
+                colorsToSkip.push("rgb(255, 255, 255)");
                 procImg = false;
                 break;
             }
@@ -257,6 +257,17 @@ function start(items)
 
             let style = getComputedStyle(node);
             
+            if(size)
+            {
+                let size = style.getPropertyValue("font-size");
+                size = parseInt(size);    
+    
+                if(size < sizeLimit) 
+                {
+                    node.setAttribute("s__", size); 
+                } 
+            }
+
             if(procImg) 
             {
                 if(style.getPropertyValue("background-image") !== "none") //Skip all descendants
@@ -331,18 +342,6 @@ function start(items)
             }
 
            node.setAttribute("d__", advDimmingCount);
-
-           if(size)
-           {
-               let size = style.getPropertyValue("font-size");
-               size = parseInt(size);    
-   
-               if(size < sizeLimit) 
-               {
-                   node.setAttribute("s__", size); 
-               } 
-           }
-
         };
 
         //https://stackoverflow.com/a/10344560

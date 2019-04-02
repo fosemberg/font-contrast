@@ -52,10 +52,6 @@ body
     justify-content: space-between;
     align-items:baseline;
 }
-.sliderDesc 
-{
-    
-}
 .val 
 {
     font-size:26px;
@@ -202,4 +198,7 @@ input[type='checkbox'] {
     border: solid white;
     border-width: 0 2px 2px 0;
     transform: rotate(45deg);
+}
+label{
+    -moz-user-select: none;
 }
