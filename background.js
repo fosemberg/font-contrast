@@ -20,8 +20,12 @@ browser.runtime.onInstalled.addListener((details) => {
         browser.tabs.create({url: "Welcome.html"});
         //storage.set({"enableEverywhere": true});
     }
-    if(details.reason === "update") {
-      //Set new values if they aren't there
+    if(details.reason === "update") 
+    {
+        storage.get(["size",  "sizeThreshold"], (items) => {
+        if(!items.size) storage.set({"size": 0});
+        if(!items.sizeThreshold) storage.set({"sizeThreshold": 12});
+      });
     }
 });
 
