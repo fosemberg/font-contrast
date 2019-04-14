@@ -125,7 +125,7 @@ function containsText(node) {
 
 function start(items) 
 {
-    let {whitelist, globalStr: strength, size, sizeLimit, skipHeadings, skipColoreds: avoidReadable, advDimming, outline, boldText, forcePlhdr, forceOpacity, smoothEnabled} = items;
+    let {whitelist, globalStr: strength, size, sizeThreshold, skipHeadings, skipColoreds: avoidReadable, advDimming, outline, boldText, forcePlhdr, forceOpacity, smoothEnabled} = items;
 
     let url = extractRootDomain(String(window.location));
 
@@ -139,7 +139,7 @@ function start(items)
 
             strength     = wlItem.strength;
             size         = wlItem.size;
-            sizeLimit    = wlItem.threshold;
+            sizeThreshold    = wlItem.threshold;
             skipHeadings = wlItem.skipHeadings;
             avoidReadable = wlItem.skipColoreds; 
             advDimming   = wlItem.advDimming;
@@ -254,29 +254,32 @@ function start(items)
             if(tagsToSkip.includes(tag)) return;
 
             let classe = String(node.className);
-
             let style = getComputedStyle(node);
             
-            if(size)
+            if(size > 0)
             {
-                let size = style.getPropertyValue("font-size");
-                size = parseInt(size);    
+                let fontSize = style.getPropertyValue("font-size");
+                fontSize = parseInt(fontSize);    
     
-                if(size < sizeLimit) 
+                if(fontSize < sizeThreshold) 
                 {
-                    node.setAttribute("s__", size); 
+                    node.setAttribute("s__", fontSize); 
                 } 
             }
+   
+            let imgOffset = 0;
 
             if(procImg) 
             {
-                if(style.getPropertyValue("background-image") !== "none") //Skip all descendants
-                {            
+                let bgImage = style.getPropertyValue("background-image");
+
+                if(bgImage !== "none") //Skip all descendants
+                {           
                     nodesToSkip = nodesToSkip.concat(nlToArr(node.getElementsByTagName("*")));
-                    return;
+                    imgOffset = 127;
                 }
 
-                if(nodesToSkip.includes(node)) return;
+                if(nodesToSkip.includes(node)) imgOffset = 96;
             }
            
             if(outline && node.nodeName === "INPUT" && node.type !== "submit") node.setAttribute("b__", "");
@@ -307,7 +310,7 @@ function start(items)
                 dbArr.push(debugObj);
             }
 
-            if(bgLuma < 160 - strength) return;
+            if(bgLuma < 160 - strength + imgOffset) return;
 
             let contrast = Math.abs(bgLuma - luma);
             contrast = +contrast.toFixed(2);
@@ -381,7 +384,7 @@ function start(items)
         if(dbValues) console.table(dbArr);
     }
 
-    let css = buildCSS(advDimming, forceOpacity, boldText, forcePlhdr, size, sizeLimit);
+    let css = buildCSS(advDimming, forceOpacity, boldText, forcePlhdr, size, sizeThreshold);
     t.nodeValue = css;
 
     process(nodes);
