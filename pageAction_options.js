@@ -210,10 +210,10 @@ let callback = (tabs) => {
 
                 strSlider.value           = wlItem.strength;
                 strLabel.innerText        = wlItem.strength;
-                sizeSlider.value          = wlItem.size;
-                sizeLabel.innerText       = wlItem.size;
-                thresholdSlider.value     = wlItem.threshold;
-                thresholdLabel.innerText  = wlItem.threshold;
+                sizeSlider.value          = wlItem.size || items.size;
+                sizeLabel.innerText       = wlItem.size || items.size;
+                thresholdSlider.value     = wlItem.threshold || items.sizeThreshold;
+                thresholdLabel.innerText  = wlItem.threshold || items.sizeThreshold;
 
                 skipHeadings.checked      = wlItem.skipHeadings;
                 skipColoreds.checked      = wlItem.skipColoreds;

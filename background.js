@@ -23,8 +23,8 @@ browser.runtime.onInstalled.addListener((details) => {
     if(details.reason === "update") 
     {
         storage.get(["size",  "sizeThreshold"], (items) => {
-        if(!items.size) storage.set({"size": 0});
-        if(!items.sizeThreshold) storage.set({"sizeThreshold": 12});
+            if(typeof items.size === "undefined") storage.set({"size": 0});
+            if(typeof items.sizeThreshold === "undefined") storage.set({"sizeThreshold": 12});
       });
     }
 });
