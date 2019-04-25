@@ -73,49 +73,6 @@ function adjustBrightness(rgbStr, amount)
     return newStr;
 }
 
-function buildCSS(advDimming, forceOpacity, boldText, forcePlhdr, size, sizeLimit)
-{
-    let dimStr = "", opacityStr = "", boldStr = "", forceBlack = "", sizeStr = "", underlineStr = "";
-
-    underlineStr = "[u__]{text-decoration:underline!important}";
-
-    if(!advDimming) 
-    {
-        dimStr = "[d__],[d__][style]{color:black!important}";
-    }
-
-    if(forceOpacity) 
-    {
-        opacityStr = "*,*[style]{opacity:1!important}"
-    }
-    
-    if(boldText) 
-    {
-        boldStr = "*{font-weight:bold!important}";
-    }
-    
-    if(forcePlhdr) 
-    {
-        forceBlack = "color:black!important";
-    }
-
-    let plhdrStr = `::placeholder{opacity:1!important;${forceBlack}}`;
-
-    if(size > 0) 
-    {
-        let i = 1;
-        
-        while(i <= sizeLimit) //threshold
-        {
-            sizeStr += `[s__="${i}"]{font-size: calc(${i++}px + ${size}%)!important}\n`;
-        }
-    }
-
-    let borderStr = "[b__]{border:1px solid black!important}"; //Doesn't hurt to put it in, even if form borders are disabled
-
-    return `${dimStr}${opacityStr}${sizeStr}${boldStr}${plhdrStr}${borderStr}${underlineStr}`;
-}
-
 function containsText(node) {
     //stackoverflow.com/a/27011142
     return Array.some(node.childNodes, (child) => {
@@ -125,7 +82,22 @@ function containsText(node) {
 
 function start(items) 
 {
-    let {whitelist, globalStr: strength, size, sizeThreshold, skipHeadings, skipColoreds: avoidReadable, advDimming, outline, boldText, forcePlhdr, forceOpacity, smoothEnabled} = items;
+    let {
+        whitelist, 
+        globalStr: strength, 
+        size, 
+        sizeThreshold, 
+        skipHeadings, 
+        skipColoreds: avoidReadable, 
+        advDimming, 
+        outline, 
+        boldText, 
+        forcePlhdr, 
+        forceOpacity, 
+        smoothEnabled,
+        skipWhites,
+        underlineLinks
+    } = items;
 
     let url = extractRootDomain(String(window.location));
 
@@ -137,16 +109,18 @@ function start(items)
         {
             let wlItem = whitelist[idx];
 
-            strength     = wlItem.strength;
-            size         = wlItem.size;
-            sizeThreshold    = wlItem.threshold;
-            skipHeadings = wlItem.skipHeadings;
-            avoidReadable = wlItem.skipColoreds; 
-            advDimming   = wlItem.advDimming;
-            outline      = wlItem.outline;
-            boldText     = wlItem.boldText;
-            forcePlhdr   = wlItem.forcePlhdr;
-            forceOpacity = wlItem.forceOpacity;
+            strength        = wlItem.strength;
+            size            = wlItem.size;
+            sizeThreshold   = wlItem.threshold;
+            skipHeadings    = wlItem.skipHeadings;
+            avoidReadable   = wlItem.skipColoreds; 
+            advDimming      = wlItem.advDimming;
+            outline         = wlItem.outline;
+            boldText        = wlItem.boldText;
+            forcePlhdr      = wlItem.forcePlhdr;
+            forceOpacity    = wlItem.forceOpacity;
+            skipWhites      = wlItem.skipWhites;
+            underlineLinks  = wlItem.underlineLinks;
         }
     }
 
@@ -189,7 +163,7 @@ function start(items)
                 break;
             }
             case "facebook.com": {
-                colorsToSkip.push("rgb(255, 255, 255)");
+                skipWhites = true;
                 procImg = false;
                 break;
             }
@@ -287,6 +261,7 @@ function start(items)
             if(!containsText(node)) return;
     
             let color = style.getPropertyValue("color");
+            if(skipWhites) colorsToSkip.push("rgb(255, 255, 255)");
             if(colorsToSkip.includes(color)) return;
 
             let bgColor      = style.getPropertyValue("background-color");
@@ -315,6 +290,8 @@ function start(items)
             let contrast = Math.abs(bgLuma - luma);
             contrast = +contrast.toFixed(2);
            
+            let isLink = tag === "A";
+
             if(avoidReadable)
             { 
                 let minContrast     = 132 + (strength / 2);
@@ -323,7 +300,7 @@ function start(items)
     
                 if(dbValues) Object.assign(debugObj, {contrast, minContrast, minLinkContrast});
     
-                if(tag === "A")
+                if(isLink)
                 {
                     minContrast = minLinkContrast;
                 }
@@ -345,6 +322,11 @@ function start(items)
             }
 
            node.setAttribute("d__", advDimmingCount);
+
+            if(underlineLinks)
+            {
+                if(isLink) node.setAttribute("u__", 0);
+            }
         };
 
         //https://stackoverflow.com/a/10344560
@@ -384,7 +366,32 @@ function start(items)
         if(dbValues) console.table(dbArr);
     }
 
-    let css = buildCSS(advDimming, forceOpacity, boldText, forcePlhdr, size, sizeThreshold);
+    let buildCSS = () => {
+        let dimStr = "", opacityStr = "", boldStr = "", forceBlack = "", sizeStr = "", underlineStr = "";
+
+        if(!advDimming)     dimStr = "[d__],[d__][style]{color:black!important}";
+        if(forceOpacity)    opacityStr = "*,*[style]{opacity:1!important}"   
+        if(boldText)        boldStr = "*{font-weight:bold!important}";    
+        if(forcePlhdr)      forceBlack = "color:black!important";
+        if(underlineLinks)  underlineStr = "[u__]{text-decoration:underline!important}";
+
+        let plhdrStr = `::placeholder{opacity:1!important;${forceBlack}}`;
+        let borderStr = "[b__]{border:1px solid black!important}"; //Doesn't hurt to put it in, even if form borders are disabled
+
+        if(size > 0) 
+        {
+            let i = 1;
+            
+            while(i <= sizeThreshold)
+            {
+                sizeStr += `[s__="${i}"]{font-size: calc(${i++}px + ${size}%)!important}\n`;
+            }
+        }
+
+        return `${dimStr}${opacityStr}${sizeStr}${boldStr}${plhdrStr}${borderStr}${underlineStr}`;
+    }
+
+    let css = buildCSS();
     t.nodeValue = css;
 
     process(nodes);
@@ -436,7 +443,9 @@ function init()
         "boldText", 
         "forceOpacity",
         "forcePlhdr",
-        "smoothEnabled"
+        "smoothEnabled",
+        "skipWhites",
+        "underlineLinks"
     ];
 
     browser.storage.local.get(stored, start);
