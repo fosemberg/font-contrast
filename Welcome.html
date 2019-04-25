@@ -43,6 +43,9 @@
                 margin-top:2.7em;
                 margin-bottom: 0;
             }
+            br{
+
+            }
         </style>
     </head>
     <body>
@@ -62,19 +65,28 @@
         <h3>Options guide:</h3>
 
         <p>Clicking on the options button will open this window:</p>
-        <img src="options.png">
+        <img src="icons/options.png">
         <ul>
         <li><strong>Strength:</strong> Adjusts the detection of dark backgrounds. A higher value might catch more hard to read text, but it might also dim light text against dark backgrounds.</li>
-        <li><strong>Increase size (%):</strong> Enlarges fonts that are below the size threshold.</li>
+        <li><strong>Increase font (%):</strong> Enlarges fonts that are below the threshold (in pixels).</li>
+        <br>
         <li><strong>Whitelist:</strong> Adds the website to the whitelist. Dragging a slider or toggling another option will automatically check this option.</li>
         <li><strong>Blacklist:</strong> Adds the website to the blacklist.</li>
-        <li><strong>Avoid colorful text:</strong>  Attempts to avoid colorful text and links, if they are considered readable.</li>
-        <li><strong>Bold text:</strong> Changes the font weight of all text to bold.</li>
-        <li><strong>Skip headings:</strong> Avoids dimming all big headings.</li>
         <li><strong>Advanced mode:</strong> Dims text to a darker shade of its color (rather than just black). Can cause slowdowns on big websites.</li>
+        <br>
+
+        <li><strong>Bold text:</strong> Changes the font weight of all text to bold.</li>
+        <li><strong>Avoid colorful text:</strong>  Attempts to avoid colorful text and links, if they are considered readable.</li>
+        <li><strong>Underline black links:</strong> Adds an underline to links that turn black, to distinguish them from other text.</li>
+    
+        <br>
         <li><strong>Force max opacity:</strong> Forces full opacity on all fonts.</li>
         <li><strong>Force black placeholder:</strong> Forces all placeholder text to turn black, rather than just increasing their opacity.</li>
         <li><strong>Form border:</strong> Attempts to add a black outline around text areas.</li> 
+        <br>
+        <li><strong>Skip headings:</strong> Avoids dimming all big headings.</li>
+        <li><strong>Skip white text:</strong> Avoids dimming all white text.</li>
+            <br>
         <li><strong>More options:</strong> Opens a tab with all the options, including the ability to activate the add-on everywhere, the global options (with in-depth tooltips) and the whitelist/blacklist.</li>
         </ul>
     </body>

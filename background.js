@@ -17,6 +17,7 @@ browser.runtime.onInstalled.addListener((details) => {
         storage.set({"size": 0});
         storage.set({"sizeThreshold": 12});
         storage.set({"skipColoreds": true});
+        storage.set({"skipWhites": true});
         browser.tabs.create({url: "Welcome.html"});
         //storage.set({"enableEverywhere": true});
     }

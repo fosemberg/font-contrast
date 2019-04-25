@@ -29,10 +29,10 @@
                 </div>-->
             
                 <div class = "sliderDiv">
-                    <span id ="curlyboye">[</span>
-                    <span class ="sliderDesc">Increase font (%)</span>
+                    
+                    <span class ="sliderDesc"><span id ="curlyboye">[</span>Increase font (%)</span>
                     <div>
-                    <span class = "val" id = "sizeLabel">43</span>
+                    <span class = "val" id = "sizeLabel"></span>
                     <input type = "range" class = "slider" id ="sizeSlider" min = "0" max = "100" value = "0">
                     </div>
                 </div>
@@ -50,81 +50,95 @@
                 <span id ="url"></span>
                 <button id="refreshBtn">Refresh</button>
             </div>
-        
+            
             <div id="checksContainer">
-                <div class="option">
-                    <label for ="addWL">Whitelist</label>
-                    <label class="container">
-                        <input type="checkbox" id="addWL">
-                        <span class="checkmark"></span>
-                    </label>
+                <div class ="separator">
+                    <div class="option">
+                        <label for ="addWL">Whitelist</label>
+                        <label class="container">
+                            <input type="checkbox" id="addWL">
+                            <span class="checkmark"></span>
+                        </label>
+                    </div>  
+                    <div class="option">
+                        <label for ="addBL">Blacklist</label>
+                        <label class="container">
+                            <input type="checkbox" id="addBL">
+                            <span class="checkmark"></span>
+                        </label>
+                    </div>
+                    <div class ="option">
+                            <label for="advDimming">Advanced mode</label>
+                            <label class="container">
+                                <input type="checkbox" id="advDimming">
+                                <span class="checkmark"></span>
+                            </label>
+                        </div>
                 </div>
-                
-                <div class="option">
-                    <label for ="addBL">Blacklist</label>
-                    <label class="container">
-                        <input type="checkbox" id="addBL">
-                        <span class="checkmark"></span>
-                    </label>
+                <div class ="separator" id ="sep">
+                        <div class ="option">
+                                <label for ="boldText">Bold text</label>
+                                <label class="container">
+                                    <input type="checkbox" id="boldText">
+                                    <span class="checkmark"></span>
+                                </label>
+                            </div>
+                    <div class ="option">
+                        <label for ="skipColoreds">Avoid colorful text</label>
+                        <label class="container">
+                            <input type="checkbox" id="skipColoreds">
+                            <span class="checkmark"></span>
+                        </label>
+                    </div>
+                    <div class ="option">
+                            <label for ="underlineLinks">Underline black links</label>
+                            <label class="container">
+                                <input type="checkbox" id="underlineLinks">
+                                <span class="checkmark"></span>
+                            </label>
+                        </div>
+                    </div>
+            <div class ="separator">
+                <div class ="forces">
+                    <div class ="option">
+                        <label for="forceOpacity">Force max opacity</label>
+                        <label class="container">
+                            <input type="checkbox" id="forceOpacity">
+                            <span class="checkmark"></span>
+                        </label>
+                    </div>
+                    <div class ="option">
+                        <label for="forcePlhdr">Force black placeholder</label>
+                        <label class="container">
+                            <input type="checkbox" id="forcePlhdr">
+                            <span class="checkmark"></span>
+                        </label>
+                    </div>
+                    <div class ="option">
+                            <label for="outline">Form border</label>
+                            <label class="container">
+                                <input type="checkbox" id="outline">
+                                <span class="checkmark"></span>
+                            </label>
+                        </div>
                 </div>
-
-                <div class ="option">
-                    <label for ="skipColoreds">Avoid colorful text</label>
-                    <label class="container">
-                        <input type="checkbox" id="skipColoreds">
-                        <span class="checkmark"></span>
-                    </label>
+            </div>
+            <div class ="separator" id ="sep">
+                    <div class ="option">
+                            <label for ="skipHeadings">Skip headings</label>
+                            <label class="container">
+                                <input type="checkbox" id="skipHeadings">
+                                <span class="checkmark"></span>
+                            </label>
+                        </div>
+                    <div class ="option">
+                        <label for ="skipWhites">Skip white text</label>
+                        <label class="container">
+                            <input type="checkbox" id="skipWhites">
+                            <span class="checkmark"></span>
+                        </label>
+                    </div>
                 </div>
-
-                <div class ="option">
-                    <label for ="boldText">Bold text</label>
-                    <label class="container">
-                        <input type="checkbox" id="boldText">
-                        <span class="checkmark"></span>
-                    </label>
-                </div>
-
-                <div class ="option">
-                    <label for ="skipHeadings">Skip headings</label>
-                    <label class="container">
-                        <input type="checkbox" id="skipHeadings">
-                        <span class="checkmark"></span>
-                    </label>
-                </div>
-                
-                <div class ="option">
-                    <label for="advDimming">Advanced mode</label>
-                    <label class="container">
-                        <input type="checkbox" id="advDimming">
-                        <span class="checkmark"></span>
-                    </label>
-                </div>
-
-                <div class ="option">
-                    <label for="forceOpacity">Force max opacity</label>
-                    <label class="container">
-                        <input type="checkbox" id="forceOpacity">
-                        <span class="checkmark"></span>
-                    </label>
-                </div>
-
-                <div class ="option">
-                    <label for="forcePlhdr">Force black placeholder</label>
-                    <label class="container">
-                        <input type="checkbox" id="forcePlhdr">
-                        <span class="checkmark"></span>
-                    </label>
-                </div>
-
-                <div class ="option">
-                    <label for="outline">Form border</label>
-                    <label class="container">
-                        <input type="checkbox" id="outline">
-                        <span class="checkmark"></span>
-                    </label>
-                </div>
-
-          
             </div><!--checks-->
         <button id="optionsBtn">More options</button>
         </div> <!--wrapper-->

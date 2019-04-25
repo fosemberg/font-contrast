@@ -26,60 +26,12 @@ let advDimming      = doc.querySelector("#advDimming");
 let outline         = doc.querySelector("#outline");
 let boldText        = doc.querySelector("#boldText");
 let forcePlhdr      = doc.querySelector("#forcePlhdr");
+let skipWhites      = doc.querySelector("#skipWhites");
 
 let optionsBtn      = doc.querySelector("#optionsBtn");
 let refreshBtn      = doc.querySelector("#refreshBtn");
 
 let isURLshown = false;
-
-optionsBtn.addEventListener("click", () => {
-    if (chrome.runtime.openOptionsPage) 
-    {
-        chrome.runtime.openOptionsPage();
-    } 
-    else 
-    {
-        window.open(chrome.runtime.getURL('options.html'));
-    }
-});
-
-function extractHostname(url) {
-  let hostname;
-  //find and remove protocol (http, ftp, etc.) and get hostname
-
-  if (url.indexOf("://") > -1) {
-      hostname = url.split('/')[2];
-  }
-  else {
-      hostname = url.split('/')[0];
-  }
-
-  //find and remove port number
-  hostname = hostname.split(':')[0];
-  //find and remove "?"
-  hostname = hostname.split('?')[0];
-  hostname = hostname.replace('www.', '');
-  return hostname;
-}
-
-function extractRootDomain(url) {
-  let domain = extractHostname(url),
-      splitArr = domain.split('.'),
-      arrLen = splitArr.length;
-
-  //extracting the root domain here
-  //if there is a subdomain 
-  if (arrLen > 2) {
-      domain = splitArr[arrLen - 2] + '.' + splitArr[arrLen - 1];
-      //check to see if it's using a Country Code Top Level Domain (ccTLD) (i.e. ".me.uk")
-      if (splitArr[arrLen - 1].length === 2 && splitArr[arrLen - 1].length === 2) {
-          //this is using a ccTLD
-          domain = splitArr[arrLen - 3] + '.' + domain;
-      }
-  }
-
-  return domain;
-}
 
 function showRefreshBtn() {
     if(!isURLshown) 
@@ -153,6 +105,7 @@ let callback = (tabs) => {
     let domain = extractRootDomain(String(url));
 
     if(url.startsWith("http")) urlSpan.innerText = domain;
+    else showRefreshBtn();
 
     let stored = [
         "whitelist", 
@@ -165,29 +118,33 @@ let callback = (tabs) => {
         "advDimming", 
         "boldText", 
         "forcePlhdr",
-        "forceOpacity"
+        "forceOpacity",
+        "skipWhites",
+        "underlineLinks"
     ];
 
-    storage.get(stored, (items) => 
+    storage.get(stored, (i) => 
     {    
-        let whitelist = items.whitelist || [];
-        let blacklist = items.blacklist || [];
+        let whitelist = i.whitelist || [];
+        let blacklist = i.blacklist || [];
 
         let globalChecks = [
-            items.skipHeadings,
-            items.skipColoreds, 
-            items.advDimming, 
-            items.boldText, 
-            items.forcePlhdr,
-            items.forceOpacity
+            i.skipHeadings,
+            i.skipColoreds, 
+            i.advDimming, 
+            i.boldText, 
+            i.forcePlhdr,
+            i.forceOpacity,
+            i.skipWhites,
+            i.underlineLinks
         ];
 
-        strSlider.value           = items.globalStr;
-        strLabel.innerText        = items.globalStr;
-        sizeSlider.value          = items.size;
-        sizeLabel.innerText       = items.size;
-        thresholdSlider.value     = items.sizeThreshold;
-        thresholdLabel.innerText  = items.sizeThreshold;
+        strSlider.value           = i.globalStr;
+        strLabel.innerText        = i.globalStr;
+        sizeSlider.value          = i.size;
+        sizeLabel.innerText       = i.size;
+        thresholdSlider.value     = i.sizeThreshold;
+        thresholdLabel.innerText  = i.sizeThreshold;
 
         skipHeadings.checked      = globalChecks[0];
         skipColoreds.checked      = globalChecks[1];
@@ -195,6 +152,8 @@ let callback = (tabs) => {
         boldText.checked          = globalChecks[3];
         forcePlhdr.checked        = globalChecks[4];
         forceOpacity.checked      = globalChecks[5];
+        skipWhites.checked        = globalChecks[6];
+        underlineLinks.checked    = globalChecks[7];
 
         if (blacklist.findIndex(o => o.url === domain) > -1)
         {
@@ -210,10 +169,10 @@ let callback = (tabs) => {
 
                 strSlider.value           = wlItem.strength;
                 strLabel.innerText        = wlItem.strength;
-                sizeSlider.value          = wlItem.size || items.size;
-                sizeLabel.innerText       = wlItem.size || items.size;
-                thresholdSlider.value     = wlItem.threshold || items.sizeThreshold;
-                thresholdLabel.innerText  = wlItem.threshold || items.sizeThreshold;
+                sizeSlider.value          = wlItem.size || i.size;
+                sizeLabel.innerText       = wlItem.size || i.size;
+                thresholdSlider.value     = wlItem.threshold || i.sizeThreshold;
+                thresholdLabel.innerText  = wlItem.threshold || i.sizeThreshold;
 
                 skipHeadings.checked      = wlItem.skipHeadings;
                 skipColoreds.checked      = wlItem.skipColoreds;
@@ -222,6 +181,8 @@ let callback = (tabs) => {
                 boldText.checked          = wlItem.boldText;
                 forcePlhdr.checked        = wlItem.forcePlhdr;
                 forceOpacity.checked      = wlItem.forceOpacity;
+                skipWhites.checked        = wlItem.skipWhites;
+                underlineLinks.checked    = wlItem.underlineLinks;
 
                 WLcheck.checked = true;
                 BLcheck.checked = false;
@@ -230,9 +191,9 @@ let callback = (tabs) => {
 
         let wlItem = {
             url:            domain, 
-            strength:       items.globalStr,
-            size:           items.size,
-            threshold:      items.sizeThreshold,
+            strength:       i.globalStr,
+            size:           i.size,
+            threshold:      i.sizeThreshold,
 
             skipHeadings:   globalChecks[0], 
             skipColoreds:   globalChecks[1], 
@@ -240,21 +201,24 @@ let callback = (tabs) => {
             boldText:       globalChecks[3],
             forcePlhdr:     globalChecks[4],
             forceOpacity:   globalChecks[5],
-            outline:        false, //The outline cannot be set globally for now
-   
+            skipWhites:     globalChecks[6],
+            underlineLinks: globalChecks[7],
+            outline:        false //The outline cannot be set globally for now
         };
 
         let updateWLItem = () => {
-            wlItem.strength     = strSlider.value;
-            wlItem.size         = sizeSlider.value;
-            wlItem.threshold    = thresholdSlider.value;
-            wlItem.skipColoreds = skipColoreds.checked;
-            wlItem.skipHeadings = skipHeadings.checked;
-            wlItem.advDimming   = advDimming.checked;
-            wlItem.outline      = outline.checked;
-            wlItem.boldText     = boldText.checked;
-            wlItem.forcePlhdr   = forcePlhdr.checked;
-            wlItem.forceOpacity = forceOpacity.checked;
+            wlItem.strength       = strSlider.value;
+            wlItem.size           = sizeSlider.value;
+            wlItem.threshold      = thresholdSlider.value;
+            wlItem.skipColoreds   = skipColoreds.checked;
+            wlItem.skipHeadings   = skipHeadings.checked;
+            wlItem.advDimming     = advDimming.checked;
+            wlItem.outline        = outline.checked;
+            wlItem.boldText       = boldText.checked;
+            wlItem.forcePlhdr     = forcePlhdr.checked;
+            wlItem.forceOpacity   = forceOpacity.checked;
+            wlItem.skipWhites     = skipWhites.checked;
+            wlItem.underlineLinks = underlineLinks.checked;
         };
 
         strSlider.oninput = () =>
@@ -301,7 +265,6 @@ let callback = (tabs) => {
 
             whitelist = updateWL(wlItem, whitelist, domain, true);
         };
-
 
         WLcheck.addEventListener("click", () => {
             let isChecked = WLcheck.checked;
@@ -391,7 +354,73 @@ let callback = (tabs) => {
             if(BLcheck.checked) blacklist = updateBL(blacklist, domain, false);
         });
 
+        skipWhites.addEventListener("click", () => {
+            updateWLItem();
+
+            whitelist = updateWL(wlItem, whitelist, domain, true);
+
+            if(BLcheck.checked) blacklist = updateBL(blacklist, domain, false);
+        });
+
+        underlineLinks.addEventListener("click", () => {
+            updateWLItem();
+
+            whitelist = updateWL(wlItem, whitelist, domain, true);
+
+            if(BLcheck.checked) blacklist = updateBL(blacklist, domain, false);
+        });
     });
 };
+
+function extractHostname(url) 
+{
+    let hostname;
+    //find and remove protocol (http, ftp, etc.) and get hostname
+  
+    if (url.indexOf("://") > -1) {
+        hostname = url.split('/')[2];
+    }
+    else {
+        hostname = url.split('/')[0];
+    }
+  
+    //find and remove port number
+    hostname = hostname.split(':')[0];
+    //find and remove "?"
+    hostname = hostname.split('?')[0];
+    hostname = hostname.replace('www.', '');
+    return hostname;
+}
+  
+function extractRootDomain(url) 
+{
+    let domain = extractHostname(url),
+        splitArr = domain.split('.'),
+        arrLen = splitArr.length;
+  
+    //extracting the root domain here
+    //if there is a subdomain 
+    if (arrLen > 2) {
+        domain = splitArr[arrLen - 2] + '.' + splitArr[arrLen - 1];
+        //check to see if it's using a Country Code Top Level Domain (ccTLD) (i.e. ".me.uk")
+        if (splitArr[arrLen - 1].length === 2 && splitArr[arrLen - 1].length === 2) {
+            //this is using a ccTLD
+            domain = splitArr[arrLen - 3] + '.' + domain;
+        }
+    }
+  
+    return domain;
+}
+
+optionsBtn.addEventListener("click", () => {
+    if (chrome.runtime.openOptionsPage) 
+    {
+        chrome.runtime.openOptionsPage();
+    } 
+    else 
+    {
+        window.open(chrome.runtime.getURL('options.html'));
+    }
+});
 
 chrome.tabs.query({active:true, currentWindow:true}, callback);

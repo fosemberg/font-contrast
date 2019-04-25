@@ -42,6 +42,8 @@ let advDimming      = doc.querySelector('#advDimming');
 let boldText        = doc.querySelector('#boldText');
 let forcePlhdr      = doc.querySelector('#forcePlhdr');
 let forceOpacity    = doc.querySelector('#forceOpacity');
+let skipWhites      = doc.querySelector('#skipWhites');
+let underlineLinks  = doc.querySelector('#underlineLinks');
 
 globalEnabled = addEventListener('click', () => {
     storage.set({'enableEverywhere': isChecked("defaultEn")});
@@ -73,6 +75,14 @@ forcePlhdr = addEventListener('click', () => {
 
 forceOpacity = addEventListener('click', () => {
     storage.set({'forceOpacity': isChecked("forceOpacity")});
+})
+
+skipWhites = addEventListener('click', () => {
+    storage.set({'skipWhites': isChecked("skipWhites")});
+})
+
+underlineLinks = addEventListener('click', () => {
+    storage.set({'underlineLinks': isChecked("underlineLinks")});
 })
 
 function isChecked(arg) {
@@ -128,34 +138,47 @@ function updateSettings()
         threshLabel.innerText = items.sizeThreshold;
     });
 
-    storage.get(['skipHeadings','skipColoreds', 'enableEverywhere', 'smoothEnabled', 'advDimming', 'boldText', 'forcePlhdr', 'forceOpacity'], (items) => {
-        doc.getElementById("skipHeadings").checked  = items.skipHeadings;
-        doc.getElementById("skipColoreds").checked  = items.skipColoreds;
-        doc.getElementById("defaultEn").checked     = items.enableEverywhere;
-        doc.getElementById("smoothEnabled").checked = items.smoothEnabled;
-        doc.getElementById("advDimming").checked    = items.advDimming;
-        doc.getElementById("boldText").checked      = items.boldText;
-        doc.getElementById("forcePlhdr").checked    = items.forcePlhdr;
-        doc.getElementById("forceOpacity").checked  = items.forceOpacity;
+    let checks = [
+        "enableEverywhere",
+        "skipColoreds", 
+        "skipHeadings", 
+        "advDimming", 
+        "boldText", 
+        "forceOpacity",
+        "forcePlhdr",
+        "smoothEnabled",
+        "skipWhites",
+        "underlineLinks"
+    ];
+
+    storage.get(checks, (i) => {
+        doc.getElementById("defaultEn").checked      = i.enableEverywhere;
+        doc.getElementById("skipColoreds").checked   = i.skipColoreds;
+        doc.getElementById("skipHeadings").checked   = i.skipHeadings;
+        doc.getElementById("advDimming").checked     = i.advDimming;
+        doc.getElementById("boldText").checked       = i.boldText;
+        doc.getElementById("forceOpacity").checked   = i.forceOpacity;
+        doc.getElementById("forcePlhdr").checked     = i.forcePlhdr;
+        doc.getElementById("smoothEnabled").checked  = i.smoothEnabled;
+        doc.getElementById("skipWhites").checked     = i.skipWhites;
+        doc.getElementById("underlineLinks").checked = i.underlineLinks;
     });
 
-    storage.get(['whitelist', 'blacklist'], (items) => {
-        let len;
-        
+    storage.get(['whitelist', 'blacklist'], (items) => {      
         if(items.whitelist) 
         {
-            len = items.whitelist.length;
+            let len = items.whitelist.length;
             len > 0 ? header.style.display = "table-row" : header.style.display = "none";
             
-            for(let i = 0, len = items.whitelist.length; i < len; i++) addRow(true, items.whitelist[i].url);
+            for(let i = 0; i < len; ++i) addRow(true, items.whitelist[i].url);
         }
 
         if(items.blacklist) 
         {
-            len = items.blacklist.length;
+            let len = items.blacklist.length;
             len > 0 ? BLheader.style.display = "table-row": BLheader.style.display = "none";
             
-            for(let i = 0, len = items.blacklist.length; i < len; i++) addRow(false, items.blacklist[i].url);
+            for(let i = 0; i < len; ++i) addRow(false, items.blacklist[i].url);
         }
     });
 }

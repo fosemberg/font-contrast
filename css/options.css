@@ -52,10 +52,10 @@ body {
 {
     height: 2.35em;
     width: 1em;
-    border-radius: 50%;
-    border: 0.15em solid black;
+    border-radius: 8px;
+    border: 0.3em solid black;
     cursor:w-resize;
-    background: black;
+    background: white;
     transition: 0.07s ease-in;
 }
 .slider::-moz-range-track 
