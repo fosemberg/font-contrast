@@ -16,22 +16,28 @@ let threshSlider    = doc.querySelector("#threshSlider");
 let threshLabel     = doc.querySelector("#threshLabel");
 
 strSlider.oninput = () => {
-    let val = strSlider.value;
-    strLabel.innerText = val;
-    storage.set({globalStr: val});
+    strLabel.innerText = strSlider.value;
 };
 
 sizeSlider.oninput = () => {
-    let val = sizeSlider.value;
-    sizeLabel.innerText = val;
-    storage.set({"size": val});
+    sizeLabel.innerText = sizeSlider.value;
 };
 
 threshSlider.oninput = () => {
-    let val = threshSlider.value;
-    threshLabel.innerText = val;
-    storage.set({"sizeThreshold": val});
+    threshLabel.innerText = threshSlider.value;
 };
+
+strSlider.onchange = () => {
+    storage.set({"globalStr": strSlider.value});
+}
+
+sizeSlider.onchange = () => {
+    storage.set({"size": sizeSlider.value});
+};
+
+threshSlider.onchange = () => {
+    storage.set({"sizeThreshold": threshSlider.value});
+}
 
 //Options
 let skipHeadings    = doc.querySelector('#skipHeadings');
