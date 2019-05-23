@@ -221,11 +221,20 @@ let callback = (tabs) => {
             wlItem.underlineLinks = underlineLinks.checked;
         };
 
-        strSlider.oninput = () =>
-        {
-            let str = strSlider.value;
-            strLabel.innerText = str;
+        strSlider.oninput = () => {
+            strLabel.innerText = strSlider.value;
+        }
 
+        sizeSlider.oninput = () => {
+            sizeLabel.innerText = sizeSlider.value;
+        }
+
+        thresholdSlider.oninput = () => {
+            thresholdLabel.innerText = thresholdSlider.value;
+        }
+
+        strSlider.onchange = () =>
+        {
             updateWLItem();
 
             if(BLcheck.checked)
@@ -236,11 +245,8 @@ let callback = (tabs) => {
             whitelist = updateWL(wlItem, whitelist, domain, true);
         };
 
-        sizeSlider.oninput = () =>
+        sizeSlider.onchange = () =>
         {
-            let sizeOffset = sizeSlider.value;
-            sizeLabel.innerText = sizeOffset;
-
             updateWLItem();
 
             if(BLcheck.checked)
@@ -251,11 +257,8 @@ let callback = (tabs) => {
             whitelist = updateWL(wlItem, whitelist, domain, true);
         };
 
-        thresholdSlider.oninput = () =>
+        thresholdSlider.onchange = () =>
         {
-            let sizeThreshold = thresholdSlider.value;
-            thresholdLabel.innerText = sizeThreshold;
-
             updateWLItem();
 
             if(BLcheck.checked)
