@@ -76,65 +76,12 @@ let callback = (tabs) =>
 
 	const process = (i) =>
 	{
-		let whitelist = i.whitelist || [];
-		let blacklist = i.blacklist || [];
-
-		const updateList = (item, is_wl, add) =>
-		{
-			let list, list_str;
-			let check;
-			
-			if(is_wl) 
-			{
-				list = whitelist;
-				list_str = 'whitelist';
-				check = WLcheck;
-			}
-			else
-			{
-				list = blacklist;
-				list_str = 'blacklist';
-				check = BLcheck;
-			}
-
-			let idx = list.findIndex(o => o.url === item.url);
-			
-			if(add)
-			{
-				if(idx > -1) 	list[idx] = item;
-				else 			list.push(item);
-
-				check.checked = true;
-			}
-			else if(idx > -1) 
-			{
-				list.splice(idx, 1);
-				
-				check.checked = false;
-			}
-
-			storage.set({[list_str]: list});
-
-			showRefreshBtn();
-
-			return list;
-		};
-
-		let globalChecks = [
-			i.skipHeadings,
-			i.skipColoreds, 
-			i.advDimming, 
-			i.boldText, 
-			i.forcePlhdr,
-			i.forceOpacity,
-			i.skipWhites,
-			i.underlineLinks
-		];
-
 		strSlider.value 		= i.globalStr;
 		strLabel.innerText 		= i.globalStr;
+		
 		sizeSlider.value 		= i.size;
 		sizeLabel.innerText 	= i.size;
+		
 		thresholdSlider.value 	= i.sizeThreshold;
 		thresholdLabel.innerText= i.sizeThreshold;
 
@@ -142,14 +89,17 @@ let callback = (tabs) =>
 		sizeSlider.oninput 		= () => sizeLabel.innerText = sizeSlider.value;
 		thresholdSlider.oninput = () => thresholdLabel.innerText = thresholdSlider.value;
 
-		skipHeadings.checked 	= globalChecks[0];
-		skipColoreds.checked 	= globalChecks[1];
-		advDimming.checked 		= globalChecks[2];
-		boldText.checked 		= globalChecks[3];
-		forcePlhdr.checked 		= globalChecks[4];
-		forceOpacity.checked 	= globalChecks[5];
-		skipWhites.checked 		= globalChecks[6];
-		underlineLinks.checked 	= globalChecks[7];
+		skipHeadings.checked 	= i.skipHeadings;
+		skipColoreds.checked 	= i.skipColoreds;
+		advDimming.checked 		= i.advDimming;
+		boldText.checked 		= i.boldText;
+		forcePlhdr.checked 		= i.forcePlhdr;
+		forceOpacity.checked 	= i.forceOpacity;
+		skipWhites.checked 		= i.skipWhites;
+		underlineLinks.checked 	= i.underlineLinks;
+
+		let whitelist = i.whitelist || [];
+		let blacklist = i.blacklist || [];
 
 		if (blacklist.findIndex(o => o.url === domain) > -1)
 		{
@@ -191,15 +141,56 @@ let callback = (tabs) =>
 			size: 			i.size,
 			threshold: 		i.sizeThreshold,
 
-			skipHeadings: 	globalChecks[0], 
-			skipColoreds: 	globalChecks[1], 
-			advDimming: 	globalChecks[2],
-			boldText: 		globalChecks[3],
-			forcePlhdr: 	globalChecks[4],
-			forceOpacity: 	globalChecks[5],
-			skipWhites: 	globalChecks[6],
-			underlineLinks: globalChecks[7],
+			skipHeadings: 	i.skipHeadings, 
+			skipColoreds: 	i.skipColoreds, 
+			advDimming: 	i.advDimming,
+			boldText: 		i.boldText,
+			forcePlhdr: 	i.forcePlhdr,
+			forceOpacity: 	i.forceOpacity,
+			skipWhites: 	i.skipWhites,
+			underlineLinks: i.underlineLinks,
 			outline: 		false // The outline cannot be set globally for now
+		};
+
+		const updateList = (item, is_wl, add) =>
+		{
+			let list, list_str;
+			let check;
+			
+			if(is_wl) 
+			{
+				list = whitelist;
+				list_str = 'whitelist';
+				check = WLcheck;
+			}
+			else
+			{
+				list = blacklist;
+				list_str = 'blacklist';
+				check = BLcheck;
+			}
+
+			let idx = list.findIndex(o => o.url === item.url);
+			
+			if(add)
+			{
+				if(idx > -1) 	list[idx] = item;
+				else 			list.push(item);
+
+				check.checked = true;
+			}
+			else if(idx > -1) 
+			{
+				list.splice(idx, 1);
+				
+				check.checked = false;
+			}
+
+			storage.set({[list_str]: list});
+
+			showRefreshBtn();
+
+			return list;
 		};
 
 		WLcheck.onclick = () => 
@@ -261,7 +252,7 @@ let callback = (tabs) =>
 				}
 			}
 		});
-	}
+	};
 
 	storage.get(stored, process);
 };
