@@ -101,28 +101,28 @@ function start(items)
 		underlineLinks
 	} = items;
 
-	let url = extractRootDomain(String(window.location));
+	const url = extractRootDomain(String(window.location));
 
 	if(whitelist) 
 	{
-		let idx = whitelist.findIndex(o => o.url === url);
+		const idx = whitelist.findIndex(o => o.url === url);
 
 		if(idx > -1) 
 		{
-			let wlItem = whitelist[idx];
+			const i = whitelist[idx];
 
-			strength        = wlItem.strength;
-			size            = wlItem.size;
-			sizeThreshold   = wlItem.threshold;
-			skipHeadings    = wlItem.skipHeadings;
-			avoidReadable   = wlItem.skipColoreds; 
-			advDimming      = wlItem.advDimming;
-			outline         = wlItem.outline;
-			boldText        = wlItem.boldText;
-			forcePlhdr      = wlItem.forcePlhdr;
-			forceOpacity    = wlItem.forceOpacity;
-			skipWhites      = wlItem.skipWhites;
-			underlineLinks  = wlItem.underlineLinks;
+			strength        = i.strength;
+			size            = i.size;
+			sizeThreshold   = i.threshold;
+			skipHeadings    = i.skipHeadings;
+			avoidReadable   = i.skipColoreds; 
+			advDimming      = i.advDimming;
+			outline         = i.outline;
+			boldText        = i.boldText;
+			forcePlhdr      = i.forcePlhdr;
+			forceOpacity    = i.forceOpacity;
+			skipWhites      = i.skipWhites;
+			underlineLinks  = i.underlineLinks;
 		}
 	}
 
@@ -148,14 +148,13 @@ function start(items)
 	nodes = nlToArr(document.body.getElementsByTagName("*"));
 
 	let tagsToSkip = ["SCRIPT", "LINK", "STYLE", "IMG", "VIDEO", "SOURCE", "CANVAS"];
-	const colorsToSkip = ["rgb(0, 0, 0)", "rgba(0, 0, 0, 0)"];
+	let colorsToSkip = ["rgb(0, 0, 0)", "rgba(0, 0, 0, 0)"];
 	const transparent = colorsToSkip[1];
 
 	let procImg = true;
 
 	const applyExceptions = (nodes) => 
 	{
-		// Temporary url exceptions
 		switch(url)
 		{
 			case "youtube.com": {
@@ -203,9 +202,6 @@ function start(items)
 		return bgLuma;
 	}
 
-	let callCount = 0
-	let advDimmingCount = 0;
-
 	if(skipWhites) 
 	{
 		const white = [
@@ -222,108 +218,121 @@ function start(items)
 
 	if(skipHeadings)
 	{  
-		tagsToSkip = tagsToSkip.concat(["H1", "H2", "H3"]);
+		tagsToSkip.push(...["H1", "H2", "H3"]);
 	}
+
+	let callcnt 		= 0;
+	let adv_dimmingcnt 	= 0;
 
 	const process = (nodes) =>
 	{
-		/* Debugging */
-		let dbArr = [];
-		const dbValues = 0;
-		const dbTime = 0;
-		let dbTimeStr = `Process ${callCount++} time`;
+		// Debugging 
+		let db_arr = [];
 		
-		if(dbTime) console.time(dbTimeStr);
+		const db_node = false;
+		const db_time = false;
+		
+		let db_timestr = `Process ${callcnt++} time`;
+		
+		if(db_time) console.time(db_timestr);
 		/************/
 
-		let nodesToSkip = [];
+		let nodes_to_skip = [];
 
 		nodes = applyExceptions(nodes);
 
-		let dimNode = (node, callback) => 
+		const dimNode = (node, callback) => 
 		{
-			let tag = String(node.nodeName);
+			const tag = String(node.nodeName);
+			
 			if(tagsToSkip.includes(tag)) return;
 
-			let classe = String(node.className);
-			let style = getComputedStyle(node);
+			const classe = String(node.className);
+			const style = getComputedStyle(node);
 			
 			if(size > 0)
 			{
-				let fontSize = style.getPropertyValue("font-size");
-				fontSize = parseInt(fontSize);    
-	
-				if(fontSize < sizeThreshold) 
+				const font_sz = parseInt(style.getPropertyValue("font-size"));
+				
+				if(font_sz < sizeThreshold) 
 				{
-					node.setAttribute("s__", fontSize); 
-				} 
+					node.setAttribute("s__", font_sz); 
+				}
 			}
    
-			let imgOffset = 0;
+			let img_offset = 0;
 
 			if(procImg) 
 			{
-				let bgImage = style.getPropertyValue("background-image");
+				const bg_img = style.getPropertyValue("background-image");
 
-				if(bgImage !== "none") //Skip all descendants
-				{           
-					nodesToSkip = nodesToSkip.concat(nlToArr(node.getElementsByTagName("*")));
-					imgOffset = 127;
+				if(bg_img !== "none")
+				{
+					const img_children = nlToArr(node.getElementsByTagName("*"));
+					
+					nodes_to_skip.push(...img_children);
+					img_offset = 127;
 				}
 
-				if(nodesToSkip.includes(node)) imgOffset = 96;
+				if(nodes_to_skip.includes(node)) img_offset = 96;
 			}
 		   
-			if(outline && node.nodeName === "INPUT" && node.type !== "submit") node.setAttribute("b__", "");
+			if(outline)
+			{
+				if(node.nodeName === "INPUT" && node.type !== "submit") node.setAttribute("b__", "");
+			}
 
 			if(!containsText(node)) return;
 	
-			let color = style.getPropertyValue("color");
+			const color = style.getPropertyValue("color");
 
 			if(colorsToSkip.includes(color)) return;
 
-			let bgColor      = style.getPropertyValue("background-color");
-			let bgLuma       = getBgLuma(node.parentNode, bgColor);
-			let luma         = calcLuma(color);
-			let colorfulness = calcColorfulness(color);
+			const bg_color 		= style.getPropertyValue("background-color");
+			const bg_luma 		= getBgLuma(node.parentNode, bg_color);
+			const luma 			= calcLuma(color);
+			const colorfulness 	= calcColorfulness(color);
 
-			let debugObj = {};
+			let db_obj = {};
 	
-			if(dbValues)
+			if(db_node)
 			{
-				debugObj = {
+				db_obj = {
 					tag,
 					classe,
 					//luma,
-					//bgLuma,
+					//bg_luma,
 					//colorfulness,
 					//minBgLuma,
 				};
 	
-				dbArr.push(debugObj);
+				db_arr.push(db_obj);
 			}
 
-			if(bgLuma < 160 - strength + imgOffset) return;
+			if(bg_luma < 160 - strength + img_offset) return;
 
-			let contrast = Math.abs(bgLuma - luma);
+			let contrast = Math.abs(bg_luma - luma);
 			contrast = +contrast.toFixed(2);
 		   
-			let isLink = tag === "A";
+			const is_link = tag === "A";
 
 			if(avoidReadable)
 			{ 
-				let minContrast     = 132 + (strength / 2);
-				let minLinkContrast = 96 + (strength / 3); 
-				let minColorfulness = 32;
-	
-				if(dbValues) Object.assign(debugObj, {contrast, minContrast, minLinkContrast});
-	
-				if(isLink)
+				let min_contrast 		= 132 + (strength / 2);
+				let min_link_contrast 	= 96 + (strength / 3); 
+				const min_colorfulness 	= 32;
+				
+				if(db_node) 
 				{
-					minContrast = minLinkContrast;
+					Object.assign(db_obj, {contrast, min_contrast, min_link_contrast});
 				}
-	
-				if(contrast > minContrast && colorfulness > minColorfulness)
+				
+				if(is_link)
+				{
+					min_contrast = min_link_contrast;
+				}
+				
+				if(contrast > min_contrast && colorfulness > min_colorfulness)
 				{
 					return;
 				}
@@ -331,15 +340,16 @@ function start(items)
 
 			if(advDimming)
 			{
-				let greyOffset = 0;
-				if(colorfulness <= 32) greyOffset = 32;
-	
-				let amount = -strength - greyOffset - contrast / 6;
-
+				let grey_offset = 0;
+				
+				if(colorfulness <= 32) grey_offset = 32;
+				
+				const amount = -strength - grey_offset - contrast / 6;
+				
 				callback(`[d__='${++advDimmingCount}']{color:${adjustBrightness(color, amount)}!important}`);
 			}
 
-			node.setAttribute("d__", advDimmingCount);
+			node.setAttribute("d__", adv_dimmingcnt);
 
 			if(underlineLinks)
 			{
@@ -380,8 +390,8 @@ function start(items)
 
 		processLargeArray(nodes);
 
-		if(dbTime) console.timeEnd(dbTimeStr);
-		if(dbValues) console.table(dbArr);
+		if(db_time) console.timeEnd(db_timestr);
+		if(db_node) console.table(db_arr);
 	}
 
 	const buildCSS = () => 
@@ -395,7 +405,7 @@ function start(items)
 		if(underlineLinks)  underlineStr = "[u__]{text-decoration:underline!important}";
 
 		let plhdrStr = `::placeholder{opacity:1!important;${forceBlack}}`;
-		let borderStr = "[b__]{border:1px solid black!important}"; //Doesn't hurt to put it in, even if form borders are disabled
+		let borderStr = "[b__]{border:1px solid black!important}"; // Doesn't hurt to put it in, even if form borders are disabled
 
 		if(size > 0) 
 		{
