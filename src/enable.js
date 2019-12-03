@@ -208,7 +208,16 @@ function start(items)
 
 	if(skipWhites) 
 	{
-		colorsToSkip.push("rgb(255, 255, 255)");
+		const white = [
+			"rgb(255, 255, 255)", 
+			"rgb(254, 254, 254)", 
+			"rgb(253, 253, 253)", 
+			"rgb(252, 252, 252)", 
+			"rgb(251, 251, 251)",
+			"rgb(250, 250, 250)"
+		];
+		
+		colorsToSkip.push(...white);
 	}
 
 	if(skipHeadings)
@@ -220,9 +229,10 @@ function start(items)
 	{
 		/* Debugging */
 		let dbArr = [];
-		let dbValues = 0;
-		let dbTime = 0;
+		const dbValues = 0;
+		const dbTime = 0;
 		let dbTimeStr = `Process ${callCount++} time`;
+		
 		if(dbTime) console.time(dbTimeStr);
 		/************/
 
@@ -329,7 +339,7 @@ function start(items)
 				callback(`[d__='${++advDimmingCount}']{color:${adjustBrightness(color, amount)}!important}`);
 			}
 
-		   node.setAttribute("d__", advDimmingCount);
+			node.setAttribute("d__", advDimmingCount);
 
 			if(underlineLinks)
 			{
