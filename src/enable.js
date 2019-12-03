@@ -73,9 +73,11 @@ function adjustBrightness(rgbStr, amount)
 	return newStr;
 }
 
-function containsText(node) {
-	//stackoverflow.com/a/27011142
-	return Array.some(node.childNodes, (child) => {
+function containsText(node) 
+{
+	// stackoverflow.com/a/27011142
+	return Array.some(node.childNodes, (child) => 
+	{
 		return child.nodeType === Node.TEXT_NODE && /\S/.test(child.nodeValue);
 	});
 }
@@ -151,13 +153,13 @@ function start(items)
 
 	let procImg = true;
 
-	let applyExceptions = (nodes) => 
+	const applyExceptions = (nodes) => 
 	{
-		/* Temporary url exceptions */
+		// Temporary url exceptions
 		switch(url)
 		{
 			case "youtube.com": {
-				//Filters youtube player. It doesn't get dimmed anyways, but it's to make sure it stays untouched by the one offset I have for now.
+				// Filters youtube player. It doesn't get dimmed anyways, but it's to make sure it stays untouched by the one offset I have for now.
 				nodes = nodes.filter(node => {return !String(node.className).startsWith("ytp")});
 				procImg = false;
 				break;
@@ -172,7 +174,7 @@ function start(items)
 		return nodes;
 	};
 
-	let getBgLuma = (parent, bgColor) =>
+	const getBgLuma = (parent, bgColor) =>
 	{
 		let bgLuma = 236; //assume light-ish color if we can't find it
 
@@ -204,7 +206,17 @@ function start(items)
 	let callCount = 0
 	let advDimmingCount = 0;
 
-	let process = (nodes) =>
+	if(skipWhites) 
+	{
+		colorsToSkip.push("rgb(255, 255, 255)");
+	}
+
+	if(skipHeadings)
+	{  
+		tagsToSkip = tagsToSkip.concat(["H1", "H2", "H3"]);
+	}
+
+	const process = (nodes) =>
 	{
 		/* Debugging */
 		let dbArr = [];
@@ -212,12 +224,7 @@ function start(items)
 		let dbTime = 0;
 		let dbTimeStr = `Process ${callCount++} time`;
 		if(dbTime) console.time(dbTimeStr);
-		/********* */
-
-		if(skipHeadings)
-		{  
-			tagsToSkip = tagsToSkip.concat(["H1", "H2", "H3"]);
-		}
+		/************/
 
 		let nodesToSkip = [];
 
@@ -262,7 +269,7 @@ function start(items)
 			if(!containsText(node)) return;
 	
 			let color = style.getPropertyValue("color");
-			if(skipWhites) colorsToSkip.push("rgb(255, 255, 255)");
+
 			if(colorsToSkip.includes(color)) return;
 
 			let bgColor      = style.getPropertyValue("background-color");
@@ -330,7 +337,6 @@ function start(items)
 			}
 		};
 
-		//https://stackoverflow.com/a/10344560
 		function processLargeArray(arr) 
 		{
 			let chunk = 200;
@@ -338,7 +344,8 @@ function start(items)
 			let len = arr.length;
 			let buf = [];
 
-			let doChunk = () => {
+			let doChunk = () => 
+			{
 				let count = chunk;
 			  
 				while (count-- && idx < len) 
@@ -367,7 +374,8 @@ function start(items)
 		if(dbValues) console.table(dbArr);
 	}
 
-	let buildCSS = () => {
+	const buildCSS = () => 
+	{
 		let dimStr = "", opacityStr = "", boldStr = "", forceBlack = "", sizeStr = "", underlineStr = "";
 
 		if(!advDimming)     dimStr = "[d__],[d__][style]{color:black!important}";
@@ -397,10 +405,12 @@ function start(items)
 
 	process(nodes);
 
-	///////////////////////////////////////////////////////////////////////////////////New elements
+	// New elements
 
-	let callback = (mutationsList) => {
-		mutationsList.forEach((mutation) => {
+	const callback = (mutationsList) => 
+	{
+		mutationsList.forEach((mutation) => 
+		{
 			if(mutation.addedNodes.length > 0) 
 			{
 				for(let node of mutation.addedNodes)
@@ -417,7 +427,7 @@ function start(items)
 		});
 	};
 
-	new MutationObserver(callback).observe(document.body, {childList: true, subtree: true});
+	new MutationObserver(callback).observe(document.body, { childList: true, subtree: true });
 
 	x.appendChild(t);
 };
@@ -496,19 +506,20 @@ function extractRootDomain(url)
 {
 	let domain = extractHostname(url);
 	let splitArr = domain.split('.');
-	let arrLen = splitArr.length;
+	let len = splitArr.length;
 
-	//Check if there is a subdomain
-	if(arrLen > 2)
+	// Check if there is a subdomain
+	if(len > 2)
 	{
-		domain = splitArr[arrLen - 2] + '.' + splitArr[arrLen - 1];
+		domain = splitArr[len - 2] + '.' + splitArr[len - 1];
 		
-		//Check if it's using a Country Code Top Level Domain (ccTLD) (i.e. ".me.uk")
-		if (splitArr[arrLen - 1].length === 2 && splitArr[arrLen - 1].length === 2) 
+		// Check if it's using a Country Code Top Level Domain (ccTLD) (i.e. ".me.uk")
+		if (splitArr[len - 1].length === 2 && splitArr[len - 1].length === 2) 
 		{
-			domain = splitArr[arrLen - 3] + '.' + domain;
+			domain = splitArr[len - 3] + '.' + domain;
 		}
 	}
+	
 	return domain;
 }
 
