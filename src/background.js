@@ -38,14 +38,14 @@ browser.browserAction.onClicked.addListener((tab) =>
 	chrome.browserAction.getTitle({tabId: tab.id}, (title) => {
 		if(title === titleApply) 
 		{
-			chrome.browserAction.setIcon({tabId: tab.id, path: 'icons/on.png'});
+			chrome.browserAction.setIcon({tabId: tab.id, path: 'assets/icons/on.png'});
 			chrome.browserAction.setTitle({title: titleRemove, tabId: tab.id});
 
 			chrome.tabs.executeScript(tab.id, {allFrames: false, file: 'src/enable.js', runAt:"document_end"});
 		}
 		else 
 		{
-			chrome.browserAction.setIcon({tabId: tab.id, path: 'icons/off.png'});
+			chrome.browserAction.setIcon({tabId: tab.id, path: 'assets/icons/off.png'});
 			chrome.browserAction.setTitle({title: titleApply, tabId: tab.id});
 
 			chrome.tabs.executeScript(tab.id, {allFrames: false, file: 'src/disable.js', runAt:"document_end"});
@@ -62,7 +62,7 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) =>
 {
 	if(request.from === "yo" && !request.t) 
 	{
-		chrome.browserAction.setIcon({tabId: sender.tab.id, path: 'icons/off.png'});
+		chrome.browserAction.setIcon({tabId: sender.tab.id, path: 'assets/icons/off.png'});
 		chrome.browserAction.setTitle({title: titleApply, tabId: sender.tab.id});
 	
 		tabs.splice(tabs.indexOf(sender.tab.id), 1);
@@ -70,7 +70,7 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) =>
 	}
 	else 
 	{
-		chrome.browserAction.setIcon({tabId: sender.tab.id, path: 'icons/on.png'});
+		chrome.browserAction.setIcon({tabId: sender.tab.id, path: 'assets/icons/on.png'});
 		chrome.browserAction.setTitle({title: titleRemove, tabId: sender.tab.id});
 
 		if(tabs.indexOf(sender.tab.id) === -1) 
@@ -95,7 +95,7 @@ browser.tabs.onUpdated.addListener((tabId,changeInfo,tab) =>
 
 			if(blacklist.find(o => o.url === domain)) 
 			{
-				chrome.browserAction.setIcon({tabId: tabId, path: 'icons/off.png'});
+				chrome.browserAction.setIcon({tabId: tabId, path: 'assets/icons/off.png'});
 				chrome.browserAction.setTitle({title: titleApply, tabId: tabId});
 				return;
 			}
