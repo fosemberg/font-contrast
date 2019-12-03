@@ -75,8 +75,9 @@ function adjustBrightness(rgbStr, amount)
 
 function containsText(node) 
 {
-	// stackoverflow.com/a/27011142
-	return Array.some(node.childNodes, (child) => 
+	const children = Array.from(node.childNodes);
+
+	return children.some((child) => 
 	{
 		return child.nodeType === Node.TEXT_NODE && /\S/.test(child.nodeValue);
 	});
