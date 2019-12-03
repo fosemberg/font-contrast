@@ -14,7 +14,7 @@
                     <span class ="sliderDesc">Strength</span>
                     <div>
                     <span class = "val" id = "strLabel"></span>
-                    <input type = "range" class = "slider" id = "strSlider" min = "-100" max = "100" step = "1">
+                    <input type = "range" class = "option slider" id = "strSlider" min = "-100" max = "100" step = "1">
                     </div>
                 </div>
 
@@ -29,11 +29,10 @@
                 </div>-->
             
                 <div class = "sliderDiv">
-                    
                     <span class ="sliderDesc"><span id ="curlyboye">[</span>Increase font (%)</span>
                     <div>
                     <span class = "val" id = "sizeLabel"></span>
-                    <input type = "range" class = "slider" id ="sizeSlider" min = "0" max = "100" value = "0">
+                    <input type = "range" class = "option slider" id ="sizeSlider" min = "0" max = "100" value = "0">
                     </div>
                 </div>
 
@@ -41,7 +40,7 @@
                     <span class ="sliderDesc">Threshold (px)</span>
                     <div>
                     <span class = "val" id = "thresholdLabel"></span>
-                    <input type = "range" class = "slider" id ="thresholdSlider" min = "0" max = "50" value = "14">
+                    <input type = "range" class = "option slider" id ="thresholdSlider" min = "0" max = "50" value = "14">
                     </div>
                 </div>
             </div>
@@ -53,21 +52,21 @@
             
             <div id="checksContainer">
                 <div class ="separator">
-                    <div class="option">
+                    <div>
                         <label for ="addWL">Whitelist</label>
                         <label class="container">
                             <input type="checkbox" id="addWL">
                             <span class="checkmark"></span>
                         </label>
                     </div>  
-                    <div class="option">
+                    <div>
                         <label for ="addBL">Blacklist</label>
                         <label class="container">
                             <input type="checkbox" id="addBL">
                             <span class="checkmark"></span>
                         </label>
                     </div>
-                    <div class ="option">
+                    <div>
                             <label for="advDimming">Advanced mode</label>
                             <label class="container">
                                 <input type="checkbox" id="advDimming">
@@ -142,6 +141,6 @@
             </div><!--checks-->
         <button id="optionsBtn">More options</button>
         </div> <!--wrapper-->
-        <script src="pageAction_options.js"></script>
+        <script src="src/pageAction_options.js"></script>
     </body>
 </html>

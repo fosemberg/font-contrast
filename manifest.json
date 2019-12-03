@@ -7,7 +7,7 @@
     "http://*/*", "https://*/*", "storage", "tabs", "file:///*"
   ],
   "background": {
-    "scripts": ["background.js"]
+    "scripts": ["src/background.js"]
   },
   "options_ui": {
     "page": "options.html",
