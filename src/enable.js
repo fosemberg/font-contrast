@@ -242,7 +242,7 @@ function start(items)
 
 		nodes = applyExceptions(nodes);
 
-		const dimNode = (node, callback) => 
+		const setNodeAttribs = (node, callback) => 
 		{
 			const tag = String(node.nodeName);
 			
@@ -291,7 +291,7 @@ function start(items)
 
 			const bg_color 		= style.getPropertyValue("background-color");
 			const bg_luma 		= getBgLuma(node.parentNode, bg_color);
-			const luma 			= calcLuma(color);
+			const luma 		= calcLuma(color);
 			const colorfulness 	= calcColorfulness(color);
 
 			let db_obj = {};
@@ -347,14 +347,17 @@ function start(items)
 				
 				const amount = -strength - grey_offset - contrast / 6;
 				
-				callback(`[d__='${++advDimmingCount}']{color:${adjustBrightness(color, amount)}!important}`);
+				++adv_dimmingcnt;
+				const new_color = adjustBrightness(color, amount);
+				
+				callback(`[d__='${adv_dimmingcnt}']{color:${new_color}!important}`);
 			}
 
 			node.setAttribute("d__", adv_dimmingcnt);
 
-			if(underlineLinks)
+			if(underlineLinks && is_link)
 			{
-				if(isLink) node.setAttribute("u__", 0);
+				node.setAttribute("u__", 0);
 			}
 		};
 
@@ -371,7 +374,7 @@ function start(items)
 			  
 				while (count-- && idx < len) 
 				{
-					dimNode(arr[idx++], cssStr => buf.push(cssStr));
+					setNodeAttribs(arr[idx++], cssStr => buf.push(cssStr));
 				}
 
 				if(advDimming) 
@@ -397,16 +400,24 @@ function start(items)
 
 	const buildCSS = () => 
 	{
-		let dimStr = "", opacityStr = "", boldStr = "", forceBlack = "", sizeStr = "", underlineStr = "";
+		let color_black = 'color:black!important';
+		
+		let simple_dim = `[d__],[d__][style]{${color_black}}`;
+		let opacity = '*,*[style]{opacity:1!important}';
+		let bold = '*{font-weight:bold!important}';
+		let underline = '[u__]{text-decoration:underline!important}';
 
-		if(!advDimming)     dimStr = "[d__],[d__][style]{color:black!important}";
-		if(forceOpacity)    opacityStr = "*,*[style]{opacity:1!important}"   
-		if(boldText)        boldStr = "*{font-weight:bold!important}";    
-		if(forcePlhdr)      forceBlack = "color:black!important";
-		if(underlineLinks)  underlineStr = "[u__]{text-decoration:underline!important}";
+		if(advDimming) 		simple_dim = '';
+		if(!forceOpacity) 	opacity = '';
+		if(!boldText) 		bold = '';
+		if(!underlineLinks) 	underline = '';
+		if(!forcePlhdr) 	color_black = '';
+		
+		const placeholder = `::placeholder{opacity:1!important;${color_black}}`;
+		
+		const form_border = '[b__]{border:1px solid black!important}'; // Doesn't hurt to put it in, even if form borders are disabled
 
-		let plhdrStr = `::placeholder{opacity:1!important;${forceBlack}}`;
-		let borderStr = "[b__]{border:1px solid black!important}"; // Doesn't hurt to put it in, even if form borders are disabled
+		let size_inc = '';
 
 		if(size > 0) 
 		{
@@ -414,16 +425,17 @@ function start(items)
 			
 			while(i <= sizeThreshold)
 			{
-				sizeStr += `[s__="${i}"]{font-size: calc(${i++}px + ${size}%)!important}\n`;
+				size_inc += `[s__='${i}']{font-size: calc(${i++}px + ${size}%)!important}\n`;
 			}
 		}
 
-		return `${dimStr}${opacityStr}${sizeStr}${boldStr}${plhdrStr}${borderStr}${underlineStr}`;
+		return `${simple_dim}${opacity}${size_inc}${bold}${placeholder}${form_border}${underline}`;
 	}
 
-	let css = buildCSS();
-	t.nodeValue = css;
+	const css_rules = buildCSS();
 
+	t.nodeValue = css_rules;
+	
 	process(nodes);
 
 	// New elements
