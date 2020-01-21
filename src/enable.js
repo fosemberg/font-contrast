@@ -6,17 +6,9 @@
 "use strict";
 var x, t;
 
-function getRGBarr(rgbString) 
+function getRGBarr(rgb_str)
 {
-	let colors = rgbString.split(")");
-	colors = colors[0].split("(");
-	colors = colors[1].split(",");
-
-	colors[0] = parseFloat(colors[0]);
-	colors[1] = parseFloat(colors[1]);
-	colors[2] = parseFloat(colors[2]);
-
-	return colors;
+	return rgb_str.match(/\d\.\d|\d+/g).map(Number);
 }
 
 function calcLuma(rgbString) 
