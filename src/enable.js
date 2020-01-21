@@ -8,6 +8,7 @@ var x, t;
 
 function getRGBarr(rgb_str)
 {
+	// Returns RGB or RGBA array
 	return rgb_str.match(/\d\.\d|\d+/g).map(Number);
 }
 
@@ -15,15 +16,17 @@ function calcLuma(rgbString)
 {
 	let colors = getRGBarr(rgbString);
 
-	let r = colors[0];
-	let g = colors[1];
-	let b = colors[2];
+	const
+	r = colors[0],
+	g = colors[1],
+	b = colors[2],
+	a = colors[3] || 1;
 
-	/* sRGB Luma gives more weight to green, as we perceive it to be lighter than other colors.
-	 * itu.int/dms_pubrec/itu-r/rec/bt/R-REC-BT.709-6-201506-I!!PDF-E.pdf */
-	let luma = r * 0.2126 + g * 0.7152 + b * 0.0722; 
+	let luma = (r * 0.2126 + g * 0.7152 + b * 0.0722) / a;
 
 	luma = +luma.toFixed(1);
+	
+	if(luma > 255) luma = 255;
 	
 	return luma;
 }
@@ -32,10 +35,11 @@ function calcColorfulness(rgbString)
 {
 	let colors = getRGBarr(rgbString);
 
-	let r, g, b;
-	r = colors[0];
-	g = colors[1];
-	b = colors[2];
+	const
+	r = colors[0],
+	g = colors[1],
+	b = colors[2],
+	a = colors[3];
 
 	let colorfulness = Math.abs(r-g);
 	colorfulness += Math.abs(g-b);
@@ -151,8 +155,9 @@ function start(items)
 		switch(url)
 		{
 			case "youtube.com": {
-				// Filters youtube player. It doesn't get dimmed anyways, but it's to make sure it stays untouched by the one offset I have for now.
-				nodes = nodes.filter(node => {return !String(node.className).startsWith("ytp")});
+				// Filters youtube player. It doesn't get dimmed anyways, 
+				// but it's to make sure it stays untouched by the one offset I have for now.
+				nodes = nodes.filter(node => { return !String(node.className).startsWith("ytp") });
 				procImg = false;
 				break;
 			}
@@ -183,13 +188,6 @@ function start(items)
 		if(bgColor !== transparent) 
 		{
 			bgLuma = calcLuma(bgColor);
-	
-			if(bgLuma < 48 && bgColor.startsWith("rgba")) 
-			{
-				/*The background color can sometimes be an rgba string such as: 'rgba(0, 0, 0, 0.01)', so we need to account for it. 
-				 *This can provide OK results with the strength slider. @TODO: Less naive method.*/
-				bgLuma += 127; 
-			}
 		}
 	
 		return bgLuma;
@@ -222,7 +220,7 @@ function start(items)
 		// Debugging 
 		let db_arr = [];
 		
-		const db_node = false;
+		const db_node = true;
 		const db_time = false;
 		
 		let db_timestr = `Process ${callcnt++} time`;
@@ -292,9 +290,8 @@ function start(items)
 			{
 				db_obj = {
 					tag,
-					classe,
-					//luma,
-					//bg_luma,
+					luma,
+					bg_luma
 					//colorfulness,
 					//minBgLuma,
 				};
@@ -302,16 +299,19 @@ function start(items)
 				db_arr.push(db_obj);
 			}
 
-			if(bg_luma < 160 - strength + img_offset) return;
+			const bg_threshold = 160 - strength + img_offset;
+
+			if(bg_luma < bg_threshold) return; 
 
 			let contrast = Math.abs(bg_luma - luma);
 			contrast = +contrast.toFixed(2);
+			console.log(contrast);
 		   
 			const is_link = tag === "A";
 
 			if(avoidReadable)
 			{ 
-				let min_contrast 		= 132 + (strength / 2);
+				let min_contrast 	= 132 + (strength / 2);
 				let min_link_contrast 	= 96 + (strength / 3); 
 				const min_colorfulness 	= 32;
 				
