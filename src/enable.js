@@ -12,16 +12,8 @@ function getRGBarr(rgb_str)
 	return rgb_str.match(/\d\.\d|\d+/g).map(Number);
 }
 
-function calcLuma(rgbString) 
+function calcLuma([r, g, b, a = 1])
 {
-	let colors = getRGBarr(rgbString);
-
-	const
-	r = colors[0],
-	g = colors[1],
-	b = colors[2],
-	a = colors[3] || 1;
-
 	let luma = (r * 0.2126 + g * 0.7152 + b * 0.0722) / a;
 
 	luma = +luma.toFixed(1);
@@ -31,16 +23,8 @@ function calcLuma(rgbString)
 	return luma;
 }
 
-function calcColorfulness(rgbString) 
+function calcColorfulness([r, g, b, a = 1]) 
 {
-	let colors = getRGBarr(rgbString);
-
-	const
-	r = colors[0],
-	g = colors[1],
-	b = colors[2],
-	a = colors[3];
-
 	let colorfulness = Math.abs(r-g);
 	colorfulness += Math.abs(g-b);
 
@@ -187,7 +171,7 @@ function start(items)
 	
 		if(bgColor !== transparent) 
 		{
-			bgLuma = calcLuma(bgColor);
+			bgLuma = calcLuma(getRGBarr(bgColor));
 		}
 	
 		return bgLuma;
@@ -276,13 +260,15 @@ function start(items)
 			if(!containsText(node)) return;
 	
 			const color = style.getPropertyValue("color");
-
+			
 			if(colorsToSkip.includes(color)) return;
+			
+			const rgb_arr = getRGBarr(color);
 
 			const bg_color 		= style.getPropertyValue("background-color");
 			const bg_luma 		= getBgLuma(node.parentNode, bg_color);
-			const luma 		= calcLuma(color);
-			const colorfulness 	= calcColorfulness(color);
+			const luma 		= calcLuma(rgb_arr);
+			const colorfulness 	= calcColorfulness(rgb_arr);
 
 			let db_obj = {};
 	
@@ -305,7 +291,6 @@ function start(items)
 
 			let contrast = Math.abs(bg_luma - luma);
 			contrast = +contrast.toFixed(2);
-			console.log(contrast);
 		   
 			const is_link = tag === "A";
 
