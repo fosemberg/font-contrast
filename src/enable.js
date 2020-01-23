@@ -15,6 +15,7 @@ function getRGBarr(rgb_str)
 function calcBrightness([r, g, b, a = 1])
 {
 	// Very naive but provides okay results
+	// @TODO: Better alpha calculation
 	let brt = +((r * 0.2126 + g * 0.7152 + b * 0.0722) / a).toFixed(1);
 	
 	if(brt > 255) brt = 255;
@@ -30,20 +31,19 @@ function calcColorfulness([r, g, b, a = 1])
 
 function adjustBrightness(colors, amount)
 {
+	let c = colors;
+	
+	// @TODO: Take RGBA into account
 	for (let i = 0; i < 3; ++i)
 	{
-		let col = colors[i];
+		c[i] += amount;
+		c[i] = parseInt(c[i]);
 
-		col += amount;
-		col = parseInt(col);
-
-		if (col > 255) col = 255;
-		else if (col < 0) col = 0;
-
-		colors[i] = col;
+		if (c[i] > 255) c[i] = 255;
+		else if (c[i] < 0) c[i] = 0;
 	}
 
-	return `rgb(${colors[0]}, ${colors[1]}, ${colors[2]})`;
+	return `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
 }
 
 function containsText(node) 
@@ -197,7 +197,7 @@ function start(items)
 		// Debugging 
 		let db_arr = [];
 		
-		const db_node = true;
+		const db_node = false;
 		const db_time = false;
 		
 		let db_timestr = `Process ${callcnt++} time`;
@@ -256,7 +256,7 @@ function start(items)
 			
 			if(colorsToSkip.includes(color)) return;
 			
-			const rgb_arr = getRGBarr(color);
+			let rgb_arr = getRGBarr(color);
 
 			const bg_color 		= style.getPropertyValue("background-color");
 			const bg_brt 		= getBackgroundBrightness(node.parentNode, bg_color);
@@ -287,7 +287,7 @@ function start(items)
 
 			if(avoidReadable)
 			{ 
-				const min_contrast	= 132 + (strength / 2);
+				let   min_contrast	= 132 + (strength / 2);
 				const min_link_contrast = 96 + (strength / 3); 
 				const min_colorfulness	= 32;
 				
@@ -316,7 +316,7 @@ function start(items)
 				const amount = -strength - grey_offset - contrast / 6;
 				
 				++adv_dimmingcnt;
-				const new_color = adjustBrightness(color, amount);
+				const new_color = adjustBrightness(rgb_arr, amount);
 				
 				callback(`[d__='${adv_dimmingcnt}']{color:${new_color}!important}`);
 			}
@@ -331,12 +331,15 @@ function start(items)
 
 		function processLargeArray(arr) 
 		{
-			let chunk = 200;
+			const chunk = 200;
+			const len = arr.length;
+			
 			let idx = 0;
-			let len = arr.length;
 			let buf = [];
 
-			let doChunk = () => 
+			// Helps prevent the script from blocking the page while running on large websites.
+			// However, it's not enough on advanced mode because the bottleneck is just the sheer amount of CSS rules being added.
+			const doChunk = () => 
 			{
 				let count = chunk;
 			  
