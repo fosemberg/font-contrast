@@ -12,29 +12,24 @@ function getRGBarr(rgb_str)
 	return rgb_str.match(/\d\.\d|\d+/g).map(Number);
 }
 
-function calcLuma([r, g, b, a = 1])
+function calcBrightness([r, g, b, a = 1])
 {
-	let luma = (r * 0.2126 + g * 0.7152 + b * 0.0722) / a;
-
-	luma = +luma.toFixed(1);
+	// Very naive but provides okay results
+	let brt = +((r * 0.2126 + g * 0.7152 + b * 0.0722) / a).toFixed(1);
 	
-	if(luma > 255) luma = 255;
+	if(brt > 255) brt = 255;
 	
-	return luma;
+	return brt;
 }
 
 function calcColorfulness([r, g, b, a = 1]) 
 {
-	let colorfulness = Math.abs(r-g);
-	colorfulness += Math.abs(g-b);
-
-	return colorfulness;
+	// Literally no clue what I'm doing here
+	return Math.abs(r-g) + Math.abs(g-b);
 }
 
-function adjustBrightness(rgbStr, amount)
+function adjustBrightness(colors, amount)
 {
-	let colors = getRGBarr(rgbStr);
-
 	for (let i = 0; i < 3; ++i)
 	{
 		let col = colors[i];
@@ -47,10 +42,8 @@ function adjustBrightness(rgbStr, amount)
 
 		colors[i] = col;
 	}
-	
-	let newStr = `rgb(${colors[0]}, ${colors[1]}, ${colors[2]})`;
 
-	return newStr;
+	return `rgb(${colors[0]}, ${colors[1]}, ${colors[2]})`;
 }
 
 function containsText(node) 
@@ -155,7 +148,7 @@ function start(items)
 		return nodes;
 	};
 
-	const getBgLuma = (parent, bgColor) =>
+	const getBackgroundBrightness = (parent, bgColor) =>
 	{
 		let bgLuma = 236; //assume light-ish color if we can't find it
 
@@ -171,7 +164,7 @@ function start(items)
 	
 		if(bgColor !== transparent) 
 		{
-			bgLuma = calcLuma(getRGBarr(bgColor));
+			bgLuma = calcBrightness(getRGBarr(bgColor));
 		}
 	
 		return bgLuma;
@@ -199,7 +192,7 @@ function start(items)
 	let callcnt 		= 0;
 	let adv_dimmingcnt 	= 0;
 
-	const process = (nodes) =>
+	const process = nodes =>
 	{
 		// Debugging 
 		let db_arr = [];
@@ -266,8 +259,8 @@ function start(items)
 			const rgb_arr = getRGBarr(color);
 
 			const bg_color 		= style.getPropertyValue("background-color");
-			const bg_luma 		= getBgLuma(node.parentNode, bg_color);
-			const luma 		= calcLuma(rgb_arr);
+			const bg_brt 		= getBackgroundBrightness(node.parentNode, bg_color);
+			const fg_brt 		= calcBrightness(rgb_arr);
 			const colorfulness 	= calcColorfulness(rgb_arr);
 
 			let db_obj = {};
@@ -276,10 +269,9 @@ function start(items)
 			{
 				db_obj = {
 					tag,
-					luma,
-					bg_luma
-					//colorfulness,
-					//minBgLuma,
+					fg_brt,
+					bg_brt,
+					colorfulness,
 				};
 	
 				db_arr.push(db_obj);
@@ -287,18 +279,17 @@ function start(items)
 
 			const bg_threshold = 160 - strength + img_offset;
 
-			if(bg_luma < bg_threshold) return; 
+			if(bg_brt < bg_threshold) return; 
 
-			let contrast = Math.abs(bg_luma - luma);
-			contrast = +contrast.toFixed(2);
+			const contrast = +Math.abs(bg_brt - fg_brt).toFixed(2);
 		   
 			const is_link = tag === "A";
 
 			if(avoidReadable)
 			{ 
-				let min_contrast 	= 132 + (strength / 2);
-				let min_link_contrast 	= 96 + (strength / 3); 
-				const min_colorfulness 	= 32;
+				const min_contrast	= 132 + (strength / 2);
+				const min_link_contrast = 96 + (strength / 3); 
+				const min_colorfulness	= 32;
 				
 				if(db_node) 
 				{
