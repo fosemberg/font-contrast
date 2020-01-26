@@ -14,13 +14,8 @@ function getRGBarr(rgb_str)
 
 function calcBrightness([r, g, b, a = 1])
 {
-	// Very naive but provides okay results
-	// @TODO: Better alpha calculation
-	let brt = +((r * 0.2126 + g * 0.7152 + b * 0.0722) / a).toFixed(1);
-	
-	if(brt > 255) brt = 255;
-	
-	return brt;
+	// Probably naive but provides okay results
+	return +(r * 0.2126 + g * 0.7152 + b * 0.0722).toFixed(1);
 }
 
 function calcColorfulness([r, g, b, a = 1]) 
@@ -29,28 +24,11 @@ function calcColorfulness([r, g, b, a = 1])
 	return Math.abs(r-g) + Math.abs(g-b);
 }
 
-function adjustBrightness(colors, amount)
-{
-	let c = colors;
-	
-	// @TODO: Take RGBA into account
-	for (let i = 0; i < 3; ++i)
-	{
-		c[i] += amount;
-		c[i] = parseInt(c[i]);
-
-		if (c[i] > 255) c[i] = 255;
-		else if (c[i] < 0) c[i] = 0;
-	}
-
-	return `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
-}
-
 function containsText(node) 
 {
 	const children = Array.from(node.childNodes);
 
-	return children.some((child) => 
+	return children.some(child => 
 	{
 		return child.nodeType === Node.TEXT_NODE && /\S/.test(child.nodeValue);
 	});
@@ -117,9 +95,7 @@ function start(items)
 		y.appendChild(z);
 	}
 
-	let nodes = [];
-
-	nodes = nlToArr(document.body.getElementsByTagName("*"));
+	let nodes = nlToArr(document.body.getElementsByTagName('*'));
 
 	let tagsToSkip = ["SCRIPT", "LINK", "STYLE", "IMG", "VIDEO", "SOURCE", "CANVAS"];
 	let colorsToSkip = ["rgb(0, 0, 0)", "rgba(0, 0, 0, 0)"];
@@ -190,7 +166,7 @@ function start(items)
 	}
 
 	let callcnt 		= 0;
-	let adv_dimmingcnt 	= 0;
+	let rgba_cnt 		= 0;
 
 	const process = nodes =>
 	{
@@ -209,7 +185,7 @@ function start(items)
 
 		nodes = applyExceptions(nodes);
 
-		const setNodeAttribs = node => 
+		const setNodeAttribs = (node, callback) => 
 		{
 			const tag = String(node.nodeName);
 			
@@ -257,7 +233,16 @@ function start(items)
 			if(colorsToSkip.includes(color)) return;
 			
 			let rgb_arr = getRGBarr(color);
-
+			
+			if(typeof rgb_arr[3] !== 'undefined')
+			{
+				node.setAttribute("rgba__", rgba_cnt);
+				
+				const new_color = color.replace(/\d\.\d+/, '1');
+				
+				callback(`[rgba__='${rgba_cnt++}']{color:${new_color}!important}`);
+			}
+			
 			const bg_color 		= style.getPropertyValue("background-color");
 			const bg_brt 		= getBackgroundBrightness(node.parentNode, bg_color);
 			const fg_brt 		= calcBrightness(rgb_arr);
@@ -307,7 +292,7 @@ function start(items)
 				}
 			}
 
-			node.setAttribute("d__", adv_dimmingcnt);
+			node.setAttribute("d__", 0);
 
 			if(underlineLinks && is_link)
 			{
@@ -315,13 +300,14 @@ function start(items)
 			}
 		};
 
-		function processLargeArray(arr) 
+		let rgba_buf = [];
+
+		const processLargeArray = arr =>
 		{
 			const chunk = 200;
 			const len = arr.length;
 			
 			let idx = 0;
-			let buf = [];
 			
 			const doChunk = () => 
 			{
@@ -329,9 +315,9 @@ function start(items)
 			  
 				while (count-- && idx < len) 
 				{
-					setNodeAttribs(arr[idx++]);
+					setNodeAttribs(arr[idx++], rgba_str => rgba_buf.push(rgba_str));
 				}
-
+				
 				if(idx < len) 
 				{
 					setTimeout(doChunk, 0);
@@ -342,6 +328,8 @@ function start(items)
 		}
 
 		processLargeArray(nodes);
+		
+		t.nodeValue += rgba_buf.join('');
 
 		if(db_time) console.timeEnd(db_timestr);
 		if(db_node) console.table(db_arr);
@@ -349,7 +337,7 @@ function start(items)
 
 	const buildCSS = () => 
 	{
-		let color_black = 'color:black!important';
+		let color_black = 'color:rgba(0, 0, 0, 1)!important';
 		
 		let dim = '';
 		
@@ -359,7 +347,6 @@ function start(items)
 		}
 		else 	dim = `[d__],[d__][style]{${color_black}}`;
 		
-		let advanced_dim	= `[d__],[d__][style]{filter:brightness(50%);}`;
 		let opacity		= '*,*[style]{opacity:1!important}';
 		let bold		= '*{font-weight:bold!important}';
 		let underline		= '[u__]{text-decoration:underline!important}';
@@ -394,26 +381,25 @@ function start(items)
 	
 	process(nodes);
 
-	// New elements
-
-	const callback = (mutationsList) => 
+	const callback = mutations => 
 	{
-		mutationsList.forEach((mutation) => 
+		let new_nodes = [];
+		
+		mutations.forEach(mut => 
 		{
-			if(mutation.addedNodes.length > 0) 
+			for(const node of mut.addedNodes)
 			{
-				for(let node of mutation.addedNodes)
-				{
-					if(node instanceof Element)
-					{
-						let nodes = Array.from(node.getElementsByTagName("*"));
-						nodes.push(node);
-				 
-						process(nodes);
-					}
-				}
+				if(!(node instanceof Element)) continue;
+
+				// Get children of node, then node itself
+				const nodes = nlToArr(node.getElementsByTagName('*'));
+				nodes.push(node);
+
+				new_nodes.push(...nodes);
 			}
 		});
+		
+		process(new_nodes);
 	};
 
 	new MutationObserver(callback).observe(document.body, { childList: true, subtree: true });
