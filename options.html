@@ -49,11 +49,42 @@
 
 		<h3>Global options</h3>
 
+		<div class ="settings">
+			<span>Advanced mode</span>
+			<div class="help-tip">
+				<p>
+				Dims text to a darker shade of its color, instead of just black.
+				<br>e.g. Light grey turns dark grey.
+				<br>The effect can be adjusted with the brightness slider.
+				
+				<br>
+				<br><span style="color:yellow">This feature is a work in progress.</span>
+				</p>
+			</div>
+			<label class="container">
+				<input type="checkbox" id="advDimming">
+				<span class="checkmark"></span>
+			</label>
+		</div>
+		
+		<div class ="settings">
+			<span>Brightness (%)</span>
+
+			<div class="help-tip">
+				<p>
+				Determines the brightness percentage of text.<br> e.g. 50% equals half brightness.<br>Requires "Advanced mode" to be checked.
+				</p>
+			</div>
+			<span class ="sliderLabel" id = "brt-label"></span>
+			<input type = "range" min = "0" max = "100" value = "50" class="slider" id = "brt-slider">
+		</div>
+
 	    <div class ="settings" id ="strOption">
 		<span>Strength</span>
-		<div class="help-tip" id="strTip">
+		<div class="help-tip">
 		    <p>
-			Adjusts the detection of dark backgrounds. Lower this value when the app dims light text against dark backgrounds.
+			Adjusts the detection of dark backgrounds. 
+			<br><br>If the add-on dims light text against dark backgrounds, try lowering this value.
 		    </p>
 		</div>
 
@@ -64,7 +95,7 @@
 	    <div class ="settings" id ="sizeOption">
 		<span>Increase font (%)</span>
 
-		<div class="help-tip" id="sizeTip">
+		<div class="help-tip">
 		    <p>
 			Increases font size. Fonts above the size threshold won't be affected.
 		    </p>
@@ -77,7 +108,7 @@
 		<div class ="settings" id ="threshOption">
 			<span>Size threshold (px)</span>
 
-			<div class="help-tip" id="thrTip">
+			<div class="help-tip">
 				<p>
 				Determines the minimum size a font has to be (in pixels) for it to be affected by an increase in size. By default, only small fonts are affected.
 				</p>
@@ -85,40 +116,15 @@
 			<span class ="sliderLabel" id = "threshLabel"></span>
 			<input type = "range" min = "0" max = "50" value = "0" class="slider" id = "threshSlider">
 		</div>
-		
-		<div class ="settings">
-			<span>Advanced mode</span>
-			<div class="help-tip" id="advTip">
-				<p>
-				Dims text to a darker shade of its color, instead of just black.
-				<br>e.g. Light grey turns dark grey.
-				<br>The effect can be adjusted with the brightness slider.
-				</p>
-			</div>
-			<label class="container">
-				<input type="checkbox" id="advDimming">
-				<span class="checkmark"></span>
-			</label>
-		</div>
-		
-		<div class ="settings" id ="threshOption">
-			<span>Brightness (%)</span>
-
-			<div class="help-tip" id="thrTip">
-				<p>
-				Determines the brightness percentage of text.<br> e.g. 50% equals half brightness.<br>Requires "Advanced mode" to be checked.
-				</p>
-			</div>
-			<span class ="sliderLabel" id = "brt-label"></span>
-			<input type = "range" min = "0" max = "100" value = "50" class="slider" id = "brt-slider">
-		</div>
 
 	    <div class ="settings">
 		<span>Avoid colorful text</span>
 
-		<div class="help-tip" id="advTip">
+		<div class="help-tip">
 		    <p>
-			Attempts to avoid colorful text and links, if they are considered readable. <br><br>Links have a slightly higher threshold, i.e. the same color might not be dimmed if it's a link.<br>Can be adjusted with strength.
+			Attempts to avoid colorful text and links, if they are considered readable. 
+			<br><br>Links have a slightly higher threshold, i.e. the same color might not be dimmed if it's a link.
+			<br>Can be adjusted with "Strength".
 		    </p>
 		</div>
 
@@ -131,7 +137,7 @@
 	    <div class ="settings">
 		<span>Bold text</span>
 		
-		<div class="help-tip" id="boldTip">
+		<div class="help-tip">
 		    <p>
 			Changes the font weight of all text to bold.
 		    </p>
@@ -146,7 +152,7 @@
 	    <div class ="settings">
 		<span>Skip headings</span>
 		
-		<div class="help-tip" id="skipHdnTip">
+		<div class="help-tip">
 		    <p>
 			Avoids dimming all big headings. (&lth1&gt, &lth2&gt, &lth3&gt)
 		    </p>
@@ -160,7 +166,7 @@
 	    <div class ="settings">
 		    <span>Skip white text</span>
 		    
-		    <div class="help-tip" id="skipHdnTip">
+		    <div class="help-tip">
 			<p>
 			    Avoids dimming all white text.<br>
 			    White text is usually behind images, where determining the background color is not always possible.<br>
@@ -175,7 +181,7 @@
 	    <div class ="settings">
 		    <span>Underline black links</span>
 		    
-		    <div class="help-tip" id="skipHdnTip">
+		    <div class="help-tip">
 			<p>
 			    Adds an underline to links that turn black with the add-on enabled, to distinguish them from other black text.
 			</p>
@@ -190,7 +196,7 @@
 	    <div class ="settings">
 		<span>Force max opacity</span>
 		    
-		<div class="help-tip" id="thrTip">
+		<div class="help-tip">
 		    <p>
 			Some websites use dark fonts that still look grey because of low opacity. This option forces full opacity on all text.<br><br>Disable this on websites that use opacity to hide some elements (e.g. YouTube).
 		    </p>
@@ -198,6 +204,21 @@
 
 		<label class="container">
 		    <input type="checkbox" id="forceOpacity">
+		    <span class="checkmark"></span>
+		</label>
+	    </div>
+	    
+	    <div class ="settings">
+		<span>Input border</span>
+		    
+		<div class="help-tip">
+		    <p>
+			Attempts to add a black outline around text areas.<br><br><span style="color:yellow">This feature is experimental.</span>
+		    </p>
+		</div>
+
+		<label class="container">
+		    <input type="checkbox" id="input-border">
 		    <span class="checkmark"></span>
 		</label>
 	    </div>

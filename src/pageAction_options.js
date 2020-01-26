@@ -26,7 +26,7 @@ let BLcheck         = doc.querySelector("#addBL");
 let skipColoreds    = doc.querySelector("#skipColoreds");
 let skipHeadings    = doc.querySelector("#skipHeadings");
 let advDimming      = doc.querySelector("#advDimming");
-let outline         = doc.querySelector("#outline");
+let input_border    = doc.querySelector("#outline");
 let boldText        = doc.querySelector("#boldText");
 let forcePlhdr      = doc.querySelector("#forcePlhdr");
 let skipWhites      = doc.querySelector("#skipWhites");
@@ -87,6 +87,7 @@ let callback = tabs =>
 		forceOpacity.checked 	= i.forceOpacity;
 		skipWhites.checked 	= i.skipWhites;
 		underlineLinks.checked 	= i.underlineLinks;
+		input_border.checked 	= i.input_border;
 
 		let whitelist = i.whitelist || [];
 		let blacklist = i.blacklist || [];
@@ -115,7 +116,7 @@ let callback = tabs =>
 				skipHeadings.checked 		= item.skipHeadings;
 				skipColoreds.checked 		= item.skipColoreds;
 				advDimming.checked 		= item.advDimming;
-				outline.checked 		= item.outline;
+				input_border.checked 		= item.input_border;
 				boldText.checked 		= item.boldText;
 				forcePlhdr.checked 		= item.forcePlhdr;
 				forceOpacity.checked 		= item.forceOpacity;
@@ -146,7 +147,7 @@ let callback = tabs =>
 			forceOpacity: 	i.forceOpacity,
 			skipWhites: 	i.skipWhites,
 			underlineLinks: i.underlineLinks,
-			outline: 	false // The outline cannot be set globally for now
+			input_border: 	i.input_border
 		};
 
 		const updateList = (item, is_wl, add) =>
@@ -235,7 +236,7 @@ let callback = tabs =>
 				wl_item.skipColoreds 	= skipColoreds.checked;
 				wl_item.skipHeadings 	= skipHeadings.checked;
 				wl_item.advDimming 	= advDimming.checked;
-				wl_item.outline 	= outline.checked;
+				wl_item.input_border 	= input_border.checked;
 				wl_item.boldText 	= boldText.checked;
 				wl_item.forcePlhdr 	= forcePlhdr.checked;
 				wl_item.forceOpacity 	= forceOpacity.checked;
@@ -280,7 +281,8 @@ let callback = tabs =>
 		"forcePlhdr",
 		"forceOpacity",
 		"skipWhites",
-		"underlineLinks"
+		"underlineLinks",
+		"input_border"
 	];
 
 	storage.get(stored, init);

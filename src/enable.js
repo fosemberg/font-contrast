@@ -46,7 +46,7 @@ function start(items)
 		skipHeadings, 
 		skipColoreds: avoidReadable, 
 		advDimming, 
-		outline, 
+		input_border, 
 		boldText, 
 		forcePlhdr, 
 		forceOpacity, 
@@ -72,7 +72,7 @@ function start(items)
 			avoidReadable   = i.skipColoreds; 
 			advDimming      = i.advDimming;
 			brightness	= i.brightness;
-			outline         = i.outline;
+			input_border    = i.input_border;
 			boldText        = i.boldText;
 			forcePlhdr      = i.forcePlhdr;
 			forceOpacity    = i.forceOpacity;
@@ -224,7 +224,7 @@ function start(items)
 				if(nodes_to_skip.includes(node)) img_offset = 96;
 			}
 		   
-			if(outline)
+			if(input_border)
 			{
 				if(node.nodeName === "INPUT" && node.type !== "submit") node.setAttribute("b__", "");
 			}
@@ -436,7 +436,8 @@ function init()
 		"forcePlhdr",
 		"smoothEnabled",
 		"skipWhites",
-		"underlineLinks"
+		"underlineLinks",
+		"input_border"
 	];
 
 	browser.storage.local.get(stored, start);

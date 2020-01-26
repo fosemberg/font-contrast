@@ -30,6 +30,7 @@ let forcePlhdr      = doc.querySelector('#forcePlhdr');
 let forceOpacity    = doc.querySelector('#forceOpacity');
 let skipWhites      = doc.querySelector('#skipWhites');
 let underlineLinks  = doc.querySelector('#underlineLinks');
+const input_border  = doc.querySelector('#input-border');
 
 // Whitelist
 let WLtable 		= doc.querySelector('#whitelist');
@@ -49,11 +50,6 @@ let BLtbody 		= doc.querySelector("#BLtbody");
 
 let wl = [];
 let bl = [];
-
-function isChecked(arg) 
-{
-	return doc.getElementById(arg).checked;
-}
 
 function addRow(item, is_wl)
 {
@@ -175,7 +171,8 @@ function init()
 		"forcePlhdr",
 		"smoothEnabled",
 		"skipWhites",
-		"underlineLinks"
+		"underlineLinks",
+		"input_border"
 	];
 
 	storage.get(checks, i => 
@@ -190,6 +187,7 @@ function init()
 		doc.getElementById("smoothEnabled").checked 	= i.smoothEnabled;
 		doc.getElementById("skipWhites").checked 	= i.skipWhites;
 		doc.getElementById("underlineLinks").checked 	= i.underlineLinks;
+		input_border.checked = i.input_border;
 	});
 	
 	storage.get('whitelist', item => 
@@ -222,6 +220,106 @@ function init()
 }
 
 init();
+
+function addListeners()
+{
+	const isChecked = check => 
+	{
+		return doc.getElementById(check).checked;
+	}
+	
+	globalEnabled.onclick = () => {
+		storage.set({'enableEverywhere': isChecked("defaultEn")});
+	};
+
+	skipHeadings.onclick = () => {
+		storage.set({'skipHeadings': isChecked("skipHeadings")});
+	};
+
+	skipColoreds.onclick = () => {
+		storage.set({'skipColoreds': isChecked("skipColoreds")});
+	};
+
+	advDimming.onclick = () => {
+		storage.set({'advDimming': isChecked("advDimming")});
+	};
+
+	smoothEnabled.onclick = () => {
+		storage.set({'smoothEnabled': isChecked("smoothEnabled")});
+	};
+
+	boldText.onclick = () => {
+		storage.set({'boldText': isChecked("boldText")});
+	};
+
+	forcePlhdr.onclick = () => {
+		storage.set({'forcePlhdr': isChecked("forcePlhdr")});
+	};
+
+	forceOpacity.onclick = () => {
+		storage.set({'forceOpacity': isChecked("forceOpacity")});
+	};
+
+	skipWhites.onclick = () => {
+		storage.set({'skipWhites': isChecked("skipWhites")});
+	};
+
+	underlineLinks.onclick = () => {
+		storage.set({'underlineLinks': isChecked("underlineLinks")});
+	};
+	
+	input_border.onclick = () => {
+		storage.set({'input_border': isChecked("input-border")});
+	};
+	
+	WLaddButton.addEventListener('click', saveURL.bind(this, true));
+	WLresetButton.addEventListener('click', reset.bind(this, true));
+
+	BLaddButton.addEventListener('click', saveURL.bind(this, false));
+	BLresetButton.addEventListener('click', reset.bind(this, false));
+
+	doc.getElementById("welcome").onclick = () => browser.tabs.create({ url: "Welcome.html" });
+	
+	strSlider.oninput = () => 
+	{
+		strLabel.innerText = strSlider.value;
+	};
+
+	sizeSlider.oninput = () => 
+	{
+		sizeLabel.innerText = sizeSlider.value;
+	};
+
+	threshSlider.oninput = () => 
+	{
+		threshLabel.innerText = threshSlider.value;
+	};
+	
+	brt_slider.oninput = () => 
+	{
+		brt_label.innerText = brt_slider.value;
+	};
+	
+	brt_slider.onchange = () => 
+	{
+		storage.set({"brightness": brt_slider.value});
+	};
+
+	strSlider.onchange = () => 
+	{
+		storage.set({"globalStr": strSlider.value});
+	}
+
+	sizeSlider.onchange = () => 
+	{
+		storage.set({"size": sizeSlider.value});
+	};
+
+	threshSlider.onchange = () => 
+	{
+		storage.set({"sizeThreshold": threshSlider.value});
+	}
+}
 
 function saveURL(is_wl) 
 {
@@ -316,97 +414,6 @@ function reset(is_wl)
 		storage.remove('blacklist');
 		bl = [];
 		BLtbody.innerHTML = "";
-	}
-}
-
-function addListeners()
-{
-	globalEnabled.onclick = () => {
-		storage.set({'enableEverywhere': isChecked("defaultEn")});
-	};
-
-	skipHeadings.onclick = () => {
-		storage.set({'skipHeadings': isChecked("skipHeadings")});
-	};
-
-	skipColoreds.onclick = () => {
-		storage.set({'skipColoreds': isChecked("skipColoreds")});
-	};
-
-	advDimming.onclick = () => {
-		storage.set({'advDimming': isChecked("advDimming")});
-	};
-
-	smoothEnabled.onclick = () => {
-		storage.set({'smoothEnabled': isChecked("smoothEnabled")});
-	};
-
-	boldText.onclick = () => {
-		storage.set({'boldText': isChecked("boldText")});
-	};
-
-	forcePlhdr.onclick = () => {
-		storage.set({'forcePlhdr': isChecked("forcePlhdr")});
-	};
-
-	forceOpacity.onclick = () => {
-		storage.set({'forceOpacity': isChecked("forceOpacity")});
-	};
-
-	skipWhites.onclick = () => {
-		storage.set({'skipWhites': isChecked("skipWhites")});
-	};
-
-	underlineLinks.onclick = () => {
-		storage.set({'underlineLinks': isChecked("underlineLinks")});
-	};
-	
-	WLaddButton.addEventListener('click', saveURL.bind(this, true));
-	WLresetButton.addEventListener('click', reset.bind(this, true));
-
-	BLaddButton.addEventListener('click', saveURL.bind(this, false));
-	BLresetButton.addEventListener('click', reset.bind(this, false));
-
-	doc.getElementById("welcome").onclick = () => browser.tabs.create({ url: "Welcome.html" });
-	
-	strSlider.oninput = () => 
-	{
-		strLabel.innerText = strSlider.value;
-	};
-
-	sizeSlider.oninput = () => 
-	{
-		sizeLabel.innerText = sizeSlider.value;
-	};
-
-	threshSlider.oninput = () => 
-	{
-		threshLabel.innerText = threshSlider.value;
-	};
-	
-	brt_slider.oninput = () => 
-	{
-		brt_label.innerText = brt_slider.value;
-	};
-	
-	brt_slider.onchange = () => 
-	{
-		storage.set({"brightness": brt_slider.value});
-	};
-
-	strSlider.onchange = () => 
-	{
-		storage.set({"globalStr": strSlider.value});
-	}
-
-	sizeSlider.onchange = () => 
-	{
-		storage.set({"size": sizeSlider.value});
-	};
-
-	threshSlider.onchange = () => 
-	{
-		storage.set({"sizeThreshold": threshSlider.value});
 	}
 }
 
