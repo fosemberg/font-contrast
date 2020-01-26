@@ -125,6 +125,11 @@ let callback = tabs =>
 				BLcheck.checked = false;
 			}
 		}
+		
+		if(!advDimming.checked)
+		{
+			document.querySelector('#brt-div').style.display ='none';
+		}
 
 		let wl_item = {
 			url: 		domain, 
@@ -218,7 +223,7 @@ let callback = tabs =>
 			}
 		};
 
-		document.querySelectorAll('.option').forEach((check) =>
+		document.querySelectorAll('.option').forEach(check =>
 		{
 			check.onclick = () => 
 			{
@@ -235,6 +240,20 @@ let callback = tabs =>
 				wl_item.forceOpacity 	= forceOpacity.checked;
 				wl_item.skipWhites 	= skipWhites.checked;
 				wl_item.underlineLinks 	= underlineLinks.checked;
+				
+				if(check.id == 'adv-mode')
+				{
+					const brt_div = document.querySelector('#brt-div');
+					
+					if(advDimming.checked)
+					{
+						brt_div.style.display = 'flex';
+					}
+					else
+					{
+						brt_div.style.display = 'none';
+					}
+				}
 				
 				whitelist = updateList(wl_item, true, true);
 
