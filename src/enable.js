@@ -322,9 +322,7 @@ function start(items)
 			
 			let idx = 0;
 			let buf = [];
-
-			// Helps prevent the script from blocking the page while running on large websites.
-			// However, it's not enough on advanced mode because the bottleneck is just the sheer amount of CSS rules being added.
+			
 			const doChunk = () => 
 			{
 				let count = chunk;
