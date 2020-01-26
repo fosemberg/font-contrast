@@ -71,8 +71,8 @@ let callback = tabs =>
 		sizeLabel.innerText      = i.size;
 		thresholdSlider.value    = i.sizeThreshold;
 		thresholdLabel.innerText = i.sizeThreshold;
-		brt_slider.value         = i.brightness;
-		brt_label.innerText      = i.brightness;
+		brt_slider.value         = i.brightness || 50;
+		brt_label.innerText      = i.brightness || 50;
 
 		strSlider.oninput 	= () => strLabel.innerText 	 = strSlider.value;
 		sizeSlider.oninput 	= () => sizeLabel.innerText 	 = sizeSlider.value;
