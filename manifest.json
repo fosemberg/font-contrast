@@ -1,7 +1,7 @@
 {
   "name": "Font Contrast",
   "description": "Improves webpage readability.",
-  "version": "1.5.6",
+  "version": "1.5.7",
   "author": "Fushko",
   "permissions": [
     "http://*/*", "https://*/*", "storage", "tabs", "file:///*"
