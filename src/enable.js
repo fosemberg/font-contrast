@@ -209,7 +209,7 @@ function start(items)
 
 		nodes = applyExceptions(nodes);
 
-		const setNodeAttribs = (node, callback) => 
+		const setNodeAttribs = node => 
 		{
 			const tag = String(node.nodeName);
 			
@@ -307,20 +307,6 @@ function start(items)
 				}
 			}
 
-			if(advDimming)
-			{
-				let grey_offset = 0;
-				
-				if(colorfulness <= 32) grey_offset = 32;
-				
-				const amount = -strength - grey_offset - contrast / 6;
-				
-				++adv_dimmingcnt;
-				const new_color = adjustBrightness(rgb_arr, amount);
-				
-				callback(`[d__='${adv_dimmingcnt}']{color:${new_color}!important}`);
-			}
-
 			node.setAttribute("d__", adv_dimmingcnt);
 
 			if(underlineLinks && is_link)
@@ -345,13 +331,7 @@ function start(items)
 			  
 				while (count-- && idx < len) 
 				{
-					setNodeAttribs(arr[idx++], cssStr => buf.push(cssStr));
-				}
-
-				if(advDimming) 
-				{
-					t.nodeValue += buf.join('');
-					buf = [];
+					setNodeAttribs(arr[idx++]);
 				}
 
 				if(idx < len) 
@@ -373,12 +353,19 @@ function start(items)
 	{
 		let color_black = 'color:black!important';
 		
-		let simple_dim = `[d__],[d__][style]{${color_black}}`;
-		let opacity = '*,*[style]{opacity:1!important}';
-		let bold = '*{font-weight:bold!important}';
-		let underline = '[u__]{text-decoration:underline!important}';
+		let dim = '';
+		
+		if(advDimming) 
+		{
+			dim = `[d__],[d__][style]{filter:brightness(${strength}%);}`;
+		}
+		else 	dim = `[d__],[d__][style]{${color_black}}`;
+		
+		let advanced_dim	= `[d__],[d__][style]{filter:brightness(50%);}`;
+		let opacity		= '*,*[style]{opacity:1!important}';
+		let bold		= '*{font-weight:bold!important}';
+		let underline		= '[u__]{text-decoration:underline!important}';
 
-		if(advDimming) 		simple_dim = '';
 		if(!forceOpacity) 	opacity = '';
 		if(!boldText) 		bold = '';
 		if(!underlineLinks) 	underline = '';
@@ -400,7 +387,7 @@ function start(items)
 			}
 		}
 
-		return `${simple_dim}${opacity}${size_inc}${bold}${placeholder}${form_border}${underline}`;
+		return `${dim}${opacity}${size_inc}${bold}${placeholder}${form_border}${underline}`;
 	}
 
 	const css_rules = buildCSS();
