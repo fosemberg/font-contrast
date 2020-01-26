@@ -342,13 +342,15 @@ function start(items)
 	{
 		let color_black = 'color:rgba(0, 0, 0, 1)!important';
 		
+		const attr = '[d__],[d__][style]';
+		
 		let dim = '';
 		
 		if(advDimming) 
 		{
-			dim = `[d__],[d__][style]{filter:brightness(${brightness}%);}`;
+			dim = `${attr}{filter:brightness(${brightness}%);}`;
 		}
-		else 	dim = `[d__],[d__][style]{${color_black}}`;
+		else 	dim = `${attr}{${color_black}}`;
 		
 		let opacity		= '*,*[style]{opacity:1!important}';
 		let bold		= '*{font-weight:bold!important}';
