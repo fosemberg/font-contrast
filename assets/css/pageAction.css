@@ -2,11 +2,6 @@
  * Copyright (C) 2019 Francesco Fusco. All rights reserved.
  * License: https://github.com/Fushko/font-contrast#license
  */
-@font-face {
-    font-family: Lato;
-    src: url('fonts/LatoLatin-Regular.woff2') format('woff2');
-    font-weight: normal;
-}
 html
 {
     margin:0;
@@ -17,7 +12,7 @@ body
     font-family: 'Lato', sans-serif;
     background-color: rgb(255, 255, 255);
     color:black;
-    font-size: 18px;
+    font-size: 17px;
     margin:0;
     padding:0;
     width:470px;
@@ -69,22 +64,16 @@ body
 }
 .slider::-moz-range-thumb 
 {
-    width: 0.7em;
-    height: 1.35em;
+    width: 0.5em;
+    height: 1.1em;
     border-radius: 8px;
-    cursor:w-resize;
-    background: white;
     border: 2px solid black;
-    transition: 0.07s ease-in;
 }
 .slider::-moz-range-track 
 {
     width: 100%;
     height: 5px;
-    cursor: pointer;
-    background: #eee;
     border-radius: 1em;
-    border: 2px solid black;
 }
 #urlContainer 
 {
@@ -107,7 +96,7 @@ body
 {
     position:fixed;
     font-size:4vmin;
-    top:31vmin;
+    top:35vmin;
     opacity: 0;
     cursor: context-menu;
     font-weight:normal;

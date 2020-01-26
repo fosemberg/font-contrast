@@ -15,6 +15,9 @@ let sizeLabel       = doc.querySelector("#sizeLabel");
 let thresholdSlider = doc.querySelector("#thresholdSlider");
 let thresholdLabel  = doc.querySelector("#thresholdLabel");
 
+const brt_slider    = doc.querySelector('#brt-slider');
+const brt_label     = doc.querySelector('#brt-label');
+
 let urlSpan         = doc.querySelector("#url");
 
 let WLcheck         = doc.querySelector("#addWL");
@@ -35,21 +38,20 @@ let isURLshown = false;
 
 function showRefreshBtn()
 {
-	if(!isURLshown)
-	{
-		urlSpan.style.opacity = 0;
-		urlSpan.style.cursor = "context-menu";
-	  
-		refreshBtn.style.opacity = 1;
-		refreshBtn.style.cursor = "pointer";
-	  
-		refreshBtn.onclick = () => browser.tabs.reload();
+	if(isURLshown) return;
 
-		isURLshown = true;
-	}
+	urlSpan.style.opacity = 0;
+	urlSpan.style.cursor = "context-menu";
+  
+	refreshBtn.style.opacity = 1;
+	refreshBtn.style.cursor = "pointer";
+  
+	refreshBtn.onclick = () => browser.tabs.reload();
+
+	isURLshown = true;
 }
 
-let callback = (tabs) => 
+let callback = tabs => 
 {
 	let url = tabs[0].url;
 
@@ -58,44 +60,31 @@ let callback = (tabs) =>
 	if(url.startsWith("http")) urlSpan.innerText = domain;
 	else showRefreshBtn();
 
-	let stored = [
-		"whitelist", 
-		"blacklist", 
-		"globalStr",
-		"size",
-		"sizeThreshold", 
-		"skipColoreds", 
-		"skipHeadings", 
-		"advDimming", 
-		"boldText", 
-		"forcePlhdr",
-		"forceOpacity",
-		"skipWhites",
-		"underlineLinks"
-	];
-
-	const process = (i) =>
+	const init = i =>
 	{
-		strSlider.value 		= i.globalStr;
-		strLabel.innerText 		= i.globalStr;
-		
-		sizeSlider.value 		= i.size;
-		sizeLabel.innerText 	= i.size;
-		
-		thresholdSlider.value 	= i.sizeThreshold;
-		thresholdLabel.innerText= i.sizeThreshold;
+		// i === global options item
 
-		strSlider.oninput 		= () => strLabel.innerText = strSlider.value;
-		sizeSlider.oninput 		= () => sizeLabel.innerText = sizeSlider.value;
+		strSlider.value          = i.globalStr;
+		strLabel.innerText       = i.globalStr;
+		sizeSlider.value         = i.size;
+		sizeLabel.innerText      = i.size;
+		thresholdSlider.value    = i.sizeThreshold;
+		thresholdLabel.innerText = i.sizeThreshold;
+		brt_slider.value         = i.brightness;
+		brt_label.innerText      = i.brightness;
+
+		strSlider.oninput 	= () => strLabel.innerText 	 = strSlider.value;
+		sizeSlider.oninput 	= () => sizeLabel.innerText 	 = sizeSlider.value;
 		thresholdSlider.oninput = () => thresholdLabel.innerText = thresholdSlider.value;
+		brt_slider.oninput 	= () => brt_label.innerText 	 = brt_slider.value;
 
 		skipHeadings.checked 	= i.skipHeadings;
 		skipColoreds.checked 	= i.skipColoreds;
-		advDimming.checked 		= i.advDimming;
-		boldText.checked 		= i.boldText;
-		forcePlhdr.checked 		= i.forcePlhdr;
+		advDimming.checked 	= i.advDimming;
+		boldText.checked 	= i.boldText;
+		forcePlhdr.checked 	= i.forcePlhdr;
 		forceOpacity.checked 	= i.forceOpacity;
-		skipWhites.checked 		= i.skipWhites;
+		skipWhites.checked 	= i.skipWhites;
 		underlineLinks.checked 	= i.underlineLinks;
 
 		let whitelist = i.whitelist || [];
@@ -111,45 +100,47 @@ let callback = (tabs) =>
 		
 			if(idx > -1)
 			{
-				const i = whitelist[idx];
+				const item = whitelist[idx];
 
-				strSlider.value 			= i.strength;
-				strLabel.innerText 			= i.strength;
-				sizeSlider.value 			= i.size || i.size;
-				sizeLabel.innerText 		= i.size || i.size;
-				thresholdSlider.value 		= i.threshold || i.sizeThreshold;
-				thresholdLabel.innerText 	= i.threshold || i.sizeThreshold;
+				strSlider.value 		= item.strength;
+				strLabel.innerText 		= item.strength;
+				sizeSlider.value 		= item.size;
+				sizeLabel.innerText 		= item.size;
+				thresholdSlider.value 		= item.threshold;
+				thresholdLabel.innerText 	= item.threshold;
+				brt_slider.value 		= item.brightness || i.brightness;
+				brt_label.innerText 		= item.brightness || i.brightness;
 
-				skipHeadings.checked 		= i.skipHeadings;
-				skipColoreds.checked 		= i.skipColoreds;
-				advDimming.checked 			= i.advDimming;
-				outline.checked 			= i.outline;
-				boldText.checked 			= i.boldText;
-				forcePlhdr.checked 			= i.forcePlhdr;
-				forceOpacity.checked 		= i.forceOpacity;
-				skipWhites.checked 			= i.skipWhites;
-				underlineLinks.checked 		= i.underlineLinks;
+				skipHeadings.checked 		= item.skipHeadings;
+				skipColoreds.checked 		= item.skipColoreds;
+				advDimming.checked 		= item.advDimming;
+				outline.checked 		= item.outline;
+				boldText.checked 		= item.boldText;
+				forcePlhdr.checked 		= item.forcePlhdr;
+				forceOpacity.checked 		= item.forceOpacity;
+				skipWhites.checked 		= item.skipWhites;
+				underlineLinks.checked 		= item.underlineLinks;
 
 				WLcheck.checked = true;
 				BLcheck.checked = false;
-			}       
+			}
 		}
 
 		let wl_item = {
-			url: 			domain, 
-			strength: 		i.globalStr,
-			size: 			i.size,
-			threshold: 		i.sizeThreshold,
+			url: 		domain, 
+			strength: 	i.globalStr,
+			size: 		i.size,
+			threshold: 	i.sizeThreshold,
 
 			skipHeadings: 	i.skipHeadings, 
 			skipColoreds: 	i.skipColoreds, 
 			advDimming: 	i.advDimming,
-			boldText: 		i.boldText,
+			boldText: 	i.boldText,
 			forcePlhdr: 	i.forcePlhdr,
 			forceOpacity: 	i.forceOpacity,
 			skipWhites: 	i.skipWhites,
 			underlineLinks: i.underlineLinks,
-			outline: 		false // The outline cannot be set globally for now
+			outline: 	false // The outline cannot be set globally for now
 		};
 
 		const updateList = (item, is_wl, add) =>
@@ -175,7 +166,7 @@ let callback = (tabs) =>
 			if(add)
 			{
 				if(idx > -1) 	list[idx] = item;
-				else 			list.push(item);
+				else 		list.push(item);
 
 				check.checked = true;
 			}
@@ -231,17 +222,18 @@ let callback = (tabs) =>
 		{
 			check.onclick = () => 
 			{
-				wl_item.strength 		= strSlider.value;
-				wl_item.size 			= sizeSlider.value;
-				wl_item.threshold 		= thresholdSlider.value;
+				wl_item.strength 	= strSlider.value;
+				wl_item.size 		= sizeSlider.value;
+				wl_item.threshold 	= thresholdSlider.value;
+				wl_item.brightness 	= brt_slider.value;
 				wl_item.skipColoreds 	= skipColoreds.checked;
 				wl_item.skipHeadings 	= skipHeadings.checked;
-				wl_item.advDimming 		= advDimming.checked;
-				wl_item.outline 		= outline.checked;
-				wl_item.boldText 		= boldText.checked;
-				wl_item.forcePlhdr 		= forcePlhdr.checked;
+				wl_item.advDimming 	= advDimming.checked;
+				wl_item.outline 	= outline.checked;
+				wl_item.boldText 	= boldText.checked;
+				wl_item.forcePlhdr 	= forcePlhdr.checked;
 				wl_item.forceOpacity 	= forceOpacity.checked;
-				wl_item.skipWhites 		= skipWhites.checked;
+				wl_item.skipWhites 	= skipWhites.checked;
 				wl_item.underlineLinks 	= underlineLinks.checked;
 				
 				whitelist = updateList(wl_item, true, true);
@@ -253,8 +245,25 @@ let callback = (tabs) =>
 			}
 		});
 	};
+	
+	const stored = [
+		"whitelist", 
+		"blacklist", 
+		"globalStr",
+		"size",
+		"sizeThreshold", 
+		"skipColoreds", 
+		"skipHeadings", 
+		"advDimming",
+		"brightness", 
+		"boldText", 
+		"forcePlhdr",
+		"forceOpacity",
+		"skipWhites",
+		"underlineLinks"
+	];
 
-	storage.get(stored, process);
+	storage.get(stored, init);
 };
 
 optionsBtn.onclick = () => 

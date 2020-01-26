@@ -1,4 +1,5 @@
 /**
+/**
  * Copyright (C) 2019 Francesco Fusco. All rights reserved.
  * License: https://github.com/Fushko/font-contrast#license
  */
@@ -38,7 +39,8 @@ function start(items)
 {
 	let {
 		whitelist, 
-		globalStr: strength, 
+		globalStr: strength,
+		brightness,
 		size, 
 		sizeThreshold, 
 		skipHeadings, 
@@ -69,6 +71,7 @@ function start(items)
 			skipHeadings    = i.skipHeadings;
 			avoidReadable   = i.skipColoreds; 
 			advDimming      = i.advDimming;
+			brightness	= i.brightness;
 			outline         = i.outline;
 			boldText        = i.boldText;
 			forcePlhdr      = i.forcePlhdr;
@@ -343,7 +346,7 @@ function start(items)
 		
 		if(advDimming) 
 		{
-			dim = `[d__],[d__][style]{filter:brightness(${strength}%);}`;
+			dim = `[d__],[d__][style]{filter:brightness(${brightness}%);}`;
 		}
 		else 	dim = `[d__],[d__][style]{${color_black}}`;
 		

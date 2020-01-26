@@ -1,8 +1,9 @@
 <!DOCTYPE HTML>
 <html lang="en">
 	<head> 
-		<meta charset="utf-8"/>
-		<link rel="stylesheet" type="text/css" href="assets/css/pageAction.css">
+		<meta charset="utf-8">
+		<link href="assets/css/main.css" rel="stylesheet">
+		<link href="assets/css/pageAction.css" rel="stylesheet">
 		<link href="https://fonts.googleapis.com/css?family=Crimson+Text:400" rel="stylesheet"> 
 		<title>Font Contrast</title>
 	</head>
@@ -12,30 +13,34 @@
 				<div class = "sliderDiv">
 					<span class ="sliderDesc">Strength</span>
 					<div>
-					<span class = "val" id = "strLabel"></span>
-					<input type = "range" class = "option slider" id = "strSlider" min = "-100" max = "100" step = "1">
+						<span class = "val" id = "strLabel"></span>
+						<input type = "range" class = "option slider" id = "strSlider" min = "-100" max = "100" step = "1">
 					</div>
 				</div>
-			   <!-- <div class = "sliderDiv">
-					<div class ="sliderDesc">Colorful text offset:  <span class = "val" id = "colLabel">144</span></div>
-					<input type = "range" class = "slider" id = "colorSlider" min = "-100" max = "100" step = "1">
-				</div>
+				<div class="font-increase" style="margin-left:0.2em">
 				<div class = "sliderDiv">
-					<div class ="sliderDesc">Link offset:<span class = "val" id = "linkLabel">132</span></div>   
-					<input type = "range" class = "slider" id = "linkSlider" min = "-100" max = "100" step = "1">
-				</div>-->
-				<div class = "sliderDiv">
-					<span class ="sliderDesc"><span id ="curlyboye">[</span>Increase font (%)</span>
+					<span class ="sliderDesc">
+						Increase font (%)
+					</span>
 					<div>
-					<span class = "val" id = "sizeLabel"></span>
-					<input type = "range" class = "option slider" id ="sizeSlider" min = "0" max = "100" value = "0">
+						<span class = "val" id = "sizeLabel"></span>
+						<input type = "range" class = "option slider" id ="sizeSlider" min = "0" max = "100" value = "0">
 					</div>
 				</div>
 				<div class = "sliderDiv">
 					<span class ="sliderDesc">Threshold (px)</span>
 					<div>
-					<span class = "val" id = "thresholdLabel"></span>
-					<input type = "range" class = "option slider" id ="thresholdSlider" min = "0" max = "50" value = "14">
+						<span class = "val" id = "thresholdLabel"></span>
+						<input type = "range" class = "option slider" id ="thresholdSlider" min = "0" max = "50" value = "14">
+					</div>
+				</div>
+				</div>
+				
+				<div class = "sliderDiv">
+					<span class ="sliderDesc">Brightness (%)</span>
+					<div>
+						<span class = "val" id = "brt-label"></span>
+						<input type = "range" class = "option slider" id = "brt-slider" min = "0" max = "100" step = "1" value="50">
 					</div>
 				</div>
 			</div>

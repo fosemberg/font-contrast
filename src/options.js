@@ -15,6 +15,9 @@ let sizeSlider      = doc.querySelector("#sizeSlider");
 let sizeLabel       = doc.querySelector("#sizeLabel");
 let threshSlider    = doc.querySelector("#threshSlider");
 let threshLabel     = doc.querySelector("#threshLabel");
+const brt_slider    = doc.querySelector('#brt-slider');
+const brt_label     = doc.querySelector('#brt-label');
+
 
 // Options
 let skipHeadings    = doc.querySelector('#skipHeadings');
@@ -150,7 +153,7 @@ function init()
 {
 	addListeners();
 	
-	storage.get(['globalStr', 'size', 'sizeThreshold'], (items) => 
+	storage.get(['globalStr', 'size', 'sizeThreshold', 'brightness'], items => 
 	{
 		strSlider.value       = items.globalStr;
 		strLabel.innerText    = items.globalStr;
@@ -158,9 +161,11 @@ function init()
 		sizeLabel.innerText   = items.size;
 		threshSlider.value    = items.sizeThreshold;
 		threshLabel.innerText = items.sizeThreshold;
+		brt_slider.value      = items.brightness || 50;
+		brt_label.innerText   = items.brightness || 50;
 	});
 
-	let checks = [
+	const checks = [
 		"enableEverywhere",
 		"skipColoreds", 
 		"skipHeadings", 
@@ -173,21 +178,21 @@ function init()
 		"underlineLinks"
 	];
 
-	storage.get(checks, (i) => 
+	storage.get(checks, i => 
 	{
-		doc.getElementById("defaultEn").checked 		= i.enableEverywhere;
-		doc.getElementById("skipColoreds").checked 		= i.skipColoreds;
-		doc.getElementById("skipHeadings").checked 		= i.skipHeadings;
-		doc.getElementById("advDimming").checked  		= i.advDimming;
-		doc.getElementById("boldText").checked 			= i.boldText;
-		doc.getElementById("forceOpacity").checked 		= i.forceOpacity;
-		doc.getElementById("forcePlhdr").checked 		= i.forcePlhdr;
+		doc.getElementById("defaultEn").checked 	= i.enableEverywhere;
+		doc.getElementById("skipColoreds").checked 	= i.skipColoreds;
+		doc.getElementById("skipHeadings").checked 	= i.skipHeadings;
+		doc.getElementById("advDimming").checked  	= i.advDimming;
+		doc.getElementById("boldText").checked 		= i.boldText;
+		doc.getElementById("forceOpacity").checked 	= i.forceOpacity;
+		doc.getElementById("forcePlhdr").checked 	= i.forcePlhdr;
 		doc.getElementById("smoothEnabled").checked 	= i.smoothEnabled;
-		doc.getElementById("skipWhites").checked 		= i.skipWhites;
+		doc.getElementById("skipWhites").checked 	= i.skipWhites;
 		doc.getElementById("underlineLinks").checked 	= i.underlineLinks;
 	});
 	
-	storage.get('whitelist', (item) => 
+	storage.get('whitelist', item => 
 	{
 		if(!item.whitelist) return;
 		
@@ -201,7 +206,7 @@ function init()
 		}
 	});
 
-	storage.get('blacklist', (item) => 
+	storage.get('blacklist', item => 
 	{
 		if(!item.blacklist) return;
 		
@@ -377,6 +382,16 @@ function addListeners()
 	threshSlider.oninput = () => 
 	{
 		threshLabel.innerText = threshSlider.value;
+	};
+	
+	brt_slider.oninput = () => 
+	{
+		brt_label.innerText = brt_slider.value;
+	};
+	
+	brt_slider.onchange = () => 
+	{
+		storage.set({"brightness": brt_slider.value});
 	};
 
 	strSlider.onchange = () => 

@@ -3,11 +3,6 @@
  * License: https://github.com/Fushko/font-contrast#license
  */
 
-@font-face {
-    font-family: Lato;
-    src: url('fonts/LatoLatin-Regular.woff2') format('woff2');
-    font-weight: normal;
-}
 html,body{
     height:100%;
     margin:auto;
@@ -50,22 +45,17 @@ body {
 }
 .slider::-moz-range-thumb 
 {
-    height: 2.35em;
-    width: 1em;
+    height: 1.9em;
+    width: 0.8em;
     border-radius: 8px;
     border: 0.3em solid black;
-    cursor:w-resize;
-    background: white;
-    transition: 0.07s ease-in;
 }
 .slider::-moz-range-track 
 {
     width: 100%;
     height: 0.6em;
     cursor: pointer;
-    background: #eee;
     border-radius: 1em;
-    border: 0.35vw solid black;
 }
 .sliderLabel 
 {
