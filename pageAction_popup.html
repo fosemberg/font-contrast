@@ -17,23 +17,23 @@
 						<input type = "range" class = "option slider" id = "strSlider" min = "-100" max = "100" step = "1">
 					</div>
 				</div>
-				<div class="font-increase" style="margin-left:0.2em">
-				<div class = "sliderDiv">
-					<span class ="sliderDesc">
-						Increase font (%)
-					</span>
-					<div>
-						<span class = "val" id = "sizeLabel"></span>
-						<input type = "range" class = "option slider" id ="sizeSlider" min = "0" max = "100" value = "0">
+				<div id="size-sliders">
+					<div class = "sliderDiv">
+						<span class ="sliderDesc">
+							Increase font (%)
+						</span>
+						<div>
+							<span class = "val" id = "sizeLabel"></span>
+							<input type = "range" class = "option slider" id ="sizeSlider" min = "0" max = "100" value = "0">
+						</div>
 					</div>
-				</div>
-				<div class = "sliderDiv">
-					<span class ="sliderDesc">Threshold (px)</span>
-					<div>
-						<span class = "val" id = "thresholdLabel"></span>
-						<input type = "range" class = "option slider" id ="thresholdSlider" min = "0" max = "50" value = "14">
+					<div class = "sliderDiv">
+						<span class ="sliderDesc">Threshold (px)</span>
+						<div>
+							<span class = "val" id = "thresholdLabel"></span>
+							<input type = "range" class = "option slider" id ="thresholdSlider" min = "0" max = "50" value = "14">
+						</div>
 					</div>
-				</div>
 				</div>
 				
 				<div class = "sliderDiv" id="brt-div">
@@ -44,10 +44,12 @@
 					</div>
 				</div>
 			</div>
+			
 			<div id="urlContainer">
-				<span id ="url"></span>
+				<div id ="url"></div>
 				<button id="refreshBtn">Refresh</button>
 			</div>
+			
 			<div id="checksContainer">
 				<div class ="separator">
 					<div>

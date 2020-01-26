@@ -41,9 +41,10 @@ function showRefreshBtn()
 	if(isURLshown) return;
 
 	urlSpan.style.opacity = 0;
-	urlSpan.style.cursor = "context-menu";
-  
+	urlSpan.style.zIndex = "2";
+	
 	refreshBtn.style.opacity = 1;
+	refreshBtn.style.zIndex = "3";
 	refreshBtn.style.cursor = "pointer";
   
 	refreshBtn.onclick = () => browser.tabs.reload();
