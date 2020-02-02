@@ -1,7 +1,7 @@
 {
   "name": "Font Contrast",
   "description": "Improves webpage readability.",
-  "version": "1.5.7",
+  "version": "1.5.8",
   "author": "Fushko",
   "permissions": [
     "http://*/*", "https://*/*", "storage", "tabs", "file:///*"
@@ -36,8 +36,7 @@
   "commands": {
 	"toggle": {
 		"suggested_key": {
-			"default": "Ctrl+Shift+Y",
-			"linux": "Ctrl+Shift+U"
+			"default": "F1"
 		},
 		"description": "Toggle contrast fix"
 	}
