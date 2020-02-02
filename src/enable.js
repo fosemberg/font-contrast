@@ -1,5 +1,4 @@
 /**
-/**
  * Copyright (C) 2019 Francesco Fusco. All rights reserved.
  * License: https://github.com/Fushko/font-contrast#license
  */
@@ -55,7 +54,9 @@ function start(items)
 		underlineLinks
 	} = items;
 
-	const url = extractRootDomain(String(window.location));
+	// This is the only script that gets executed on the tab window
+	// In other scripts, we use a regex that should be equivalent to location.hostname
+	const url = window.location.hostname;
 
 	if(whitelist) 
 	{
@@ -457,51 +458,6 @@ function createElem()
 	x.setAttribute("id", "_fc_");
 
 	t = doc.createTextNode("");
-}
-
-function extractHostname(url) 
-{
-	let hostname;
-
-	//Find and remove protocol (http, ftp, etc.) and get hostname
-	if(url.indexOf("://") > -1) 
-	{
-		hostname = url.split('/')[2];
-	}
-	else
-	{
-		hostname = url.split('/')[0];
-	}
-
-	//Find and remove port number
-	hostname = hostname.split(':')[0];
-
-	//Find and remove "?"
-	hostname = hostname.split('?')[0];
-	hostname = hostname.replace('www.', '');
-
-	return hostname;
-}
-
-function extractRootDomain(url) 
-{
-	let domain = extractHostname(url);
-	let splitArr = domain.split('.');
-	let len = splitArr.length;
-
-	// Check if there is a subdomain
-	if(len > 2)
-	{
-		domain = splitArr[len - 2] + '.' + splitArr[len - 1];
-		
-		// Check if it's using a Country Code Top Level Domain (ccTLD) (i.e. ".me.uk")
-		if (splitArr[len - 1].length === 2 && splitArr[len - 1].length === 2) 
-		{
-			domain = splitArr[len - 3] + '.' + domain;
-		}
-	}
-	
-	return domain;
 }
 
 function nlToArr(nl)

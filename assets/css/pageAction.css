@@ -78,7 +78,7 @@ body
 	z-index:1;
 }
 #url {
-	position:absolute;
+
 	z-index:3;
 	
 	font-size: 100%;
@@ -86,6 +86,10 @@ body
 	font-style: normal;
 	color: navy;
 	transition: opacity ease-out 0.1s;
+	
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow:ellipsis;
 }
 #refreshBtn
 {

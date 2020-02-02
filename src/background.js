@@ -5,12 +5,13 @@
 
 const storage = chrome.storage.local;
 
-let tabs = [], urls = [];
-const titleApply = "Apply contrast fix!";
+const titleApply  = "Apply contrast fix!";
 const titleRemove = "Remove contrast fix!";
 
-browser.runtime.onInstalled.addListener((details) => {
+let tabs = [];
 
+browser.runtime.onInstalled.addListener(details => 
+{
 	if(details.reason === "install") 
 	{
 		storage.set({"globalStr": 0});
@@ -21,13 +22,13 @@ browser.runtime.onInstalled.addListener((details) => {
 		browser.tabs.create({url: "Welcome.html"});
 		//storage.set({"enableEverywhere": true});
 	}
-	if(details.reason === "update") 
+	else if(details.reason === "update") 
 	{
 		storage.get(["size", "sizeThreshold"], (items) => 
 		{
 			if(typeof items.size === "undefined") storage.set({"size": 0});
 			if(typeof items.sizeThreshold === "undefined") storage.set({"sizeThreshold": 12});
-	  });
+		});
 	}
 });
 
@@ -35,7 +36,8 @@ browser.runtime.onStartup.addListener(() => { storage.remove('tabs');});
 
 browser.browserAction.onClicked.addListener((tab) =>
 {
-	chrome.browserAction.getTitle({tabId: tab.id}, (title) => {
+	chrome.browserAction.getTitle({tabId: tab.id}, title => 
+	{
 		if(title === titleApply) 
 		{
 			chrome.browserAction.setIcon({tabId: tab.id, path: 'assets/icons/on.png'});
@@ -51,11 +53,6 @@ browser.browserAction.onClicked.addListener((tab) =>
 			chrome.tabs.executeScript(tab.id, {allFrames: false, file: 'src/disable.js', runAt:"document_end"});
 		}
 	});
-});
-
-browser.tabs.onRemoved.addListener((tab) => {
-	tabs.splice(tabs.indexOf(tab.id), 1);
-	storage.set({'tabs': tabs});
 });
 
 browser.runtime.onMessage.addListener((request, sender, sendResponse) => 
@@ -81,93 +78,66 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) =>
 	}
 });
 
-browser.tabs.onUpdated.addListener((tabId,changeInfo,tab) => 
+browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => 
 {
-	/*if(tab.url.startsWith("http"))*/browser.pageAction.show(tab.id);
+	browser.pageAction.show(tab.id);
 
-	if(changeInfo.status === "complete")
+	if(changeInfo.status !== 'complete') return;
+
+	let hostname = '';
+	
+	const url = tab.url;
+
+	if(url.startsWith('file://'))
 	{
-		let domain = extractRootDomain(tab.url);
+		hostname = url;
+	}
+	else
+	{
+		hostname = url.match(/\/\/(.+?)\//)[1];
+	}
 
-		storage.get('blacklist', (items) => 
+	storage.get(['blacklist', 'enableEverywhere'], items => 
+	{
+		const blacklist = items.blacklist || [];
+
+		if(blacklist.find(o => o.url === hostname)) 
 		{
-			let blacklist = items.blacklist || [];
-
-			if(blacklist.find(o => o.url === domain)) 
+			chrome.browserAction.setIcon({ tabId: tabId, path: 'assets/icons/off.png' });
+			chrome.browserAction.setTitle({ title: titleApply, tabId: tabId });
+			
+			return;
+		}
+		else 
+		{
+			if(items.enableEverywhere) 
 			{
-				chrome.browserAction.setIcon({tabId: tabId, path: 'assets/icons/off.png'});
-				chrome.browserAction.setTitle({title: titleApply, tabId: tabId});
+				chrome.tabs.executeScript(tabId, { allFrames: false, file: 'src/enable.js', runAt:"document_end" });
+				
 				return;
 			}
 			else 
 			{
-				storage.get('enableEverywhere', (items) => 
+				storage.get(['whitelist', 'tabs'], items => 
 				{
-					if(items.enableEverywhere) 
-					{
-						chrome.tabs.executeScript(tabId, {allFrames: false, file: 'src/enable.js', runAt:"document_end"});
-						return;
-					}
-					else 
-					{
-						storage.get(['whitelist', 'tabs'], (items) => {
-							if(items.whitelist)
-							{
-								let whitelist = items.whitelist || [];
+					if(!items.whitelist) return;
 
-								if(items.tabs) tabs = items.tabs;
-							
-								if (~tabs.indexOf(tabId) || whitelist.find(o => o.url === domain)) 
-								{
-									chrome.tabs.executeScript(tabId, {allFrames: false, file: 'src/enable.js', runAt:"document_end"});
-								}
-							}
-							else urls = [];
-						});
+					let whitelist = items.whitelist || [];
+
+					if(items.tabs) tabs = items.tabs;
+				
+					if (~tabs.indexOf(tabId) || whitelist.find(o => o.url === hostname)) 
+					{
+						chrome.tabs.executeScript(tabId, { allFrames: false, file: 'src/enable.js', runAt:"document_end" });
 					}
 				});
 			}
-		});
-	}
+		}
+	});
 });
 
-function extractHostname(url) 
+browser.tabs.onRemoved.addListener(tab => 
 {
-	let hostname;
-
-	if (url.indexOf("://") > -1) 
-	{
-		hostname = url.split('/')[2];
-	}
-	else 
-	{
-		hostname = url.split('/')[0];
-	}
-
-	hostname = hostname.split(':')[0];
-	hostname = hostname.split('?')[0];
-	hostname = hostname.replace('www.', '');
-
-	return hostname;
-}
-
-function extractRootDomain(url) 
-{
-	let domain = extractHostname(url);
-	let splitArr = domain.split('.');
-	let len = splitArr.length;
-
-	// Extract the root domain if there's a subdomain
-	if (len > 2) 
-	{
-		domain = splitArr[len - 2] + '.' + splitArr[len - 1];
-		
-		// Check to see if it's using a Country Code Top Level Domain (ccTLD) (i.e. ".me.uk")
-		if (splitArr[len - 1].length === 2 && splitArr[len - 1].length === 2) 
-		{
-			domain = splitArr[len - 3] + '.' + domain;
-		}
-	}
-	
-	return domain;
-}
+	tabs.splice(tabs.indexOf(tab.id), 1);
+	storage.set({'tabs': tabs});
+});

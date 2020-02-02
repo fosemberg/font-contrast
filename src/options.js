@@ -54,19 +54,19 @@ let bl = [];
 function addRow(item, is_wl)
 {
 	let table;
-	let list, list_str;
+	let list, list_name;
 	
 	if(is_wl)
 	{
 		list = wl;
-		list_str = 'whitelist';
+		list_name = 'whitelist';
 		header = WLheader;
 		table = WLtbody;
 	}
 	else
 	{
 		list = bl;
-		list_str = 'blacklist';
+		list_name = 'blacklist';
 		header = BLheader;
 		table = BLtbody;
 	}
@@ -82,7 +82,7 @@ function addRow(item, is_wl)
 	{
 		item.url = url_cell.innerText;
 
-		storage.set({[list_str]: list});
+		storage.set({ [list_name]: list });
 	};
 
 	if(is_wl)
@@ -135,7 +135,7 @@ function addRow(item, is_wl)
 	{
 		table.deleteRow(row.rowIndex - 1);
 		list.splice(list.findIndex(o => o.url === url_cell.innerText), 1);
-		storage.set({[list_str]: list});
+		storage.set({[list_name]: list});
 	};
 
 	let cell_pos = 2;
@@ -323,21 +323,21 @@ function addListeners()
 
 function saveURL(is_wl) 
 {
-	let list_str;
+	let list_name;
 	let list;
 	let textarea;
 
 	if(is_wl) 
 	{
 		list = wl;
-		list_str = 'whitelist';
+		list_name = 'whitelist';
 		header = WLheader;
 		textarea = WLtextarea;
 	}
 	else
 	{
 		list = bl;
-		list_str = 'blacklist';
+		list_name = 'blacklist';
 		header = BLheader;
 		textarea = BLtextarea;
 	}
@@ -363,24 +363,24 @@ function saveURL(is_wl)
 	
 	list.push(new_item);
 	
-	storage.set({[list_str]: list});
+	storage.set({[list_name]: list});
 	
 	addRow(new_item, is_wl);
 }
 
-function isInputValid(domain, list, is_wl)
+function isInputValid(url, list, is_wl)
 {
-	let list_str;
+	let list_name;
 
-	if(is_wl) 	list_str = 'whitelist';
-	else 		list_str = 'blacklist';
+	if(is_wl) 	list_name = 'whitelist';
+	else 		list_name = 'blacklist';
 	
-	if(domain.length < 3) 
+	if(url.length < 3) 
 	{
 		message("Input is too short.", is_wl);
 		return false;
 	}
-	else if(domain.length > 80) 
+	else if(url.length > 80) 
 	{
 		message("Exceeded limit of 80 characters.", is_wl);
 		return false;
@@ -392,7 +392,7 @@ function isInputValid(domain, list, is_wl)
 		return false;
 	}
 
-	if(list.find(o => o.url === domain)) 
+	if(list.find(o => o.url === url)) 
 	{
 		message("It's already there.", is_wl);
 		return false;

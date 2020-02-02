@@ -4,167 +4,244 @@
  */
 
 const storage = chrome.storage.local;
-const doc = document;
 
-let strSlider       = doc.querySelector("#strSlider");
-let strLabel        = doc.querySelector("#strLabel");
+const $ = document.querySelector.bind(document);
+const $$ = document.querySelectorAll.bind(document);
 
-let sizeSlider      = doc.querySelector("#sizeSlider");
-let sizeLabel       = doc.querySelector("#sizeLabel");
+const url_text = $('#url');
+const refreshBtn = $("#refreshBtn");
 
-let thresholdSlider = doc.querySelector("#thresholdSlider");
-let thresholdLabel  = doc.querySelector("#thresholdLabel");
+let url_visible = false;
 
-const brt_slider    = doc.querySelector('#brt-slider');
-const brt_label     = doc.querySelector('#brt-label');
+function init(tabs) 
+{	
+	const strSlider       = $("#strSlider");
+	const strLabel        = $("#strLabel");
 
-let urlSpan         = doc.querySelector("#url");
+	const sizeSlider      = $("#sizeSlider");
+	const sizeLabel       = $("#sizeLabel");
 
-let WLcheck         = doc.querySelector("#addWL");
-let BLcheck         = doc.querySelector("#addBL");
+	const thresholdSlider = $("#thresholdSlider");
+	const thresholdLabel  = $("#thresholdLabel");
 
-let skipColoreds    = doc.querySelector("#skipColoreds");
-let skipHeadings    = doc.querySelector("#skipHeadings");
-let advDimming      = doc.querySelector("#advDimming");
-let input_border    = doc.querySelector("#outline");
-let boldText        = doc.querySelector("#boldText");
-let forcePlhdr      = doc.querySelector("#forcePlhdr");
-let skipWhites      = doc.querySelector("#skipWhites");
+	const brt_slider      = $('#brt-slider');
+	const brt_label       = $('#brt-label');
 
-let optionsBtn      = doc.querySelector("#optionsBtn");
-let refreshBtn      = doc.querySelector("#refreshBtn");
+	const WLcheck         = $("#addWL");
+	const BLcheck         = $("#addBL");
 
-let isURLshown = false;
+	const skipColoreds    = $("#skipColoreds");
+	const skipHeadings    = $("#skipHeadings");
+	const advDimming      = $("#advDimming");
+	const input_border    = $("#outline");
+	const boldText        = $("#boldText");
+	const forcePlhdr      = $("#forcePlhdr");
+	const skipWhites      = $("#skipWhites");
 
-function showRefreshBtn()
-{
-	if(isURLshown) return;
-
-	urlSpan.style.opacity = 0;
-	urlSpan.style.zIndex = "2";
+	const optionsBtn      = $("#optionsBtn");
 	
-	refreshBtn.style.opacity = 1;
-	refreshBtn.style.zIndex = "3";
-	refreshBtn.style.cursor = "pointer";
-  
-	refreshBtn.onclick = () => browser.tabs.reload();
-
-	isURLshown = true;
-}
-
-let callback = tabs => 
-{
 	let url = tabs[0].url;
+	
+	let hostname = '';
 
-	let domain = extractRootDomain(String(url));
-
-	if(url.startsWith("http")) urlSpan.innerText = domain;
-	else showRefreshBtn();
-
-	const init = i =>
+	if(url.startsWith('file://'))
 	{
-		// i === global options item
+		hostname = url;
+	}
+	else
+	{
+		hostname = url.match(/\/\/(.+?)\//)[1];
+		
+		if(!url.startsWith('http')) 
+		{
+			showRefreshBtn();
+		}
+	}
+	
+	url_text.innerText = hostname;
+	
+	strSlider.oninput 	= () => strLabel.innerText 	 = strSlider.value;
+	sizeSlider.oninput 	= () => sizeLabel.innerText 	 = sizeSlider.value;
+	thresholdSlider.oninput = () => thresholdLabel.innerText = thresholdSlider.value;
+	brt_slider.oninput 	= () => brt_label.innerText 	 = brt_slider.value;
+	
+	optionsBtn.onclick = () => 
+	{
+		if (chrome.runtime.openOptionsPage) 
+		{
+			chrome.runtime.openOptionsPage();
+		} 
+		else 
+		{
+			window.open(chrome.runtime.getURL('options.html'));
+		}
+	};
+	
+	const settings = [
+		"whitelist", 
+		"blacklist", 
+		"globalStr",
+		"size",
+		"sizeThreshold", 
+		"skipColoreds", 
+		"skipHeadings", 
+		"advDimming",
+		"brightness", 
+		"boldText", 
+		"forcePlhdr",
+		"forceOpacity",
+		"skipWhites",
+		"underlineLinks",
+		"input_border"
+	];
+	
+	const start = settings =>
+	{
+		let whitelist = settings.whitelist || [];
+		let blacklist = settings.blacklist || [];
 
-		strSlider.value          = i.globalStr;
-		strLabel.innerText       = i.globalStr;
-		sizeSlider.value         = i.size;
-		sizeLabel.innerText      = i.size;
-		thresholdSlider.value    = i.sizeThreshold;
-		thresholdLabel.innerText = i.sizeThreshold;
-		brt_slider.value         = i.brightness || 50;
-		brt_label.innerText      = i.brightness || 50;
+		let item = settings;
 
-		strSlider.oninput 	= () => strLabel.innerText 	 = strSlider.value;
-		sizeSlider.oninput 	= () => sizeLabel.innerText 	 = sizeSlider.value;
-		thresholdSlider.oninput = () => thresholdLabel.innerText = thresholdSlider.value;
-		brt_slider.oninput 	= () => brt_label.innerText 	 = brt_slider.value;
-
-		skipHeadings.checked 	= i.skipHeadings;
-		skipColoreds.checked 	= i.skipColoreds;
-		advDimming.checked 	= i.advDimming;
-		boldText.checked 	= i.boldText;
-		forcePlhdr.checked 	= i.forcePlhdr;
-		forceOpacity.checked 	= i.forceOpacity;
-		skipWhites.checked 	= i.skipWhites;
-		underlineLinks.checked 	= i.underlineLinks;
-		input_border.checked 	= i.input_border;
-
-		let whitelist = i.whitelist || [];
-		let blacklist = i.blacklist || [];
-
-		if (blacklist.findIndex(o => o.url === domain) > -1)
+		if (blacklist.findIndex(o => o.url === hostname) > -1)
 		{
 			BLcheck.checked = true;
 		}
 		else 
 		{
-			const idx = whitelist.findIndex(o => o.url === domain);
+			const idx = whitelist.findIndex(o => o.url === hostname);
 		
 			if(idx > -1)
 			{
-				const item = whitelist[idx];
-
-				strSlider.value 		= item.strength;
-				strLabel.innerText 		= item.strength;
-				sizeSlider.value 		= item.size;
-				sizeLabel.innerText 		= item.size;
-				thresholdSlider.value 		= item.threshold;
-				thresholdLabel.innerText 	= item.threshold;
-				brt_slider.value 		= item.brightness || i.brightness;
-				brt_label.innerText 		= item.brightness || i.brightness;
-
-				skipHeadings.checked 		= item.skipHeadings;
-				skipColoreds.checked 		= item.skipColoreds;
-				advDimming.checked 		= item.advDimming;
-				input_border.checked 		= item.input_border;
-				boldText.checked 		= item.boldText;
-				forcePlhdr.checked 		= item.forcePlhdr;
-				forceOpacity.checked 		= item.forceOpacity;
-				skipWhites.checked 		= item.skipWhites;
-				underlineLinks.checked 		= item.underlineLinks;
-
+				item = whitelist[idx];
+				
 				WLcheck.checked = true;
 				BLcheck.checked = false;
 			}
 		}
 		
+		strSlider.value 		= item.strength || item.globalStr;
+		strLabel.innerText 		= item.strength || item.globalStr;
+		sizeSlider.value 		= item.size;
+		sizeLabel.innerText 		= item.size;
+		thresholdSlider.value 		= item.threshold || item.sizeThreshold;
+		thresholdLabel.innerText 	= item.threshold || item.sizeThreshold;
+		brt_slider.value 		= item.brightness || 50;
+		brt_label.innerText 		= item.brightness || 50;
+
+		skipHeadings.checked 		= item.skipHeadings;
+		skipColoreds.checked 		= item.skipColoreds;
+		advDimming.checked 		= item.advDimming;
+		input_border.checked 		= item.input_border;
+		boldText.checked 		= item.boldText;
+		forcePlhdr.checked 		= item.forcePlhdr;
+		forceOpacity.checked 		= item.forceOpacity;
+		skipWhites.checked 		= item.skipWhites;
+		underlineLinks.checked 		= item.underlineLinks;
+		
 		if(!advDimming.checked)
 		{
-			document.querySelector('#brt-div').style.display ='none';
+			$('#brt-div').style.display ='none';
+		}
+		
+		const getOptions = () =>
+		{
+			const wl_item = {
+				url: 		hostname, 
+				strength: 	strSlider.value,
+				size: 		sizeSlider.value,
+				threshold: 	thresholdSlider.value,
+				brightness:	brt_slider.value,
+				skipHeadings: 	skipHeadings.checked, 
+				skipColoreds: 	skipColoreds.checked, 
+				advDimming: 	advDimming.checked,
+				boldText: 	boldText.checked,
+				forcePlhdr: 	forcePlhdr.checked,
+				forceOpacity: 	forceOpacity.checked,
+				skipWhites: 	skipWhites.checked,
+				underlineLinks: underlineLinks.checked,
+				input_border: 	input_border.checked
+			}
+			
+			return wl_item;
 		}
 
-		let wl_item = {
-			url: 		domain, 
-			strength: 	i.globalStr,
-			size: 		i.size,
-			threshold: 	i.sizeThreshold,
+		WLcheck.onclick = () => 
+		{
+			const is_checked = WLcheck.checked;
 
-			skipHeadings: 	i.skipHeadings, 
-			skipColoreds: 	i.skipColoreds, 
-			advDimming: 	i.advDimming,
-			boldText: 	i.boldText,
-			forcePlhdr: 	i.forcePlhdr,
-			forceOpacity: 	i.forceOpacity,
-			skipWhites: 	i.skipWhites,
-			underlineLinks: i.underlineLinks,
-			input_border: 	i.input_border
+			whitelist = updateList(getOptions(), true, is_checked);
+
+			if(is_checked)
+			{ 
+				let idx = blacklist.findIndex(o => o.url === hostname);
+				
+				if(idx > -1) 
+				{
+					blacklist = updateList({ url: hostname }, false, false);
+				}
+			}
 		};
 
+		BLcheck.onclick = () => 
+		{
+			const is_checked = BLcheck.checked;
+
+			blacklist = updateList({ url: hostname }, false, is_checked);
+
+			if(is_checked)
+			{
+				const idx = whitelist.findIndex(o => o.url === hostname);
+
+				if(idx > -1)
+				{
+					whitelist = updateList(getOptions(), true, false);
+				}
+			}
+		};
+
+		$$('.option').forEach(checkbox =>
+		{
+			checkbox.onclick = () => 
+			{
+				if(checkbox.id === 'adv-mode')
+				{
+					const brt_div = document.querySelector('#brt-div');
+					
+					if(advDimming.checked)
+					{
+						brt_div.style.display = 'flex';
+					}
+					else
+					{
+						brt_div.style.display = 'none';
+					}
+				}
+				
+				whitelist = updateList(getOptions(), true, true);
+
+				if(BLcheck.checked) 
+				{
+					blacklist = updateList({ url: hostname }, false, false);
+				}
+			}
+		});
+		
 		const updateList = (item, is_wl, add) =>
 		{
-			let list, list_str;
+			let list;
+			let list_name;
 			let check;
 			
 			if(is_wl) 
 			{
 				list = whitelist;
-				list_str = 'whitelist';
+				list_name = 'whitelist';
 				check = WLcheck;
 			}
 			else
 			{
 				list = blacklist;
-				list_str = 'blacklist';
+				list_name = 'blacklist';
 				check = BLcheck;
 			}
 
@@ -184,161 +261,31 @@ let callback = tabs =>
 				check.checked = false;
 			}
 
-			storage.set({[list_str]: list});
+			storage.set({ [list_name]: list });
 
 			showRefreshBtn();
 
 			return list;
 		};
+	}
 
-		WLcheck.onclick = () => 
-		{
-			const is_checked = WLcheck.checked;
-
-			whitelist = updateList(wl_item, true, is_checked);
-
-			if(is_checked)
-			{ 
-				let idx = blacklist.findIndex(o => o.url === domain);
-				
-				if(idx > -1) 
-				{
-					blacklist = updateList({url: domain}, false, false);
-				}
-			}
-		};
-
-		BLcheck.onclick = () => 
-		{
-			const is_checked = BLcheck.checked;
-
-			blacklist = updateList({url: domain}, false, is_checked);
-
-			if(is_checked)
-			{ 
-				const idx = whitelist.findIndex(o => o.url === domain);
-
-				if(idx > -1)
-				{
-					whitelist = updateList(wl_item, true, false);
-				}
-			}
-		};
-
-		document.querySelectorAll('.option').forEach(check =>
-		{
-			check.onclick = () => 
-			{
-				wl_item.strength 	= strSlider.value;
-				wl_item.size 		= sizeSlider.value;
-				wl_item.threshold 	= thresholdSlider.value;
-				wl_item.brightness 	= brt_slider.value;
-				wl_item.skipColoreds 	= skipColoreds.checked;
-				wl_item.skipHeadings 	= skipHeadings.checked;
-				wl_item.advDimming 	= advDimming.checked;
-				wl_item.input_border 	= input_border.checked;
-				wl_item.boldText 	= boldText.checked;
-				wl_item.forcePlhdr 	= forcePlhdr.checked;
-				wl_item.forceOpacity 	= forceOpacity.checked;
-				wl_item.skipWhites 	= skipWhites.checked;
-				wl_item.underlineLinks 	= underlineLinks.checked;
-				
-				if(check.id == 'adv-mode')
-				{
-					const brt_div = document.querySelector('#brt-div');
-					
-					if(advDimming.checked)
-					{
-						brt_div.style.display = 'flex';
-					}
-					else
-					{
-						brt_div.style.display = 'none';
-					}
-				}
-				
-				whitelist = updateList(wl_item, true, true);
-
-				if(BLcheck.checked) 
-				{
-					blacklist = updateList({url: domain}, false, false);
-				}
-			}
-		});
-	};
-	
-	const stored = [
-		"whitelist", 
-		"blacklist", 
-		"globalStr",
-		"size",
-		"sizeThreshold", 
-		"skipColoreds", 
-		"skipHeadings", 
-		"advDimming",
-		"brightness", 
-		"boldText", 
-		"forcePlhdr",
-		"forceOpacity",
-		"skipWhites",
-		"underlineLinks",
-		"input_border"
-	];
-
-	storage.get(stored, init);
+	storage.get(settings, start);
 };
 
-optionsBtn.onclick = () => 
+chrome.tabs.query({ active: true, currentWindow: true }, init);
+
+function showRefreshBtn()
 {
-	if (chrome.runtime.openOptionsPage) 
-	{
-		chrome.runtime.openOptionsPage();
-	} 
-	else 
-	{
-		window.open(chrome.runtime.getURL('options.html'));
-	}
-};
+	if(url_visible) return;
 
-chrome.tabs.query({active:true, currentWindow:true}, callback);
-
-function extractHostname(url) 
-{
-	let hostname;
-
-	if (url.indexOf("://") > -1) 
-	{
-		hostname = url.split('/')[2];
-	}
-	else 
-	{
-		hostname = url.split('/')[0];
-	}
-
-	hostname = hostname.split(':')[0];
-	hostname = hostname.split('?')[0];
-	hostname = hostname.replace('www.', '');
-
-	return hostname;
-}
-
-function extractRootDomain(url) 
-{
-	let domain = extractHostname(url);
-	let splitArr = domain.split('.');
-	let len = splitArr.length;
-
-	// Extract the root domain if there's a subdomain
-	if (len > 2) 
-	{
-		domain = splitArr[len- 2] + '.' + splitArr[len - 1];
-		
-		// Check to see if it's using a Country Code Top Level Domain (ccTLD) (i.e. ".me.uk")
-		if (splitArr[len- 1].length === 2 && splitArr[len - 1].length === 2) 
-		{
-			domain = splitArr[len - 3] + '.' + domain;
-		}
-	}
+	url_text.style.opacity = 0;
+	url_text.style.zIndex = "2";
 	
-	return domain;
+	refreshBtn.style.opacity = 1;
+	refreshBtn.style.zIndex = "3";
+	refreshBtn.style.cursor = "pointer";
+  
+	refreshBtn.onclick = () => browser.tabs.reload();
+
+	url_visible = true;
 }
