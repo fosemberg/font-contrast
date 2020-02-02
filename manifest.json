@@ -32,5 +32,14 @@
   "icons": { "16": "assets/icons/on.png",
            "48": "assets/icons/on.png",
           "128": "assets/icons/on.png" },
-  "manifest_version": 2
+  "manifest_version": 2,
+  "commands": {
+	"toggle": {
+		"suggested_key": {
+			"default": "Ctrl+Shift+Y",
+			"linux": "Ctrl+Shift+U"
+		},
+		"description": "Toggle contrast fix"
+	}
+  }
 }

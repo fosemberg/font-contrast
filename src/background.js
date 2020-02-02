@@ -2,29 +2,34 @@
  * Copyright (C) 2019 Francesco Fusco. All rights reserved.
  * License: https://github.com/Fushko/font-contrast#license
  */
+'use strict';
 
 const storage = chrome.storage.local;
 
-const titleApply  = "Apply contrast fix!";
-const titleRemove = "Remove contrast fix!";
+const title_apply  = "Apply contrast fix!";
+const title_remove = "Remove contrast fix!";
 
 let tabs = [];
 
 browser.runtime.onInstalled.addListener(details => 
 {
-	if(details.reason === "install") 
+	if(details.reason === "install")
 	{
 		storage.set({"globalStr": 0});
 		storage.set({"size": 0});
 		storage.set({"sizeThreshold": 12});
+		storage.set({"size": 0});
+		storage.set({"sizeThreshold": 12});
+		storage.set({"brightness": 50});
 		storage.set({"skipColoreds": true});
 		storage.set({"skipWhites": true});
-		browser.tabs.create({url: "Welcome.html"});
-		//storage.set({"enableEverywhere": true});
+		//storage.set({ "enableEverywhere": true });
+		
+		browser.tabs.create({ url: "Welcome.html" });
 	}
-	else if(details.reason === "update") 
+	else if(details.reason === "update")
 	{
-		storage.get(["size", "sizeThreshold"], (items) => 
+		storage.get(["size", "sizeThreshold"], items => 
 		{
 			if(typeof items.size === "undefined") storage.set({"size": 0});
 			if(typeof items.sizeThreshold === "undefined") storage.set({"sizeThreshold": 12});
@@ -32,27 +37,11 @@ browser.runtime.onInstalled.addListener(details =>
 	}
 });
 
-browser.runtime.onStartup.addListener(() => { storage.remove('tabs');});
+browser.runtime.onStartup.addListener(() => { storage.remove('tabs'); });
 
-browser.browserAction.onClicked.addListener((tab) =>
+browser.browserAction.onClicked.addListener(async (tab) =>
 {
-	chrome.browserAction.getTitle({tabId: tab.id}, title => 
-	{
-		if(title === titleApply) 
-		{
-			chrome.browserAction.setIcon({tabId: tab.id, path: 'assets/icons/on.png'});
-			chrome.browserAction.setTitle({title: titleRemove, tabId: tab.id});
-
-			chrome.tabs.executeScript(tab.id, {allFrames: false, file: 'src/enable.js', runAt:"document_end"});
-		}
-		else 
-		{
-			chrome.browserAction.setIcon({tabId: tab.id, path: 'assets/icons/off.png'});
-			chrome.browserAction.setTitle({title: titleApply, tabId: tab.id});
-
-			chrome.tabs.executeScript(tab.id, {allFrames: false, file: 'src/disable.js', runAt:"document_end"});
-		}
-	});
+	toggle(await browser.browserAction.getTitle({ tabId: tab.id }), tab.id);
 });
 
 browser.runtime.onMessage.addListener((request, sender, sendResponse) => 
@@ -60,7 +49,7 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) =>
 	if(request.from === "yo" && !request.t) 
 	{
 		chrome.browserAction.setIcon({tabId: sender.tab.id, path: 'assets/icons/off.png'});
-		chrome.browserAction.setTitle({title: titleApply, tabId: sender.tab.id});
+		chrome.browserAction.setTitle({title: title_apply, tabId: sender.tab.id});
 	
 		tabs.splice(tabs.indexOf(sender.tab.id), 1);
 		storage.set({'tabs': tabs});
@@ -68,7 +57,7 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) =>
 	else 
 	{
 		chrome.browserAction.setIcon({tabId: sender.tab.id, path: 'assets/icons/on.png'});
-		chrome.browserAction.setTitle({title: titleRemove, tabId: sender.tab.id});
+		chrome.browserAction.setTitle({title: title_remove, tabId: sender.tab.id});
 
 		if(tabs.indexOf(sender.tab.id) === -1) 
 		{
@@ -104,7 +93,7 @@ browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) =>
 		if(blacklist.find(o => o.url === hostname)) 
 		{
 			chrome.browserAction.setIcon({ tabId: tabId, path: 'assets/icons/off.png' });
-			chrome.browserAction.setTitle({ title: titleApply, tabId: tabId });
+			chrome.browserAction.setTitle({ title: title_apply, tabId: tabId });
 			
 			return;
 		}
@@ -112,7 +101,7 @@ browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) =>
 		{
 			if(items.enableEverywhere) 
 			{
-				chrome.tabs.executeScript(tabId, { allFrames: false, file: 'src/enable.js', runAt:"document_end" });
+				chrome.tabs.executeScript(tabId, { allFrames: true, file: 'src/enable.js', runAt:"document_end" });
 				
 				return;
 			}
@@ -128,7 +117,7 @@ browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) =>
 				
 					if (~tabs.indexOf(tabId) || whitelist.find(o => o.url === hostname)) 
 					{
-						chrome.tabs.executeScript(tabId, { allFrames: false, file: 'src/enable.js', runAt:"document_end" });
+						chrome.tabs.executeScript(tabId, { allFrames: true, file: 'src/enable.js', runAt:"document_end" });
 					}
 				});
 			}
@@ -136,8 +125,38 @@ browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) =>
 	});
 });
 
+browser.commands.onCommand.addListener(async (command) =>
+{
+	if (!command === 'toggle') return;
+	
+	const tabs = await browser.tabs.query({ currentWindow: true, active: true });
+
+	const id = tabs[0].id;
+
+	toggle(await browser.browserAction.getTitle({ tabId: id }), id);
+});
+
 browser.tabs.onRemoved.addListener(tab => 
 {
 	tabs.splice(tabs.indexOf(tab.id), 1);
+	
 	storage.set({'tabs': tabs});
 });
+
+function toggle(title, tab_id)
+{
+	if(title === title_remove)
+	{
+		chrome.browserAction.setIcon({ tabId: tab_id, path: 'assets/icons/off.png' });
+		chrome.browserAction.setTitle({ title: title_apply, tabId: tab_id });
+
+		chrome.tabs.executeScript(tab_id, { allFrames: true, file: 'src/disable.js', runAt: "document_end" });
+	}
+	else
+	{
+		chrome.browserAction.setIcon({ tabId: tab_id, path: 'assets/icons/on.png' });
+		chrome.browserAction.setTitle({ title: title_remove, tabId: tab_id });
+
+		chrome.tabs.executeScript(tab_id, { allFrames: true, file: 'src/enable.js', runAt: "document_end" });
+	}
+}
