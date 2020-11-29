@@ -417,10 +417,6 @@ function init()
 	browser.storage.local.get(stored, start);
 }
 
-init();
-
-chrome.runtime.sendMessage({from: "yo", t: true});
-
 function createElem()
 {
 	const doc = document;
@@ -442,3 +438,7 @@ function nlToArr(nl)
 
 	return arr;
 }
+
+init();
+
+chrome.runtime.sendMessage({from: "yo", t: true});
