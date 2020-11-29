@@ -13,8 +13,8 @@ const refreshBtn = $("#refreshBtn");
 
 let url_visible = false;
 
-function init(tabs) 
-{	
+function init(tabs)
+{
 	const strSlider       = $("#strSlider");
 	const strLabel        = $("#strLabel");
 
@@ -39,62 +39,52 @@ function init(tabs)
 	const skipWhites      = $("#skipWhites");
 
 	const optionsBtn      = $("#optionsBtn");
-	
+
 	let url = tabs[0].url;
-	
+
 	let hostname = '';
 
-	if(url.startsWith('file://'))
-	{
+	if (url.startsWith('file://')) {
 		hostname = url;
-	}
-	else
-	{
+	} else {
 		hostname = url.match(/\/\/(.+?)\//)[1];
-		
-		if(!url.startsWith('http')) 
-		{
+
+		if (!url.startsWith('http'))
 			showRefreshBtn();
-		}
 	}
-	
+
 	url_text.innerText = hostname;
-	
-	strSlider.oninput 	= () => strLabel.innerText 	 = strSlider.value;
-	sizeSlider.oninput 	= () => sizeLabel.innerText 	 = sizeSlider.value;
+
+	strSlider.oninput 	    = () => strLabel.innerText       = strSlider.value;
+	sizeSlider.oninput 	    = () => sizeLabel.innerText      = sizeSlider.value;
 	thresholdSlider.oninput = () => thresholdLabel.innerText = thresholdSlider.value;
-	brt_slider.oninput 	= () => brt_label.innerText 	 = brt_slider.value;
-	
-	optionsBtn.onclick = () => 
-	{
-		if (chrome.runtime.openOptionsPage) 
-		{
+	brt_slider.oninput 	    = () => brt_label.innerText      = brt_slider.value;
+
+	optionsBtn.onclick = () =>  {
+		if (chrome.runtime.openOptionsPage)
 			chrome.runtime.openOptionsPage();
-		} 
-		else 
-		{
+		else
 			window.open(chrome.runtime.getURL('options.html'));
-		}
 	};
-	
+
 	const settings = [
-		"whitelist", 
-		"blacklist", 
+		"whitelist",
+		"blacklist",
 		"globalStr",
 		"size",
-		"sizeThreshold", 
-		"skipColoreds", 
-		"skipHeadings", 
+		"sizeThreshold",
+		"skipColoreds",
+		"skipHeadings",
 		"advDimming",
-		"brightness", 
-		"boldText", 
+		"brightness",
+		"boldText",
 		"forcePlhdr",
 		"forceOpacity",
 		"skipWhites",
 		"underlineLinks",
 		"input_border"
 	];
-	
+
 	const start = settings =>
 	{
 		let whitelist = settings.whitelist || [];
@@ -102,162 +92,134 @@ function init(tabs)
 
 		let item = settings;
 
-		if (blacklist.findIndex(o => o.url === hostname) > -1)
-		{
+		if (blacklist.findIndex(o => o.url === hostname) > -1) {
 			BLcheck.checked = true;
-		}
-		else 
-		{
+		} else {
 			const idx = whitelist.findIndex(o => o.url === hostname);
-		
-			if(idx > -1)
-			{
+
+			if (idx > -1) {
 				item = whitelist[idx];
-				
+
 				WLcheck.checked = true;
 				BLcheck.checked = false;
 			}
 		}
-		
-		strSlider.value 		= item.strength || item.globalStr;
-		strLabel.innerText 		= item.strength || item.globalStr;
-		sizeSlider.value 		= item.size;
-		sizeLabel.innerText 		= item.size;
-		thresholdSlider.value 		= item.threshold || item.sizeThreshold;
-		thresholdLabel.innerText 	= item.threshold || item.sizeThreshold;
-		brt_slider.value 		= item.brightness || 50;
-		brt_label.innerText 		= item.brightness || 50;
 
-		skipHeadings.checked 		= item.skipHeadings;
-		skipColoreds.checked 		= item.skipColoreds;
-		advDimming.checked 		= item.advDimming;
-		input_border.checked 		= item.input_border;
-		boldText.checked 		= item.boldText;
-		forcePlhdr.checked 		= item.forcePlhdr;
-		forceOpacity.checked 		= item.forceOpacity;
-		skipWhites.checked 		= item.skipWhites;
-		underlineLinks.checked 		= item.underlineLinks;
-		
+		strSlider.value          = item.strength || item.globalStr;
+		strLabel.innerText       = item.strength || item.globalStr;
+		sizeSlider.value         = item.size || 0;
+		sizeLabel.innerText      = item.size || 0;
+		thresholdSlider.value    = item.threshold || item.sizeThreshold || 0;
+		thresholdLabel.innerText = item.threshold || item.sizeThreshold || 0;
+		brt_slider.value         = item.brightness || 50;
+		brt_label.innerText      = item.brightness || 50;
+
+		skipHeadings.checked     = item.skipHeadings;
+		skipColoreds.checked     = item.skipColoreds;
+		advDimming.checked       = item.advDimming;
+		input_border.checked     = item.input_border;
+		boldText.checked         = item.boldText;
+		forcePlhdr.checked       = item.forcePlhdr;
+		forceOpacity.checked     = item.forceOpacity;
+		skipWhites.checked       = item.skipWhites;
+		underlineLinks.checked   = item.underlineLinks;
+
 		if(!advDimming.checked)
-		{
 			$('#brt-div').style.display ='none';
-		}
-		
-		const getOptions = () =>
-		{
+
+		const getOptions = () => {
 			const wl_item = {
-				url: 		hostname, 
-				strength: 	strSlider.value,
-				size: 		sizeSlider.value,
-				threshold: 	thresholdSlider.value,
-				brightness:	brt_slider.value,
-				skipHeadings: 	skipHeadings.checked, 
-				skipColoreds: 	skipColoreds.checked, 
-				advDimming: 	advDimming.checked,
-				boldText: 	boldText.checked,
-				forcePlhdr: 	forcePlhdr.checked,
-				forceOpacity: 	forceOpacity.checked,
-				skipWhites: 	skipWhites.checked,
+				url:            hostname,
+				strength:       strSlider.value,
+				size:           sizeSlider.value,
+				threshold:      thresholdSlider.value,
+				brightness:     brt_slider.value,
+				skipHeadings:   skipHeadings.checked,
+				skipColoreds:   skipColoreds.checked,
+				advDimming:     advDimming.checked,
+				boldText:       boldText.checked,
+				forcePlhdr:     forcePlhdr.checked,
+				forceOpacity:   forceOpacity.checked,
+				skipWhites:     skipWhites.checked,
 				underlineLinks: underlineLinks.checked,
-				input_border: 	input_border.checked
+				input_border:   input_border.checked
 			}
-			
+
 			return wl_item;
 		}
 
-		WLcheck.onclick = () => 
-		{
+		WLcheck.onclick = () => {
 			const is_checked = WLcheck.checked;
 
 			whitelist = updateList(getOptions(), true, is_checked);
 
-			if(is_checked)
-			{ 
+			if (is_checked) {
 				let idx = blacklist.findIndex(o => o.url === hostname);
-				
-				if(idx > -1) 
-				{
+
+				if(idx > -1)
 					blacklist = updateList({ url: hostname }, false, false);
-				}
 			}
 		};
 
-		BLcheck.onclick = () => 
-		{
+		BLcheck.onclick = () => {
 			const is_checked = BLcheck.checked;
 
 			blacklist = updateList({ url: hostname }, false, is_checked);
 
-			if(is_checked)
-			{
+			if (is_checked) {
 				const idx = whitelist.findIndex(o => o.url === hostname);
 
 				if(idx > -1)
-				{
 					whitelist = updateList(getOptions(), true, false);
-				}
 			}
 		};
 
-		$$('.option').forEach(checkbox =>
-		{
-			checkbox.onclick = () => 
-			{
-				if(checkbox.id === 'adv-mode')
-				{
+		$$('.option').forEach(checkbox => {
+			checkbox.onclick = () => {
+				if (checkbox.id === 'adv-mode') {
 					const brt_div = document.querySelector('#brt-div');
-					
-					if(advDimming.checked)
-					{
+
+					if (advDimming.checked)
 						brt_div.style.display = 'flex';
-					}
 					else
-					{
 						brt_div.style.display = 'none';
-					}
 				}
-				
+
 				whitelist = updateList(getOptions(), true, true);
 
-				if(BLcheck.checked) 
-				{
+				if (BLcheck.checked)
 					blacklist = updateList({ url: hostname }, false, false);
-				}
 			}
 		});
-		
-		const updateList = (item, is_wl, add) =>
-		{
+
+		const updateList = (item, is_wl, add) => {
 			let list;
 			let list_name;
 			let check;
-			
-			if(is_wl) 
-			{
+
+			if (is_wl) {
 				list = whitelist;
 				list_name = 'whitelist';
 				check = WLcheck;
-			}
-			else
-			{
+			} else {
 				list = blacklist;
 				list_name = 'blacklist';
 				check = BLcheck;
 			}
 
 			let idx = list.findIndex(o => o.url === item.url);
-			
-			if(add)
-			{
-				if(idx > -1) 	list[idx] = item;
-				else 		list.push(item);
+
+			if (add) {
+				if (idx > -1)
+					list[idx] = item;
+				else
+					list.push(item);
 
 				check.checked = true;
 			}
-			else if(idx > -1) 
-			{
+			else if (idx > -1) {
 				list.splice(idx, 1);
-				
+
 				check.checked = false;
 			}
 
@@ -276,15 +238,16 @@ chrome.tabs.query({ active: true, currentWindow: true }, init);
 
 function showRefreshBtn()
 {
-	if(url_visible) return;
+	if (url_visible)
+		return;
 
 	url_text.style.opacity = 0;
 	url_text.style.zIndex = "2";
-	
+
 	refreshBtn.style.opacity = 1;
 	refreshBtn.style.zIndex = "3";
 	refreshBtn.style.cursor = "pointer";
-  
+
 	refreshBtn.onclick = () => browser.tabs.reload();
 
 	url_visible = true;
