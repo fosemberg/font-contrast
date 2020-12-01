@@ -84,7 +84,6 @@ browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 		if (blacklist.find(o => o.url === hostname)) {
 			chrome.browserAction.setIcon({ tabId: tabId, path: 'assets/icons/off.png' });
 			chrome.browserAction.setTitle({ title: title_apply, tabId: tabId });
-
 			return;
 		}
 

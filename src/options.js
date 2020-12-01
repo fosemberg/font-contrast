@@ -32,20 +32,20 @@ let underlineLinks  = doc.querySelector('#underlineLinks');
 const input_border  = doc.querySelector('#input-border');
 
 // Whitelist
-let WLtable 		= doc.querySelector('#whitelist');
-let WLaddButton 	= doc.querySelector('#add');
-let WLresetButton 	= doc.querySelector('#reset');
-let WLtextarea 		= doc.querySelector('#urltext');
-let WLheader 		= doc.getElementById("header");
-let WLtbody 		= doc.querySelector("#WLtbody");
+let WLtable         = doc.querySelector('#whitelist');
+let WLaddButton     = doc.querySelector('#add');
+let WLresetButton   = doc.querySelector('#reset');
+let WLtextarea      = doc.querySelector('#urltext');
+let WLheader        = doc.getElementById("header");
+let WLtbody         = doc.querySelector("#WLtbody");
 
 // Blacklist
-let BLtable 		= doc.querySelector('#blacklist');
-let BLaddButton 	= doc.querySelector('#BLadd');
-let BLresetButton 	= doc.querySelector('#BLreset');
-let BLtextarea 		= doc.querySelector('#BLurltext');
-let BLheader 		= doc.getElementById("BLheader");
-let BLtbody 		= doc.querySelector("#BLtbody");
+let BLtable         = doc.querySelector('#blacklist');
+let BLaddButton     = doc.querySelector('#BLadd');
+let BLresetButton   = doc.querySelector('#BLreset');
+let BLtextarea      = doc.querySelector('#BLurltext');
+let BLheader        = doc.getElementById("BLheader");
+let BLtbody         = doc.querySelector("#BLtbody");
 
 let wl = [];
 let bl = [];
@@ -132,7 +132,7 @@ function addRow(item, is_wl)
 
 	let cell_pos = 2;
 
-	if(!is_wl)
+	if (!is_wl)
 		--cell_pos;
 
 	row.insertCell(cell_pos).appendChild(rem_btn);
@@ -182,7 +182,7 @@ function init()
 	});
 
 	storage.get('whitelist', item => {
-		if(!item.whitelist)
+		if (!item.whitelist)
 			return;
 
 		wl = item.whitelist;
@@ -194,7 +194,7 @@ function init()
 	});
 
 	storage.get('blacklist', item => {
-		if(!item.blacklist)
+		if (!item.blacklist)
 			return;
 
 		bl = item.blacklist;

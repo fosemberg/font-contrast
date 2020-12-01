@@ -4,11 +4,15 @@
  */
 
 "use strict";
-var x, t;
 
-function getRGBarr(rgb_str)
+// Style tag
+var x;
+// Text node
+var t;
+
+function getRGBarr(rgba_str)
 {
-	return rgb_str.match(/\d\.\d|\d+/g).map(Number);
+	return rgba_str.match(/\d\.\d|\d+/g);
 }
 
 function calcBrightness([r, g, b, a = 1])
@@ -50,6 +54,100 @@ function getBgBrightness(parent, bg_color)
 	return bg_luma;
 }
 
+function getCSS(cfg) {
+
+	const attr = '[d__],[d__][style]';
+	let color_black = 'color:rgba(0, 0, 0, 1)!important';
+
+	let dim = '';
+	if (cfg.advDimming)
+		dim = `${attr}{filter:brightness(${cfg.brightness}%);}`;
+	else
+		dim = `${attr}{${color_black}}`;
+
+	let opacity =  '';
+	if (cfg.forceOpacity)
+		opacity = '*,*[style]{opacity:1!important}';
+
+	let bold = '';
+	if (cfg.boldText)
+		bold = '*{font-weight:bold!important}';
+
+	let underline = '';
+	if (cfg.underlineLinks)
+		underline = '[u__]{text-decoration:underline!important}';
+
+	if (!cfg.forcePlhdr)
+		color_black = '';
+
+	const placeholder = `::placeholder{opacity:1!important;${color_black}}`;
+
+	// Doesn't hurt to put it in, even if form borders are disabled
+	const form_border = '[b__]{border:1px solid black!important}';
+
+	let size_inc = '';
+
+	if (cfg.size > 0) {
+		let i = 1;
+
+		while (i <= size_threshold)
+			size_inc += `[s__='${i}']{font-size: calc(${i++}px + ${size}%)!important}\n`;
+	}
+
+	return `${dim}${opacity}${size_inc}${bold}${placeholder}${form_border}${underline}`;
+}
+
+function createElem()
+{
+	const doc = document;
+
+	x = doc.createElement("style");
+	doc.head.appendChild(x);
+	x.setAttribute("id", "_fc_");
+
+	t = doc.createTextNode("");
+}
+
+function nlToArr(nl)
+{
+	let arr = [];
+
+	for (let i = 0, len = arr.length = nl.length; i < len; ++i)
+		arr[i] = nl[i];
+
+	return arr;
+}
+
+function init()
+{
+	if (document.getElementById("_fc_")) {
+		x.appendChild(t);
+		return;
+	}
+
+	createElem();
+
+	const stored = [
+		"whitelist",
+		//"blacklist",
+		"globalStr",
+		"size",
+		"sizeThreshold",
+		"skipColoreds",
+		"skipHeadings",
+		"advDimming",
+		"boldText",
+		"forceOpacity",
+		"forcePlhdr",
+		"smoothEnabled",
+		"skipWhites",
+		"underlineLinks",
+		"input_border"
+	];
+
+	browser.storage.local.get(stored, start);
+}
+
 function start(cfg)
 {
 	let {
@@ -65,7 +163,7 @@ function start(cfg)
 		boldText,
 		forcePlhdr,
 		forceOpacity,
-		smoothEnabled,
+		smoothEnabled: transition,
 		skipWhites,
 		underlineLinks
 	} = cfg;
@@ -98,18 +196,17 @@ function start(cfg)
 		}
 	}
 
-	if (smoothEnabled) {
+	if (transition) {
 		const doc = document;
 
 		let y = doc.createElement("style");
 		doc.head.appendChild(y);
 		y.setAttribute("id", "_fct_");
 
-		let smoothSize;
-		size > 0 ? smoothSize = " font-size" : "";
+		const smooth_sz = size > 0 ? ' font-size,' : '';
 
 		let z = doc.createTextNode(`[d__],[d__][style*]{
-			transition: color,${smoothSize} .25s linear!important;
+			transition: color${smooth_sz} .25s linear!important;
 		}`);
 
 		y.appendChild(z);
@@ -162,7 +259,7 @@ function start(cfg)
 	let callcnt  = 0;
 	let rgba_cnt = 0;
 
-	const process = (nodes, mutations = false) =>
+	const process = (nodes, mutation = false) =>
 	{
 		// Debug variables
 		let   db_arr     = [];
@@ -223,20 +320,23 @@ function start(cfg)
 			if (colors_to_skip.includes(color))
 				return;
 
-			let rgb_arr = getRGBarr(color);
+			let rgba_arr = getRGBarr(color);
 
-			if (typeof rgb_arr[3] !== 'undefined') {
+			if (!rgba_arr)
+				return;
+
+			if (rgba_arr.length > 3) {
 				node.setAttribute("rgba__", rgba_cnt);
 				const new_color = color.replace(/\d\.\d+/, '1');
 				callback(`[rgba__='${rgba_cnt++}']{color:${new_color}!important}`);
 			}
 
-			const bg_color = style.getPropertyValue("background-color");
+			rgba_arr = rgba_arr.map(Number);
 
-			const bg_brt = getBgBrightness(node.parentNode, bg_color);
-			const fg_brt = calcBrightness(rgb_arr);
-
-			const colorfulness = calcColorfulness(rgb_arr);
+			const fg_brt          = calcBrightness(rgba_arr);
+			const fg_colorfulness = calcColorfulness(rgba_arr);
+			const bg_color        = style.getPropertyValue("background-color");
+			const bg_brt          = getBgBrightness(node.parentNode, bg_color);
 
 			let db_obj = {};
 
@@ -245,7 +345,7 @@ function start(cfg)
 					tag,
 					fg_brt,
 					bg_brt,
-					colorfulness,
+					fg_colorfulness,
 				};
 
 				db_arr.push(db_obj);
@@ -265,12 +365,12 @@ function start(cfg)
 				const min_colorfulness  = 32;
 
 				if(db_node)
-					Object.assign(db_obj, {contrast, min_contrast, min_link_contrast});
+					Object.assign(db_obj, { contrast, min_contrast, min_link_contrast });
 
 				if(is_link)
 					min_contrast = min_link_contrast;
 
-				if(contrast > min_contrast && colorfulness > min_colorfulness)
+				if(contrast > min_contrast && fg_colorfulness > min_colorfulness)
 					return;
 			}
 
@@ -314,7 +414,6 @@ function start(cfg)
 	}
 
 	t.nodeValue = getCSS(cfg);
-
 	process(nodes);
 
 	const observer = mutations => {
@@ -340,103 +439,6 @@ function start(cfg)
 	new MutationObserver(observer).observe(document.body, { childList: true, subtree: true });
 
 	x.appendChild(t);
-};
-
-function getCSS(cfg) {
-
-	let color_black = 'color:rgba(0, 0, 0, 1)!important';
-
-	const attr = '[d__],[d__][style]';
-
-	let dim = '';
-
-	if (cfg.advDimming)
-		dim = `${attr}{filter:brightness(${brightness}%);}`;
-	else
-		dim = `${attr}{${color_black}}`;
-
-	let opacity =  '';
-	if (cfg.forceOpacity)
-		opacity = '*,*[style]{opacity:1!important}';
-
-	let bold = '';
-	if (cfg.boldText)
-		bold = '*{font-weight:bold!important}';
-
-	let underline = '';
-	if (cfg.underlineLinks)
-		underline = '[u__]{text-decoration:underline!important}';
-
-	if (!cfg.forcePlhdr)
-		color_black = '';
-
-	const placeholder = `::placeholder{opacity:1!important;${color_black}}`;
-
-	// Doesn't hurt to put it in, even if form borders are disabled
-	const form_border = '[b__]{border:1px solid black!important}';
-
-	let size_inc = '';
-
-	if (cfg.size > 0) {
-		let i = 1;
-
-		while (i <= size_threshold)
-			size_inc += `[s__='${i}']{font-size: calc(${i++}px + ${size}%)!important}\n`;
-	}
-
-	return `${dim}${opacity}${size_inc}${bold}${placeholder}${form_border}${underline}`;
-}
-
-function init()
-{
-	if (document.getElementById("_fc_")) {
-		x.appendChild(t);
-		return;
-	}
-
-	createElem();
-
-	let stored = [
-		"whitelist",
-		//"blacklist",
-		"globalStr",
-		"size",
-		"sizeThreshold",
-		"skipColoreds",
-		"skipHeadings",
-		"advDimming",
-		"boldText",
-		"forceOpacity",
-		"forcePlhdr",
-		"smoothEnabled",
-		"skipWhites",
-		"underlineLinks",
-		"input_border"
-	];
-
-	browser.storage.local.get(stored, start);
-}
-
-function createElem()
-{
-	const doc = document;
-
-	x = doc.createElement("style");
-	doc.head.appendChild(x);
-
-	x.setAttribute("id", "_fc_");
-
-	t = doc.createTextNode("");
-}
-
-function nlToArr(nl)
-{
-	let arr = [];
-
-	for (let i = 0, len = arr.length = nl.length; i < len; ++i)
-		arr[i] = nl[i];
-
-	return arr;
 }
 
 init();
