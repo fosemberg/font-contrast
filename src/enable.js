@@ -256,8 +256,9 @@ function start(cfg)
 	if (skipHeadings)
 		tags_to_skip.push(...["H1", "H2", "H3"]);
 
-	let callcnt  = 0;
-	let rgba_cnt = 0;
+	let callcnt = 0;
+
+	const rgba_rules = new Set();
 
 	const process = (nodes, mutation = false) =>
 	{
@@ -274,14 +275,14 @@ function start(cfg)
 
 		nodes = applyExceptions(nodes);
 
-		const setNodeAttribs = (node, callback) => {
+		const new_rgba_rules = new Set();
+
+		const setAttribs = node => {
 
 			const tag = String(node.nodeName);
 
 			if (tags_to_skip.includes(tag))
 				return;
-
-			const classe = String(node.className);
 
 			const style = getComputedStyle(node);
 
@@ -326,15 +327,19 @@ function start(cfg)
 				return;
 
 			if (rgba_arr.length > 3) {
-				node.setAttribute("rgba__", rgba_cnt);
-				const new_color = color.replace(/\d\.\d+/, '1');
-				callback(`[rgba__='${rgba_cnt++}']{color:${new_color}!important}`);
-			}
 
-			rgba_arr = rgba_arr.map(Number);
+				const class_name = `fc_rgba__${rgba_arr[0]}${rgba_arr[1]}${rgba_arr[2]}`;
+				node.classList.add(class_name);
+
+				const new_color = color.replace(/\d\.\d+/, '1');
+				const rule      = `.${class_name}{color:${new_color}!important}`;
+
+				new_rgba_rules.add(rule);
+			}
 
 			const fg_brt          = calcBrightness(rgba_arr);
 			const fg_colorfulness = calcColorfulness(rgba_arr);
+
 			const bg_color        = style.getPropertyValue("background-color");
 			const bg_brt          = getBgBrightness(node.parentNode, bg_color);
 
@@ -364,13 +369,13 @@ function start(cfg)
 				const min_link_contrast = 96 + (strength / 3);
 				const min_colorfulness  = 32;
 
-				if(db_node)
+				if (db_node)
 					Object.assign(db_obj, { contrast, min_contrast, min_link_contrast });
 
-				if(is_link)
+				if (is_link)
 					min_contrast = min_link_contrast;
 
-				if(contrast > min_contrast && fg_colorfulness > min_colorfulness)
+				if (contrast > min_contrast && fg_colorfulness > min_colorfulness)
 					return;
 			}
 
@@ -380,31 +385,39 @@ function start(cfg)
 				node.setAttribute("u__", 0);
 		};
 
-		let rgba_buf = [];
-
-		const processLargeArray = (arr) => {
+		const iterateBigArr = (arr) => {
 			const chunk = 200;
 			const len   = arr.length;
 
 			let idx = 0;
 
 			const doChunk = () => {
-				let count = chunk;
+				let c = chunk;
 
-				while (count-- && idx < len)
-					setNodeAttribs(arr[idx++], rgba_str => rgba_buf.push(rgba_str));
+				while (c--) {
+					if (idx > len - 1)
+						return;
 
-				if (idx < len)
-					setTimeout(doChunk, 0);
+					setAttribs(arr[idx++]);
+				}
+
+				setTimeout(doChunk, 0);
 			};
 
 			doChunk();
 		}
 
-		processLargeArray(nodes);
+		iterateBigArr(nodes);
 
-		if(rgba_buf.length)
-			t.nodeValue += rgba_buf.join('');
+		// Get the RGBA selectors that aren't already present.
+		const diff = [...new_rgba_rules].filter(x => !rgba_rules.has(x));
+
+		if (diff.length) {
+			t.nodeValue += diff.join('');
+
+			for (const new_rule of new_rgba_rules)
+				rgba_rules.add(new_rule);
+		}
 
 		if (db_time)
 			console.timeEnd(db_timestr);
