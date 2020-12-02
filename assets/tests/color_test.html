@@ -29,6 +29,28 @@
     </head>
     <body>
 
+    <p id="node" style="background-color:rgb(20,20,20); color:rgba(230,230,230,0.5)">RGBA color</p>
+
+    <span id="new_nodes"></span>
+
+    <button id="add">Add</button>
+    <script>
+        let count = 0;
+
+        add.onclick = (e) => {
+
+            let color1 = '230,230,230,0.5';
+            let color2 = '200,200,200,0.5';
+
+            /*if (count++ % 2 == 0) {
+                color = '200,200,200,0.5';
+            }*/
+
+            new_nodes.innerHTML += `<p style="background-color:rgb(20,20,20); color:rgba(${color1})">RGBA color</p>`;
+            new_nodes.innerHTML += `<p style="background-color:rgb(20,20,20); color:rgba(${color2})">RGBA color</p>`;
+        };
+    </script>
+
 	<!--<p style="color:rgb(17, 119, 67)">RGB readable</p>
 	<p style="color:rgba(17,119,67, 0.1); ">RGBA readable</p>
 	<p style="color:rgba(17,119,67, 0.2); ">RGBA readable</p>
@@ -39,25 +61,25 @@
 	<p style="color:rgba(17,119,67, 0.7); ">RGBA readable</p>
 	<p style="color:rgba(17,119,67, 0.8); ">RGBA readable</p>
 	<p style="color:rgba(17,119,67, 0.9); ">RGBA readable</p>
-	<p style="color:rgba(17,119,67, 1); ">RGBA readable</p>!-->
-	
-	<p style="color:rgb(205, 169, 167); background-color:rgb(26,26,26)">RGB readable</p>
-	<p style="color:rgba(17,119,67, 0.2); ">RGBA readable</p>
-	<p style="color:rgba(17,119,67, 0.2); background-color:rgb(200,200,200)">RGBA readable</p>
-	<p style="color:rgba(17,119,67, 0.2); background-color:rgb(160,160,160)">RGBA readable</p>
-	<p style="color:rgba(17,119,67, 0.2); background-color:rgb(155,155,155)">RGBA readable</p>
-	<p style="color:rgba(17,119,67, 0.1); background-color:rgb(126,126,126)">RGBA readable</p>
-	<p style="color:rgba(17,119,67, 0.2); background-color:rgb(26,26,26)">RGBA readable</p>
-	<p style="color:rgba(17,119,67, 0.3); background-color:rgb(36,36,36)">RGBA readable</p>
-	<p style="color:rgba(17,119,67, 0.4); background-color:rgb(86,86,86)">RGBA readable</p>
-	<p style="color:rgba(17,119,67, 0.5); background-color:rgb(116,116,116)">RGBA readable</p>
-	<p style="color:rgba(17,119,67, 0.6); background-color:rgb(156,156,156)">RGBA readable</p>
-	<p style="color:rgba(17,119,67, 0.7); background-color:rgb(26,26,26)">RGBA readable</p>
-	<p style="color:rgba(17,119,67, 0.8); background-color:rgb(26,26,26)">RGBA readable</p>
-	<p style="color:rgba(17,119,67, 0.9); background-color:rgb(26,26,26)">RGBA readable</p>
 	<p style="color:rgba(17,119,67, 1); ">RGBA readable</p>
 
-	<!--
+	<p style="color:rgb(205, 169, 167); background-color:rgb(26,26,26)">RGB readable</p>
+	<p style="color:rgba(17,119,67, 0.2); ">RGBA readable</p>
+	<p style="color:rgba(67,119,67, 0.2); background-color:rgb(200,200,200)">RGBA readable</p>
+	<p style="color:rgba(17,119,67, 0.2); background-color:rgb(160,160,160)">RGBA readable</p>
+	<p style="color:rgba(17,229,67, 0.2); background-color:rgb(155,155,155)">RGBA readable</p>
+	<p style="color:rgba(17,229,67, 0.1); background-color:rgb(126,126,126)">RGBA readable</p>
+	<p style="color:rgba(67,119,67, 0.2); background-color:rgb(26,26,26)">RGBA readable</p>
+	<p style="color:rgba(17,119,67, 0.3); background-color:rgb(36,36,36)">RGBA readable</p>
+	<p style="color:rgba(107,119,127, 0.4); background-color:rgb(86,86,86)">RGBA readable</p>
+	<p style="color:rgba(17,119,27, 0.5); background-color:rgb(116,116,116)">RGBA readable</p>
+	<p style="color:rgba(17,119,27, 0.6); background-color:rgb(156,156,156)">RGBA readable</p>
+	<p style="color:rgba(17,119,67, 0.7); background-color:rgb(26,26,26)">RGBA readable</p>
+	<p style="color:rgba(17,119,67, 0.8); background-color:rgb(26,26,26)">RGBA readable</p>
+	<p style="color:rgba(17,39,17, 0.9); background-color:rgb(26,26,26)">RGBA unreadable</p>
+	<p style="color:rgba(17,39,17, 1); ">RGBA readable</p>
+
+
         <p style ="color:rgb(221, 221, 221)">Lorem ipsum dolor sit amet</p>
         <p class ="dictionaryBlue">Lorem ipsum dolor sit amet</p>
         <p class ="dictionaryYellow">Lorem ipsum dolor sit amet</p>
