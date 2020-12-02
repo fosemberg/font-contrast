@@ -36,26 +36,22 @@ function containsText(node)
 
 function getBgBrightness(parent, bg_color)
 {
-	const transparent = 'rgba(0, 0, 0, 0)';
+	// assume light-ish color if we can't find it
+	let bg_luma = 236;
 
-	if (bg_color !== transparent)
-		return calcBrightness(getRGBarr(bg_color));
+	const transparent = "rgba(0, 0, 0, 0)";
 
-	// Assume light-ish color if we can't find it
-	let bg_brt = 236;
-
-	// Get the background color of the last parent that has it
-	while (parent) {
+	while (bg_color === transparent && parent) {
 		if (parent instanceof Element)
-			bg_color = getComputedStyle(parent).getPropertyValue('background-color');
+			bg_color = getComputedStyle(parent).getPropertyValue("background-color");
 
 		parent = parent.parentNode;
 	}
 
 	if (bg_color !== transparent)
-		bg_brt = calcBrightness(getRGBarr(bg_color));;
+		bg_luma = calcBrightness(getRGBarr(bg_color));
 
-	return bg_brt;
+	return bg_luma;
 }
 
 function getCSS(cfg) {
