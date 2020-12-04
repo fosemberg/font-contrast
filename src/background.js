@@ -9,7 +9,8 @@ const storage = chrome.storage.local;
 const title_apply  = "Apply contrast fix!";
 const title_remove = "Remove contrast fix!";
 
-let tabs = [];
+const tabs          = new Set();
+const disabled_tabs = new Set();
 
 browser.runtime.onInstalled.addListener(details =>  {
 
@@ -26,6 +27,7 @@ browser.runtime.onInstalled.addListener(details =>  {
 
 		browser.tabs.create({ url: "Welcome.html" });
 	} else if(details.reason === "update") {
+
 		storage.get(["size", "sizeThreshold"], items =>  {
 			if(typeof items.size === "undefined")
 				storage.set({"size": 0});
@@ -36,34 +38,41 @@ browser.runtime.onInstalled.addListener(details =>  {
 	}
 });
 
-browser.runtime.onStartup.addListener(() => { storage.remove('tabs'); });
-
 browser.browserAction.onClicked.addListener(async (tab) => {
 	toggle(await browser.browserAction.getTitle({ tabId: tab.id }), tab.id);
 });
 
-browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
-	if (request.from === "yo" && !request.t)  {
-		chrome.browserAction.setIcon({tabId: sender.tab.id, path: 'assets/icons/off.png'});
-		chrome.browserAction.setTitle({title: title_apply, tabId: sender.tab.id});
+browser.runtime.onMessage.addListener( async (request, sender, sendResponse) => {
 
-		tabs.splice(tabs.indexOf(sender.tab.id), 1);
-		storage.set({'tabs': tabs});
+	if (request.from !== 'toggle')
+		return;
+
+	let title;
+	let path;
+
+	if (request.enabled) {
+		title = title_remove;
+		path = 'assets/icons/on.png';
+
+		tabs.add(sender.tab.id);
+		disabled_tabs.delete(sender.tab.id);
 	} else {
-		chrome.browserAction.setIcon({tabId: sender.tab.id, path: 'assets/icons/on.png'});
-		chrome.browserAction.setTitle({title: title_remove, tabId: sender.tab.id});
+		title = title_apply;
+		path  = 'assets/icons/off.png';
 
-		if (tabs.indexOf(sender.tab.id) === -1) {
-			tabs.push(sender.tab.id);
-			storage.set({'tabs': tabs});
-		}
+		tabs.delete(sender.tab.id);
+		disabled_tabs.add(sender.tab.id);
 	}
+
+	chrome.browserAction.setTitle({ tabId: sender.tab.id, title: title });
+	chrome.browserAction.setIcon({ tabId: sender.tab.id, path: path });
 });
 
-browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+browser.tabs.onUpdated.addListener((tabId, change_info, tab) => {
+
 	browser.pageAction.show(tab.id);
 
-	if (changeInfo.status !== 'complete')
+	if (change_info.status !== 'complete')
 		return;
 
 	const url = tab.url;
@@ -74,11 +83,18 @@ browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 	} else {
 		const matches = url.match(/\/\/(.+?)\//);
 
-		if(matches)
+		if (matches)
 			hostname = matches[1];
 	}
 
-	storage.get(['blacklist', 'enableEverywhere'], items => {
+	const data = [
+		'whitelist',
+		'blacklist',
+		'enableEverywhere',
+	];
+
+	storage.get(data, items => {
+
 		const blacklist = items.blacklist || [];
 
 		if (blacklist.find(o => o.url === hostname)) {
@@ -87,28 +103,27 @@ browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 			return;
 		}
 
-		if (items.enableEverywhere) {
-			chrome.tabs.executeScript(tabId, { allFrames: true, file: 'src/enable.js', runAt:"document_end" });
+		const options = {
+			file: 'src/enable.js',
+			runAt: 'document_end',
+			allFrames: true
+		};
+
+		if (items.enableEverywhere && !disabled_tabs.has(tabId)) {
+			chrome.tabs.executeScript(tabId, options);
 			return;
 		}
 
-		storage.get(['whitelist', 'tabs'], items => {
-			if (!items.whitelist)
-				return;
+		const whitelist = items.whitelist || [];
 
-			let whitelist = items.whitelist || [];
-
-			if (items.tabs)
-				tabs = items.tabs;
-
-			if (~tabs.indexOf(tabId) || whitelist.find(o => o.url === hostname))
-				chrome.tabs.executeScript(tabId, { allFrames: true, file: 'src/enable.js', runAt:"document_end" });
-		});
+		if (tabs.has(tabId) || whitelist.find(x => x.url === hostname))
+			chrome.tabs.executeScript(tabId, options);
 	});
 });
 
 browser.commands.onCommand.addListener(async (command) => {
-	if (!command === 'toggle')
+
+	if (command !== 'toggle')
 		return;
 
 	const tabs = await browser.tabs.query({ currentWindow: true, active: true });
@@ -119,8 +134,8 @@ browser.commands.onCommand.addListener(async (command) => {
 });
 
 browser.tabs.onRemoved.addListener(tab => {
-	tabs.splice(tabs.indexOf(tab.id), 1);
-	storage.set({'tabs': tabs});
+	tabs.delete(tab.id);
+	disabled_tabs.delete(tab.id);
 });
 
 function toggle(title, tab_id)
@@ -137,5 +152,5 @@ function toggle(title, tab_id)
 
 	chrome.browserAction.setIcon({ tabId: tab_id, path: icon_path });
 	chrome.browserAction.setTitle({ title: new_title, tabId: tab_id });
-	chrome.tabs.executeScript(tab_id, { allFrames: true, file: file, runAt: "document_end" });
+	chrome.tabs.executeScript(tab_id, { allFrames: true, file: file, runAt: 'document_end' });
 }

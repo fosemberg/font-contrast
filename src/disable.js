@@ -3,5 +3,5 @@
  * License: https://github.com/Fushko/font-contrast#license
  */
 
-x.removeChild(t);
-chrome.runtime.sendMessage({from: "yo", t: false});
+style_node.removeChild(css_node);
+chrome.runtime.sendMessage({ from: 'toggle', enabled: false });

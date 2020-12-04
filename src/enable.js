@@ -6,9 +6,9 @@
 "use strict";
 
 // Style tag
-var x;
+var style_node;
 // Text node
-var t;
+var css_node;
 
 function getRGBarr(rgba_str)
 {
@@ -101,11 +101,11 @@ function createElem()
 {
 	const doc = document;
 
-	x = doc.createElement("style");
-	doc.head.appendChild(x);
-	x.setAttribute("id", "_fc_");
+	style_node = doc.createElement('style');
+	style_node.setAttribute('id', '_fc_');
+	doc.head.appendChild(style_node);
 
-	t = doc.createTextNode("");
+	css_node = doc.createTextNode('');
 }
 
 function nlToArr(nl)
@@ -120,8 +120,8 @@ function nlToArr(nl)
 
 function init()
 {
-	if (document.getElementById("_fc_")) {
-		x.appendChild(t);
+	if (document.getElementById('_fc_')) {
+		style_node.appendChild(css_node);
 		return;
 	}
 
@@ -413,7 +413,7 @@ function start(cfg)
 		const diff = [...new_rgba_rules].filter(x => !rgba_rules.has(x));
 
 		if (diff.length) {
-			t.nodeValue += diff.join('');
+			css_node.nodeValue += diff.join('');
 
 			for (const new_rule of new_rgba_rules)
 				rgba_rules.add(new_rule);
@@ -426,7 +426,7 @@ function start(cfg)
 			console.table(db_arr);
 	}
 
-	t.nodeValue = getCSS(cfg);
+	css_node.nodeValue = getCSS(cfg);
 	process(nodes);
 
 	const observer = mutations => {
@@ -451,9 +451,9 @@ function start(cfg)
 
 	new MutationObserver(observer).observe(document.body, { childList: true, subtree: true });
 
-	x.appendChild(t);
+	style_node.appendChild(css_node);
 }
 
 init();
 
-chrome.runtime.sendMessage({from: "yo", t: true});
+chrome.runtime.sendMessage({ from: 'toggle', enabled: true });
