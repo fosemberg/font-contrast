@@ -22,7 +22,6 @@ const brt_label     = doc.querySelector('#brt-label');
 let skipHeadings    = doc.querySelector('#skipHeadings');
 let skipColoreds    = doc.querySelector('#skipColoreds');
 let globalEnabled   = doc.querySelector('#defaultEn');
-let smoothEnabled   = doc.querySelector('#smoothEnabled');
 let advDimming      = doc.querySelector('#advDimming');
 let boldText        = doc.querySelector('#boldText');
 let forcePlhdr      = doc.querySelector('#forcePlhdr');
@@ -161,7 +160,6 @@ function init()
 		"boldText",
 		"forceOpacity",
 		"forcePlhdr",
-		"smoothEnabled",
 		"skipWhites",
 		"underlineLinks",
 		"input_border"
@@ -175,7 +173,6 @@ function init()
 		doc.getElementById("boldText").checked       = i.boldText;
 		doc.getElementById("forceOpacity").checked   = i.forceOpacity;
 		doc.getElementById("forcePlhdr").checked     = i.forcePlhdr;
-		doc.getElementById("smoothEnabled").checked  = i.smoothEnabled;
 		doc.getElementById("skipWhites").checked     = i.skipWhites;
 		doc.getElementById("underlineLinks").checked = i.underlineLinks;
 		input_border.checked = i.input_border;
@@ -229,10 +226,6 @@ function addListeners()
 
 	advDimming.onclick = () => {
 		storage.set({'advDimming': isChecked("advDimming")});
-	};
-
-	smoothEnabled.onclick = () => {
-		storage.set({'smoothEnabled': isChecked("smoothEnabled")});
 	};
 
 	boldText.onclick = () => {

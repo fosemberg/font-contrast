@@ -128,21 +128,19 @@ function init()
 	createElem();
 
 	const stored = [
-		"whitelist",
-		//"blacklist",
-		"globalStr",
-		"size",
-		"sizeThreshold",
-		"skipColoreds",
-		"skipHeadings",
-		"advDimming",
-		"boldText",
-		"forceOpacity",
-		"forcePlhdr",
-		"smoothEnabled",
-		"skipWhites",
-		"underlineLinks",
-		"input_border"
+		'whitelist',
+		'globalStr',
+		'size',
+		'sizeThreshold',
+		'skipColoreds',
+		'skipHeadings',
+		'advDimming',
+		'boldText',
+		'forceOpacity',
+		'forcePlhdr',
+		'skipWhites',
+		'underlineLinks',
+		'input_border'
 	];
 
 	browser.storage.local.get(stored, start);
@@ -163,7 +161,6 @@ function start(cfg)
 		boldText,
 		forcePlhdr,
 		forceOpacity,
-		smoothEnabled: transition,
 		skipWhites,
 		underlineLinks
 	} = cfg;
@@ -194,22 +191,6 @@ function start(cfg)
 			skipWhites      = i.skipWhites;
 			underlineLinks  = i.underlineLinks;
 		}
-	}
-
-	if (transition) {
-		const doc = document;
-
-		let y = doc.createElement("style");
-		doc.head.appendChild(y);
-		y.setAttribute("id", "_fct_");
-
-		const smooth_sz = size > 0 ? ' font-size,' : '';
-
-		let z = doc.createTextNode(`[d__],[d__][style*]{
-			transition: color${smooth_sz} .25s linear!important;
-		}`);
-
-		y.appendChild(z);
 	}
 
 	const nodes = nlToArr(document.body.getElementsByTagName('*'));
