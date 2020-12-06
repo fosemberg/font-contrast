@@ -6,35 +6,30 @@
 
 const storage = chrome.storage.local;
 
-const title_apply  = "Apply contrast fix!";
-const title_remove = "Remove contrast fix!";
+const title_apply  = 'Apply contrast fix!';
+const title_remove = 'Remove contrast fix!';
 
 const tabs          = new Set();
 const disabled_tabs = new Set();
 
-browser.runtime.onInstalled.addListener(details =>  {
+browser.runtime.onInstalled.addListener(details => {
 
-	if(details.reason === "install") {
-		storage.set({"globalStr": 0});
-		storage.set({"size": 0});
-		storage.set({"sizeThreshold": 12});
-		storage.set({"size": 0});
-		storage.set({"sizeThreshold": 12});
-		storage.set({"brightness": 50});
-		storage.set({"skipColoreds": true});
-		storage.set({"skipWhites": true});
-		//storage.set({ "enableEverywhere": true });
+	if (details.reason === 'install') {
 
-		browser.tabs.create({ url: "Welcome.html" });
-	} else if(details.reason === "update") {
+		const defaults = {
+			'globalStr': 0,
+			'size': 0,
+			'sizeThreshold': 12,
+			'brightness': 50,
+			'skipColoreds': true,
+			'skipWhites': true,
+			'enableEverywhere': true
+		};
 
-		storage.get(["size", "sizeThreshold"], items =>  {
-			if(typeof items.size === "undefined")
-				storage.set({"size": 0});
+		storage.set(defaults);
 
-			if(typeof items.sizeThreshold === "undefined")
-				storage.set({"sizeThreshold": 12});
-		});
+		browser.tabs.create({ url: 'Welcome.html' });
+		return;
 	}
 });
 
@@ -127,8 +122,7 @@ browser.commands.onCommand.addListener(async (command) => {
 		return;
 
 	const tabs = await browser.tabs.query({ currentWindow: true, active: true });
-
-	const id = tabs[0].id;
+	const id   = tabs[0].id;
 
 	toggle(await browser.browserAction.getTitle({ tabId: id }), id);
 });
