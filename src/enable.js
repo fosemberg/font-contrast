@@ -212,53 +212,66 @@ function start(cfg)
 		y.appendChild(z);
 	}
 
-	let nodes = nlToArr(document.body.getElementsByTagName('*'));
+	const nodes = nlToArr(document.body.getElementsByTagName('*'));
 
-	let tags_to_skip = ["SCRIPT", "LINK", "STYLE", "IMG", "VIDEO", "SOURCE", "CANVAS"];
-	let colors_to_skip = ["rgb(0, 0, 0)", "rgba(0, 0, 0, 0)"];
+	const tags_to_skip = [
+		'SCRIPT',
+		'LINK',
+		'STYLE',
+		'IMG',
+		'VIDEO',
+		'SOURCE',
+		'CANVAS',
+		'undefined'
+	];
+
+	const colors_to_skip  = [
+		'rgb(0, 0, 0)',
+		'rgba(0, 0, 0, 0)'
+	];
+
+	let classes_to_skip = '';
 
 	let proc_img = true;
 
-	const applyExceptions = (nodes) => {
-		switch (url) {
-		case "youtube.com":
-			/**
-			 * Filters youtube player. It doesn't get dimmed anyways,
-			 * but let's make sure it stays untouched.
-			 */
-			nodes = nodes.filter(node => {
-				return !String(node.className).startsWith("ytp")
-			});
-			proc_img = false;
-			break;
-		case "facebook.com":
-			skipWhites = true;
-			proc_img = false;
-			break;
-		}
-
-		return nodes;
-	};
-
 	if (skipWhites) {
 		const white = [
-			"rgb(255, 255, 255)",
-			"rgb(254, 254, 254)",
-			"rgb(253, 253, 253)",
-			"rgb(252, 252, 252)",
-			"rgb(251, 251, 251)",
-			"rgb(250, 250, 250)"
+			'rgb(255, 255, 255)',
+			'rgb(254, 254, 254)',
+			'rgb(253, 253, 253)',
+			'rgb(252, 252, 252)',
+			'rgb(251, 251, 251)',
+			'rgb(250, 250, 250)'
 		];
 
 		colors_to_skip.push(...white);
 	}
 
 	if (skipHeadings)
-		tags_to_skip.push(...["H1", "H2", "H3"]);
+		tags_to_skip.push(...['H1', 'H2', 'H3']);
 
 	let callcnt = 0;
 
 	const rgba_rules = new Set();
+
+	const applyExceptions = () =>
+	{
+		let host = url.replace('www.', '');
+
+		switch (host) {
+		case 'youtube.com':
+			// Make sure youtube player stays untouched
+			classes_to_skip += 'ytp';
+			proc_img = false;
+			break;
+		case 'facebook.com':
+			skipWhites = true;
+			proc_img = false;
+			break;
+		}
+	};
+
+	applyExceptions();
 
 	const process = (nodes, mutation = false) =>
 	{
@@ -271,9 +284,8 @@ function start(cfg)
 		if (db_time)
 			console.time(db_timestr);
 
-		let nodes_to_skip = [];
-
-		nodes = applyExceptions(nodes);
+		const nodes_to_skip    = [];
+		const nodes_behind_img = [];
 
 		const new_rgba_rules = new Set();
 
@@ -283,6 +295,19 @@ function start(cfg)
 
 			if (tags_to_skip.includes(tag))
 				return;
+
+			if (nodes_to_skip.includes(node))
+				return;
+
+			if (classes_to_skip.length) {
+
+				const classname = String(node.className);
+
+				if (classname.includes(classes_to_skip)) {
+					nodes_to_skip.push(...nlToArr(node.getElementsByTagName('*')));
+					return;
+				}
+			}
 
 			const style = getComputedStyle(node);
 
@@ -300,11 +325,11 @@ function start(cfg)
 
 				if (bg_img !== "none") {
 					const img_children = nlToArr(node.getElementsByTagName("*"));
-					nodes_to_skip.push(...img_children);
+					nodes_behind_img.push(...img_children);
 					img_offset = 127;
 				}
 
-				if (nodes_to_skip.includes(node))
+				if (nodes_behind_img.includes(node))
 					img_offset = 96;
 			}
 
