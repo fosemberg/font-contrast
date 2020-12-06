@@ -286,7 +286,7 @@ function start(cfg, url)
 
 			if (cfg.input_border) {
 				if(node.nodeName === 'INPUT' && node.type !== 'submit')
-					node.setAttribute('b__', 0);
+					node.setAttribute('b__', '');
 			}
 
 			if (!containsText(node))
@@ -340,7 +340,7 @@ function start(cfg, url)
 			const contrast = +Math.abs(bg_brt - fg_brt).toFixed(2);
 			const is_link  = tag === 'A';
 
-			if (cfg.SkipColoreds) {
+			if (cfg.skipColoreds) {
 				let   min_contrast      = 132 + (cfg.strength / 2);
 				const min_link_contrast = 96 + (cfg.strength / 3);
 				const min_colorfulness  = 32;
