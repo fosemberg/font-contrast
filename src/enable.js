@@ -54,6 +54,16 @@ function getBgBrightness(parent, bg_color)
 	return bg_luma;
 }
 
+function nlToArr(nl)
+{
+	let arr = [];
+
+	for (let i = 0, len = arr.length = nl.length; i < len; ++i)
+		arr[i] = nl[i];
+
+	return arr;
+}
+
 function getCSS(cfg) {
 
 	const attr = '[d__],[d__][style]';
@@ -88,9 +98,9 @@ function getCSS(cfg) {
 	let size_inc = '';
 
 	if (cfg.size > 0) {
-		let i = 1;
-		while (i <= size_threshold)
-			size_inc += `[s__='${i}']{font-size: calc(${i++}px + ${size}%)!important}\n`;
+		let c = 1;
+		while (c <= cfg.threshold)
+			size_inc += `[s__='${c}']{font-size: calc(${c++}px + ${cfg.size}%)!important}\n`;
 	}
 
 	return `${dim}${opacity}${size_inc}${bold}${placeholder}${form_border}${underline}`;
@@ -107,17 +117,7 @@ function createElem()
 	css_node = doc.createTextNode('');
 }
 
-function nlToArr(nl)
-{
-	let arr = [];
-
-	for (let i = 0, len = arr.length = nl.length; i < len; ++i)
-		arr[i] = nl[i];
-
-	return arr;
-}
-
-function init()
+async function init()
 {
 	if (document.getElementById('_fc_')) {
 		style_node.appendChild(css_node);
@@ -143,55 +143,25 @@ function init()
 		'input_border'
 	];
 
-	browser.storage.local.get(stored, start);
+	let cfg = await new Promise(res => browser.storage.local.get(stored, res));
+
+	cfg.strength  = cfg.globalStr;
+	cfg.threshold = cfg.sizeThreshold;
+
+	const url = window.location.hostname || window.location.href;
+
+	const wl  = cfg.whitelist || [];
+	const idx = wl.findIndex(x => x.url === url);
+
+	if (idx > -1)
+		cfg = wl[idx];
+
+	start(cfg, url);
 }
 
-function start(cfg)
+function start(cfg, url)
 {
-	let {
-		whitelist,
-		globalStr: strength,
-		brightness,
-		size,
-		size_threshold,
-		skipHeadings,
-		skipColoreds: avoid_readable,
-		advDimming,
-		input_border,
-		boldText,
-		forcePlhdr,
-		forceOpacity,
-		skipWhites,
-		underlineLinks
-	} = cfg;
-
-	/**
-	 * As this is the only script executed on the tab window,
-	 * we can use window.location.hostname instead of a regex.
-	 */
-	const url = window.location.hostname;
-
-	if (whitelist) {
-		const idx = whitelist.findIndex(o => o.url === url);
-
-		if (idx > -1) {
-			const i = whitelist[idx];
-
-			strength        = i.strength;
-			size            = i.size;
-			size_threshold  = i.threshold;
-			skipHeadings    = i.skipHeadings;
-			avoid_readable  = i.skipColoreds;
-			advDimming      = i.advDimming;
-			brightness      = i.brightness;
-			input_border    = i.input_border;
-			boldText        = i.boldText;
-			forcePlhdr      = i.forcePlhdr;
-			forceOpacity    = i.forceOpacity;
-			skipWhites      = i.skipWhites;
-			underlineLinks  = i.underlineLinks;
-		}
-	}
+	css_node.nodeValue = getCSS(cfg);
 
 	const nodes = nlToArr(document.body.getElementsByTagName('*'));
 
@@ -215,7 +185,7 @@ function start(cfg)
 
 	let proc_img = true;
 
-	if (skipWhites) {
+	if (cfg.skipWhites) {
 		const white = [
 			'rgb(255, 255, 255)',
 			'rgb(254, 254, 254)',
@@ -228,7 +198,7 @@ function start(cfg)
 		colors_to_skip.push(...white);
 	}
 
-	if (skipHeadings)
+	if (cfg.skipHeadings)
 		tags_to_skip.push(...['H1', 'H2', 'H3']);
 
 	let callcnt = 0;
@@ -292,19 +262,19 @@ function start(cfg)
 
 			const style = getComputedStyle(node);
 
-			if (size > 0) {
-				const font_sz = parseInt(style.getPropertyValue("font-size"));
+			if (cfg.size > 0) {
+				const f_sz = parseInt(style.getPropertyValue('font-size'));
 
-				if (font_sz < size_threshold)
-					node.setAttribute("s__", font_sz);
+				if (f_sz <= cfg.threshold)
+					node.setAttribute('s__', f_sz);
 			}
 
 			let img_offset = 0;
 
 			if (proc_img) {
-				const bg_img = style.getPropertyValue("background-image");
+				const bg_img = style.getPropertyValue('background-image');
 
-				if (bg_img !== "none") {
+				if (bg_img !== 'none') {
 					const img_children = nlToArr(node.getElementsByTagName("*"));
 					nodes_behind_img.push(...img_children);
 					img_offset = 127;
@@ -314,15 +284,15 @@ function start(cfg)
 					img_offset = 96;
 			}
 
-			if (input_border) {
-				if(node.nodeName === "INPUT" && node.type !== "submit")
-					node.setAttribute("b__", "");
+			if (cfg.input_border) {
+				if(node.nodeName === 'INPUT' && node.type !== 'submit')
+					node.setAttribute('b__', 0);
 			}
 
 			if (!containsText(node))
 				return;
 
-			const color = style.getPropertyValue("color");
+			const color = style.getPropertyValue('color');
 
 			if (colors_to_skip.includes(color))
 				return;
@@ -346,7 +316,7 @@ function start(cfg)
 			const fg_brt          = calcBrightness(rgba_arr);
 			const fg_colorfulness = calcColorfulness(rgba_arr);
 
-			const bg_color        = style.getPropertyValue("background-color");
+			const bg_color        = style.getPropertyValue('background-color');
 			const bg_brt          = getBgBrightness(node.parentNode, bg_color);
 
 			let db_obj = {};
@@ -362,17 +332,17 @@ function start(cfg)
 				db_arr.push(db_obj);
 			}
 
-			const bg_threshold = 160 - strength + img_offset;
+			const bg_threshold = 160 - cfg.strength + img_offset;
 
 			if (bg_brt < bg_threshold)
 				return;
 
 			const contrast = +Math.abs(bg_brt - fg_brt).toFixed(2);
-			const is_link  = tag === "A";
+			const is_link  = tag === 'A';
 
-			if (avoid_readable) {
-				let   min_contrast      = 132 + (strength / 2);
-				const min_link_contrast = 96 + (strength / 3);
+			if (cfg.SkipColoreds) {
+				let   min_contrast      = 132 + (cfg.strength / 2);
+				const min_link_contrast = 96 + (cfg.strength / 3);
 				const min_colorfulness  = 32;
 
 				if (db_node)
@@ -385,10 +355,10 @@ function start(cfg)
 					return;
 			}
 
-			node.setAttribute("d__", 0);
+			node.setAttribute('d__', '');
 
-			if (underlineLinks && is_link)
-				node.setAttribute("u__", 0);
+			if (cfg.underlineLinks && is_link)
+				node.setAttribute('u__', '');
 		};
 
 		const iterateBigArr = (arr) => {
@@ -432,7 +402,6 @@ function start(cfg)
 			console.table(db_arr);
 	}
 
-	css_node.nodeValue = getCSS(cfg);
 	process(nodes);
 
 	const observer = mutations => {
