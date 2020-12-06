@@ -65,7 +65,7 @@ function getCSS(cfg) {
 	else
 		dim = `${attr}{${color_black}}`;
 
-	let opacity =  '';
+	let opacity = '';
 	if (cfg.forceOpacity)
 		opacity = '*,*[style]{opacity:1!important}';
 
@@ -89,7 +89,6 @@ function getCSS(cfg) {
 
 	if (cfg.size > 0) {
 		let i = 1;
-
 		while (i <= size_threshold)
 			size_inc += `[s__='${i}']{font-size: calc(${i++}px + ${size}%)!important}\n`;
 	}
@@ -135,6 +134,7 @@ function init()
 		'skipColoreds',
 		'skipHeadings',
 		'advDimming',
+		'brightness',
 		'boldText',
 		'forceOpacity',
 		'forcePlhdr',
