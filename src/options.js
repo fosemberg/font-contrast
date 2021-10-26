@@ -258,7 +258,7 @@ function addListeners()
 	BLaddButton.addEventListener('click', saveURL.bind(this, false));
 	BLresetButton.addEventListener('click', reset.bind(this, false));
 
-	doc.getElementById("welcome").onclick = () => browser.tabs.create({ url: "Welcome.html" });
+	doc.getElementById("welcome").onclick = () => chrome.tabs.create({ url: "Welcome.html" });
 
 	strSlider.oninput = () => {
 		strLabel.innerText = strSlider.value;

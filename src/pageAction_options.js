@@ -258,7 +258,7 @@ function showRefreshBtn()
 	refreshBtn.style.zIndex = "3";
 	refreshBtn.style.cursor = "pointer";
 
-	refreshBtn.onclick = () => browser.tabs.reload();
+	refreshBtn.onclick = () => chrome.tabs.reload();
 
 	url_visible = true;
 }
