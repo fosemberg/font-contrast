@@ -12,7 +12,7 @@ const title_remove = 'Remove contrast fix!';
 const tabs          = new Set();
 const disabled_tabs = new Set();
 
-browser.runtime.onInstalled.addListener(details => {
+chrome.runtime.onInstalled.addListener(details => {
 
 	if (details.reason === 'install') {
 
@@ -28,16 +28,24 @@ browser.runtime.onInstalled.addListener(details => {
 
 		storage.set(defaults);
 
-		browser.tabs.create({ url: 'Welcome.html' });
+		chrome.tabs.create({ url: 'Welcome.html' });
 		return;
 	}
 });
 
-browser.browserAction.onClicked.addListener(async (tab) => {
-	toggle(await browser.browserAction.getTitle({ tabId: tab.id }), tab.id);
-});
+// chrome.action.onClicked.addListener(async (tab) => {
+// 	await toggle(await chrome.action.getTitle({ tabId: tab.id }), tab.id);
+// });
 
-browser.runtime.onMessage.addListener( async (request, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener( async (request, sender, sendResponse) => {
+
+	if (request.action === 'toggle') {
+		const tabs = await chrome.tabs.query({active: true, currentWindow: true});
+		const id   = tabs[0].id;
+
+		await toggle(await chrome.action.getTitle({ tabId: id }), id);
+		return;
+	}
 
 	if (request.from !== 'toggle')
 		return;
@@ -59,80 +67,80 @@ browser.runtime.onMessage.addListener( async (request, sender, sendResponse) => 
 		disabled_tabs.add(sender.tab.id);
 	}
 
-	chrome.browserAction.setTitle({ tabId: sender.tab.id, title: title });
-	chrome.browserAction.setIcon({ tabId: sender.tab.id, path: path });
+	await chrome.action.setTitle({ tabId: sender.tab.id, title: title });
+	// await chrome.action.setIcon({ tabId: sender.tab.id, path: path });
 });
 
-browser.tabs.onUpdated.addListener((tabId, change_info, tab) => {
+// chrome.tabs.onUpdated.addListener((tabId, change_info, tab) => {
+//
+// 	chrome.pageAction.show(tab.id);
+//
+// 	if (change_info.status !== 'complete')
+// 		return;
+//
+// 	const url = tab.url;
+// 	let hostname = '';
+//
+// 	if (url.startsWith('file://')) {
+// 		hostname = url;
+// 	} else {
+// 		const matches = url.match(/\/\/(.+?)\//);
+//
+// 		if (matches)
+// 			hostname = matches[1];
+// 	}
+//
+// 	const data = [
+// 		'whitelist',
+// 		'blacklist',
+// 		'enableEverywhere',
+// 	];
+//
+// 	storage.get(data, items => {
+//
+// 		const blacklist = items.blacklist || [];
+//
+// 		if (blacklist.find(o => o.url === hostname)) {
+// 			chrome.action.setIcon({ tabId: tabId, path: 'assets/icons/off.png' });
+// 			chrome.action.setTitle({ title: title_apply, tabId: tabId });
+// 			return;
+// 		}
+//
+// 		const options = {
+// 			file: 'src/enable.js',
+// 			runAt: 'document_end',
+// 			allFrames: true
+// 		};
+//
+// 		if (items.enableEverywhere && !disabled_tabs.has(tabId)) {
+// 			chrome.tabs.executeScript(tabId, options);
+// 			return;
+// 		}
+//
+// 		const whitelist = items.whitelist || [];
+//
+// 		if (tabs.has(tabId) || whitelist.find(x => x.url === hostname))
+// 			chrome.tabs.executeScript(tabId, options);
+// 	});
+// });
 
-	browser.pageAction.show(tab.id);
-
-	if (change_info.status !== 'complete')
-		return;
-
-	const url = tab.url;
-	let hostname = '';
-
-	if (url.startsWith('file://')) {
-		hostname = url;
-	} else {
-		const matches = url.match(/\/\/(.+?)\//);
-
-		if (matches)
-			hostname = matches[1];
-	}
-
-	const data = [
-		'whitelist',
-		'blacklist',
-		'enableEverywhere',
-	];
-
-	storage.get(data, items => {
-
-		const blacklist = items.blacklist || [];
-
-		if (blacklist.find(o => o.url === hostname)) {
-			chrome.browserAction.setIcon({ tabId: tabId, path: 'assets/icons/off.png' });
-			chrome.browserAction.setTitle({ title: title_apply, tabId: tabId });
-			return;
-		}
-
-		const options = {
-			file: 'src/enable.js',
-			runAt: 'document_end',
-			allFrames: true
-		};
-
-		if (items.enableEverywhere && !disabled_tabs.has(tabId)) {
-			chrome.tabs.executeScript(tabId, options);
-			return;
-		}
-
-		const whitelist = items.whitelist || [];
-
-		if (tabs.has(tabId) || whitelist.find(x => x.url === hostname))
-			chrome.tabs.executeScript(tabId, options);
-	});
-});
-
-browser.commands.onCommand.addListener(async (command) => {
+chrome.commands.onCommand.addListener(async (command) => {
 
 	if (command !== 'toggle')
 		return;
 
-	const tabs = await browser.tabs.query({ currentWindow: true, active: true });
+	const tabs = await chrome.tabs.query({ currentWindow: true, active: true });
 	const id   = tabs[0].id;
 
-	toggle(await browser.browserAction.getTitle({ tabId: id }), id);
+	await toggle(await chrome.action.getTitle({ tabId: id }), id);
 });
 
-browser.tabs.onRemoved.addListener(tab => {
+chrome.tabs.onRemoved.addListener(tab => {
 	tabs.delete(tab.id);
 	disabled_tabs.delete(tab.id);
 });
 
-function toggle(title, tab_id)
+async function toggle(title, tab_id)
 {
 	let new_title = title_remove;
 	let file      = 'src/enable.js';
@@ -144,7 +152,14 @@ function toggle(title, tab_id)
 		icon_path = 'assets/icons/off.png';
 	}
 
-	chrome.browserAction.setIcon({ tabId: tab_id, path: icon_path });
-	chrome.browserAction.setTitle({ title: new_title, tabId: tab_id });
-	chrome.tabs.executeScript(tab_id, { allFrames: true, file: file, runAt: 'document_end' });
+	// await chrome.action.setIcon({ tabId: tab_id, path: icon_path });
+	await chrome.action.setTitle({ title: new_title, tabId: tab_id });
+	await chrome.scripting.executeScript({
+		target: {
+			tabId: tab_id,
+			allFrames: true,
+		},
+		files: [file],
+	});
+		// tab_id, { allFrames: true, file: file, runAt: 'document_end' }
 }

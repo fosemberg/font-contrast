@@ -15,6 +15,8 @@ let url_visible = false;
 
 function init(tabs)
 {
+	const enableExtension = $("#enableExtension");
+
 	const strSlider       = $("#strSlider");
 	const strLabel        = $("#strLabel");
 
@@ -55,6 +57,10 @@ function init(tabs)
 
 	url_text.innerText = hostname;
 
+	enableExtension.onclick = () => {
+		chrome.runtime.sendMessage({ action: 'toggle' });
+	}
+
 	strSlider.oninput 	    = () => strLabel.innerText       = strSlider.value;
 	sizeSlider.oninput 	    = () => sizeLabel.innerText      = sizeSlider.value;
 	thresholdSlider.oninput = () => thresholdLabel.innerText = thresholdSlider.value;
@@ -68,6 +74,7 @@ function init(tabs)
 	};
 
 	const settings = [
+		"enableExtension",
 		"whitelist",
 		"blacklist",
 		"globalStr",
@@ -105,6 +112,8 @@ function init(tabs)
 			}
 		}
 
+		enableExtension.checked  = item.enableExtension;
+
 		strSlider.value          = item.strength || item.globalStr;
 		strLabel.innerText       = item.strength || item.globalStr;
 		sizeSlider.value         = item.size || 0;
@@ -129,20 +138,21 @@ function init(tabs)
 
 		const getOptions = () => {
 			const wl_item = {
-				url:            hostname,
-				strength:       strSlider.value,
-				size:           sizeSlider.value,
-				threshold:      thresholdSlider.value,
-				brightness:     brt_slider.value,
-				skipHeadings:   skipHeadings.checked,
-				skipColoreds:   skipColoreds.checked,
-				advDimming:     advDimming.checked,
-				boldText:       boldText.checked,
-				forcePlhdr:     forcePlhdr.checked,
-				forceOpacity:   forceOpacity.checked,
-				skipWhites:     skipWhites.checked,
-				underlineLinks: underlineLinks.checked,
-				input_border:   input_border.checked
+				enableExtension: enableExtension.checked,
+				url:             hostname,
+				strength:        strSlider.value,
+				size:            sizeSlider.value,
+				threshold:       thresholdSlider.value,
+				brightness:      brt_slider.value,
+				skipHeadings:    skipHeadings.checked,
+				skipColoreds:    skipColoreds.checked,
+				advDimming:      advDimming.checked,
+				boldText:        boldText.checked,
+				forcePlhdr:      forcePlhdr.checked,
+				forceOpacity:    forceOpacity.checked,
+				skipWhites:      skipWhites.checked,
+				underlineLinks:  underlineLinks.checked,
+				input_border:    input_border.checked
 			}
 
 			return wl_item;

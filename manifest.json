@@ -3,40 +3,35 @@
   "description": "Improves webpage readability.",
   "version": "1.5.9",
   "author": "Fushko",
-  "permissions": [
-    "http://*/*", "https://*/*", "storage", "tabs", "file:///*"
-  ],
   "background": {
-    "scripts": ["src/background.js"]
+    "service_worker": "src/background.js"
+  },
+  "permissions": [
+    "storage", "tabs", "activeTab", "scripting"
+  ],
+  "action": {
+    "default_popup": "pageAction_popup.html",
+    "default_icon": {
+      "16": "assets/icons/on.png",
+      "48": "assets/icons/on.png",
+      "128": "assets/icons/on.png"
+    }
   },
   "options_ui": {
     "page": "options.html",
     "browser_style": false,
     "open_in_tab": false
 },
-  "browser_action": {
-    "browser_style": true,
-    "default_icon": "assets/icons/off.png",
-    "default_title": "Apply contrast fix!"
+  "icons": {
+    "16": "assets/icons/on.png",
+    "48": "assets/icons/on.png",
+    "128": "assets/icons/on.png"
   },
-  "page_action":{
-    "default_icon":{
-      "16": "assets/icons/halo.png",
-      "24": "assets/icons/halo.png",
-      "32": "assets/icons/halo.png"
-    }, 
-    "default_title": "Manage Font Contrast for this website",
-    "default_popup": "pageAction_popup.html",
-    "browser_style": false
-  },
-  "icons": { "16": "assets/icons/on.png",
-           "48": "assets/icons/on.png",
-          "128": "assets/icons/on.png" },
-  "manifest_version": 2,
+  "manifest_version": 3,
   "commands": {
 	"toggle": {
 		"suggested_key": {
-			"default": "F1"
+			"default": "Ctrl+Shift+5"
 		},
 		"description": "Toggle contrast fix"
 	}

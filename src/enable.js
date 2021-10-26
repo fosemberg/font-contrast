@@ -143,7 +143,7 @@ async function init()
 		'input_border'
 	];
 
-	let cfg = await new Promise(res => browser.storage.local.get(stored, res));
+	let cfg = await new Promise(res => chrome.storage.local.get(stored, res));
 
 	cfg.strength  = cfg.globalStr;
 	cfg.threshold = cfg.sizeThreshold;

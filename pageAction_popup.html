@@ -1,14 +1,23 @@
 <!DOCTYPE HTML>
 <html lang="en">
-	<head> 
+	<head>
 		<meta charset="utf-8">
 		<link href="assets/css/main.css" rel="stylesheet">
 		<link href="assets/css/pageAction.css" rel="stylesheet">
 		<link href="https://fonts.googleapis.com/css?family=Crimson+Text:400" rel="stylesheet">
 		<title>Font Contrast</title>
 	</head>
-	<body>  
+	<body>
 		<div id ="wrapper">
+			<div class="top">
+				<div class ="option">
+					<label for ="boldText">Enable extension</label>
+					<label class="container">
+						<input type="checkbox" id="enableExtension">
+						<span class="checkmark"></span>
+					</label>
+				</div>
+			</div>
 			<div class ="sliders">
 				<div class = "sliderDiv">
 					<span class ="sliderDesc">Strength</span>
@@ -35,7 +44,7 @@
 						</div>
 					</div>
 				</div>
-				
+
 				<div class = "sliderDiv" id="brt-div">
 					<span class ="sliderDesc">Brightness (%)</span>
 					<div>
@@ -44,12 +53,12 @@
 					</div>
 				</div>
 			</div>
-			
+
 			<div id="urlContainer">
 				<div id ="url"></div>
 				<button id="refreshBtn">Refresh</button>
 			</div>
-			
+
 			<div id="checksContainer">
 				<div class ="separator">
 					<div>
@@ -58,7 +67,7 @@
 							<input type="checkbox" id="addWL">
 							<span class="checkmark"></span>
 						</label>
-					</div>  
+					</div>
 					<div>
 						<label for ="addBL">Blacklist</label>
 						<label class="container">
