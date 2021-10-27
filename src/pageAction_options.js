@@ -13,8 +13,7 @@ const refreshBtn = $("#refreshBtn");
 
 let url_visible = false;
 
-function init(tabs)
-{
+function init(tabs) {
 	const enableExtension = $("#enableExtension");
 
 	const strSlider       = $("#strSlider");
@@ -66,7 +65,7 @@ function init(tabs)
 	thresholdSlider.oninput = () => thresholdLabel.innerText = thresholdSlider.value;
 	brt_slider.oninput 	    = () => brt_label.innerText      = brt_slider.value;
 
-	optionsBtn.onclick = () =>  {
+	optionsBtn.onclick = () => {
 		if (chrome.runtime.openOptionsPage)
 			chrome.runtime.openOptionsPage();
 		else
@@ -92,8 +91,7 @@ function init(tabs)
 		"input_border"
 	];
 
-	const start = settings =>
-	{
+	const start = settings => {
 		let whitelist = settings.whitelist || [];
 		let blacklist = settings.blacklist || [];
 
@@ -246,8 +244,7 @@ function init(tabs)
 
 chrome.tabs.query({ active: true, currentWindow: true }, init);
 
-function showRefreshBtn()
-{
+function showRefreshBtn() {
 	if (url_visible)
 		return;
 

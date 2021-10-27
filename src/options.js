@@ -49,8 +49,7 @@ let BLtbody         = doc.querySelector("#BLtbody");
 let wl = [];
 let bl = [];
 
-function addRow(item, is_wl)
-{
+function addRow(item, is_wl) {
 	let table;
 	let list, list_name;
 
@@ -137,8 +136,7 @@ function addRow(item, is_wl)
 	row.insertCell(cell_pos).appendChild(rem_btn);
 }
 
-function init()
-{
+function init() {
 	addListeners();
 
 	storage.get(['globalStr', 'size', 'sizeThreshold', 'brightness'], items => {
@@ -205,13 +203,11 @@ function init()
 
 init();
 
-function isChecked(check)
-{
+function isChecked(check) {
 	return doc.getElementById(check).checked;
 }
 
-function addListeners()
-{
+function addListeners() {
 	globalEnabled.onclick = () => {
 		storage.set({'enableEverywhere': isChecked("defaultEn")});
 	};
@@ -293,8 +289,7 @@ function addListeners()
 	}
 }
 
-function saveURL(is_wl)
-{
+function saveURL(is_wl) {
 	let list_name;
 	let list;
 	let textarea;
@@ -338,8 +333,7 @@ function saveURL(is_wl)
 	addRow(new_item, is_wl);
 }
 
-function isInputValid(url, list, is_wl)
-{
+function isInputValid(url, list, is_wl) {
 	let list_name;
 
 	if (is_wl)
@@ -369,8 +363,7 @@ function isInputValid(url, list, is_wl)
 	return true;
 }
 
-function reset(is_wl)
-{
+function reset(is_wl) {
 	if (is_wl) {
 		storage.remove('whitelist');
 		wl = [];
@@ -383,8 +376,7 @@ function reset(is_wl)
 	}
 }
 
-function message(msg, is_wl)
-{
+function message(msg, is_wl) {
 	let elem;
 
 	if (is_wl)

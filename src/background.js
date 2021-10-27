@@ -140,8 +140,7 @@ chrome.tabs.onRemoved.addListener(tab => {
 	disabled_tabs.delete(tab.id);
 });
 
-async function toggle(title, tab_id)
-{
+async function toggle(title, tab_id) {
 	let new_title = title_remove;
 	let file      = 'src/enable.js';
 	let icon_path = 'assets/icons/on.png';

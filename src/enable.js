@@ -10,23 +10,19 @@ var style_node;
 // Text node
 var css_node;
 
-function getRGBarr(rgba_str)
-{
+function getRGBarr(rgba_str) {
 	return rgba_str.match(/\d\.\d|\d+/g);
 }
 
-function calcBrightness([r, g, b, a = 1])
-{
+function calcBrightness([r, g, b, a = 1]) {
 	return +(r * 0.2126 + g * 0.7152 + b * 0.0722).toFixed(1);
 }
 
-function calcColorfulness([r, g, b, a = 1])
-{
+function calcColorfulness([r, g, b, a = 1]) {
 	return Math.abs(r - g) + Math.abs(g - b);
 }
 
-function containsText(node)
-{
+function containsText(node) {
 	const children = Array.from(node.childNodes);
 
 	return children.some(child => {
@@ -34,8 +30,7 @@ function containsText(node)
 	});
 }
 
-function getBgBrightness(parent, bg_color)
-{
+function getBgBrightness(parent, bg_color) {
 	// assume light-ish color if we can't find it
 	let bg_luma = 236;
 
@@ -54,8 +49,7 @@ function getBgBrightness(parent, bg_color)
 	return bg_luma;
 }
 
-function nlToArr(nl)
-{
+function nlToArr(nl) {
 	let arr = [];
 
 	for (let i = 0, len = arr.length = nl.length; i < len; ++i)
@@ -67,6 +61,9 @@ function nlToArr(nl)
 function getCSS(cfg) {
 
 	const attr = '[d__],[d__][style]';
+
+	const white_background = `${attr}{background-color:#fff !important;}`;
+
 	let color_black = 'color:rgba(0, 0, 0, 1)!important';
 
 	let dim = '';
@@ -103,11 +100,10 @@ function getCSS(cfg) {
 			size_inc += `[s__='${c}']{font-size: calc(${c++}px + ${cfg.size}%)!important}\n`;
 	}
 
-	return `${dim}${opacity}${size_inc}${bold}${placeholder}${form_border}${underline}`;
+	return `${dim}${white_background}${opacity}${size_inc}${bold}${placeholder}${form_border}${underline}`;
 }
 
-function createElem()
-{
+function createElem() {
 	const doc = document;
 
 	style_node = doc.createElement('style');
@@ -117,8 +113,7 @@ function createElem()
 	css_node = doc.createTextNode('');
 }
 
-async function init()
-{
+async function init() {
 	if (document.getElementById('_fc_')) {
 		style_node.appendChild(css_node);
 		return;
@@ -159,8 +154,7 @@ async function init()
 	start(cfg, url);
 }
 
-function start(cfg, url)
-{
+function start(cfg, url) {
 	css_node.nodeValue = getCSS(cfg);
 
 	const nodes = nlToArr(document.body.getElementsByTagName('*'));
@@ -205,8 +199,7 @@ function start(cfg, url)
 
 	const rgba_rules = new Set();
 
-	const applyExceptions = () =>
-	{
+	const applyExceptions = () => {
 		let host = url.replace('www.', '');
 
 		switch (host) {
@@ -224,8 +217,7 @@ function start(cfg, url)
 
 	applyExceptions();
 
-	const process = (nodes, mutation = false) =>
-	{
+	const process = (nodes, mutation = false) => {
 		// Debug variables
 		let   db_arr     = [];
 		const db_node    = false;
