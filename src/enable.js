@@ -21,6 +21,36 @@ function getAlfa(rgba_str) {
 		: 1
 }
 
+function checkIsRound (node, style = getComputedStyle(node)) {
+	const {borderRadius, width, paddingLeft, paddingRight, height, paddingTop, paddingBottom} = style;
+	const isPercent = borderRadius.match(/%/);
+	const borderRadiusNum = parseFloat(borderRadius);
+	let widthNum = 0;
+	let heightNum = 0;
+
+	if (width === 'auto' || height === 'auto') {
+		widthNum = node.getBoundingClientRect().width;
+		heightNum = node.getBoundingClientRect().height;
+	} else {
+		widthNum = parseFloat(paddingLeft) + parseFloat(width) + parseFloat(paddingRight);
+		heightNum = parseFloat(paddingTop) + parseFloat(height) + parseFloat(paddingBottom);
+	}
+	// const widthNum = width === 'auto'
+	// 	? node.getBoundingClientRect().width
+	// 	: parseFloat(paddingLeft) + parseFloat(width) + parseFloat(paddingRight);
+	// const heightNum = height === 'auto'
+	// 	? node.getBoundingClientRect().height
+	// 	: parseFloat(paddingTop) + parseFloat(height) + parseFloat(paddingBottom)
+	// console.log({isPercent, borderRadiusNum});
+	if (isPercent) {
+		return borderRadiusNum > 40 && borderRadiusNum < 60
+	} else {
+		// console.log({widthNum, heightNum});
+		return Math.max(widthNum, heightNum) / Math.min(widthNum, heightNum) < 2 &&
+			Math.min(widthNum, heightNum) / borderRadiusNum < 3
+	}
+}
+
 function calcBrightness([r, g, b, a = 1]) {
 	return +(r * 0.2126 + g * 0.7152 + b * 0.0722).toFixed(1);
 }
@@ -85,13 +115,13 @@ function getCSS(cfg, url) {
 	const white_background_picked = `${'[bg__]'.repeat(weight)}{background-color:#fff !important;}`;
 	const delete_gradient_for_background = `${'[bg_ig__]'.repeat(weight)}{background-image:unset !important;}`;
 	const add_box_shadow_for_big_background = `${'[bg_bs__]'.repeat(weight)}{box-shadow: 0px 0px 0px 0.5px #000;}`;
-	const add_border_color_for_big_background = `${'[bg_b__]'.repeat(weight)}{border-color: #000;}`;
+	const add_border_color_for_big_background = `${'[bg_b__]'.repeat(weight)}{border-color: #000;border-width: 1px;border-style: solid;}`;
 
 
 	const d__repeat = '[d__]'.repeat(weight)
 	const attr = `${d__repeat},${d__repeat}[style],${d__repeat} svg`;
 
-	const white_background_for_text = `${attr}{background-color:#fff !important;}`;
+	// const white_background_for_text = `${attr}{background-color:#fff !important;}`;
 	const black_fill = `${attr}{fill:#000 !important;}`;
 
 	let color_black = 'color:rgba(0, 0, 0, 1)!important';
@@ -146,7 +176,7 @@ function getCSS(cfg, url) {
 
 	return [
 		forceColorBlackCss,
-    white_background_for_text,
+    // white_background_for_text,
     dim,
     whiteBackground,
     white_background_picked,
@@ -319,6 +349,32 @@ function start(cfg, url) {
 				}
 			}
 
+			const bg_color        = style.getPropertyValue('background-color');
+
+			if (
+				tag === 'BUTTON' ||
+				(
+					bg_color &&
+					bg_color !== 'rgba(255, 255, 255)' &&
+					bg_color !== 'rgba(0, 0, 0, 0)' &&
+					checkIsRound(node)
+				)
+			) {
+				node.setAttribute('bg__', '');
+				const {borderWidth} = style;
+				if (parseFloat(borderWidth) === 0) {
+					node.setAttribute('bg_bs__', '');
+				} else {
+					const {borderColor} = style;
+					// if (
+					// 	borderColor !== 'rgba(0, 0, 0, 0)' &&
+					// 	borderColor !== 'rgba(0, 0, 0)'
+					// ) {
+						node.setAttribute('bg_b__', '');
+					// }
+				}
+			}
+
 			const f_sz = parseInt(style.getPropertyValue('font-size'));
 
 			if (f_sz === 0)
@@ -414,6 +470,15 @@ function start(cfg, url) {
 			// 		return;
 			// }
 
+
+
+			if (
+				bg_color &&
+				bg_color !== 'rgba(255, 255, 255)' &&
+				bg_color !== 'rgba(0, 0, 0, 0)'
+			) {
+				node.setAttribute('bg__', '');
+			}
 			node.setAttribute('d__', '');
 
 			if (cfg.underlineLinks && is_link)
@@ -433,7 +498,7 @@ function start(cfg, url) {
 			const opacity         = parseFloat(style.opacity);
 
 			console.log('fosemberg', 'node', node);
-			console.log(`node.getAttribute('d__')`, node.getAttribute('d__'))
+			console.log(`node.getAttribute('d__')`, node.getAttribute('d__'));
 
 			if (
 				node.getAttribute('d__') === null &&
@@ -457,9 +522,11 @@ function start(cfg, url) {
 					// width > 50 &&
 					// height > 50 &&
 					// width * height > 30_000
-					width > 10 &&
-					height > 10 &&
-					width * height > 1000
+					(
+						width > 10 &&
+						height > 10 &&
+						width * height > 1000
+					) || checkIsRound(node)
 				) {
 					const {borderWidth} = style;
 					if (parseFloat(borderWidth) === 0) {
@@ -479,6 +546,7 @@ function start(cfg, url) {
 			if (opacity > 0.1 && opacity < 0.9) {
 				node.setAttribute('o__', '');
 			}
+
 		}
 
 		const setAttribs = node => {
