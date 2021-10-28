@@ -71,58 +71,61 @@ chrome.runtime.onMessage.addListener( async (request, sender, sendResponse) => {
 	// await chrome.action.setIcon({ tabId: sender.tab.id, path: path });
 });
 
-// chrome.tabs.onUpdated.addListener((tabId, change_info, tab) => {
-//
-// 	chrome.pageAction.show(tab.id);
-//
-// 	if (change_info.status !== 'complete')
-// 		return;
-//
-// 	const url = tab.url;
-// 	let hostname = '';
-//
-// 	if (url.startsWith('file://')) {
-// 		hostname = url;
-// 	} else {
-// 		const matches = url.match(/\/\/(.+?)\//);
-//
-// 		if (matches)
-// 			hostname = matches[1];
-// 	}
-//
-// 	const data = [
-// 		'whitelist',
-// 		'blacklist',
-// 		'enableEverywhere',
-// 	];
-//
-// 	storage.get(data, items => {
-//
-// 		const blacklist = items.blacklist || [];
-//
-// 		if (blacklist.find(o => o.url === hostname)) {
-// 			chrome.action.setIcon({ tabId: tabId, path: 'assets/icons/off.png' });
-// 			chrome.action.setTitle({ title: title_apply, tabId: tabId });
-// 			return;
-// 		}
-//
-// 		const options = {
-// 			file: 'src/enable.js',
-// 			runAt: 'document_end',
-// 			allFrames: true
-// 		};
-//
-// 		if (items.enableEverywhere && !disabled_tabs.has(tabId)) {
-// 			chrome.tabs.executeScript(tabId, options);
-// 			return;
-// 		}
-//
-// 		const whitelist = items.whitelist || [];
-//
-// 		if (tabs.has(tabId) || whitelist.find(x => x.url === hostname))
-// 			chrome.tabs.executeScript(tabId, options);
-// 	});
-// });
+chrome.tabs.onUpdated.addListener((tabId, change_info, tab) => {
+
+	// chrome.action.show(tab.id);
+
+	if (change_info.status !== 'complete')
+		return;
+
+	const url = tab.url;
+	let hostname = '';
+
+	if (url.startsWith('file://')) {
+		hostname = url;
+	} else {
+		const matches = url.match(/\/\/(.+?)\//);
+
+		if (matches)
+			hostname = matches[1];
+	}
+
+	const data = [
+		'whitelist',
+		'blacklist',
+		'enableEverywhere',
+	];
+
+	storage.get(data, async (items) => {
+
+		const blacklist = items.blacklist || [];
+
+		if (blacklist.find(o => o.url === hostname)) {
+			chrome.action.setIcon({ tabId: tabId, path: 'assets/icons/off.png' });
+			chrome.action.setTitle({ title: title_apply, tabId: tabId });
+			return;
+		}
+
+		const file = 'src/enable.js'
+		const options = {
+			target: {
+				tabId,
+				allFrames: true,
+			},
+			files: [file],
+		}
+
+		if (items.enableEverywhere && !disabled_tabs.has(tabId)) {
+			await chrome.scripting.executeScript(options);
+			return;
+		}
+
+		const whitelist = items.whitelist || [];
+
+		if (tabs.has(tabId) || whitelist.find(x => x.url === hostname))
+			await chrome.scripting.executeScript(options);
+	});
+});
 
 chrome.commands.onCommand.addListener(async (command) => {
 
