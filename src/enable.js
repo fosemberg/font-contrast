@@ -22,11 +22,15 @@ function calcColorfulness([r, g, b, a = 1]) {
 	return Math.abs(r - g) + Math.abs(g - b);
 }
 
-function containsText(node) {
-	const children = Array.from(node.childNodes);
+function containsText(element) {
+	return element.nodeType === Node.TEXT_NODE &&
+		/\S/.test(element.nodeValue);
+}
 
+function childNodesContainsTextOrSvg(node) {
+	const children = Array.from(node.childNodes);
 	return children.some(child => {
-		return child.nodeType === Node.TEXT_NODE && /\S/.test(child.nodeValue);
+		return containsText(child) || String(child.nodeName) === 'svg';
 	});
 }
 
@@ -58,11 +62,23 @@ function nlToArr(nl) {
 	return arr;
 }
 
-function getCSS(cfg) {
 
-	const attr = '[d__],[d__][style]';
+
+function getCSS(cfg, url) {
+	let host = url.replace('www.', '');
+	let additionalCss = ''
+	switch (host) {
+		case 'vk.com':
+			additionalCss = 'svg {z-index: 3;}'
+			break;
+	}
+
+	const weight = 5;
+	const d__repeat = '[d__]'.repeat(weight)
+	const attr = `${d__repeat},${d__repeat}[style],${d__repeat} svg`;
 
 	const white_background = `${attr}{background-color:#fff !important;}`;
+	const black_fill = `${attr}{fill:#000 !important;}`;
 
 	let color_black = 'color:rgba(0, 0, 0, 1)!important';
 
@@ -100,10 +116,10 @@ function getCSS(cfg) {
 			size_inc += `[s__='${c}']{font-size: calc(${c++}px + ${cfg.size}%)!important}\n`;
 	}
 
-	return `${dim}${white_background}${opacity}${size_inc}${bold}${placeholder}${form_border}${underline}`;
+	return `${dim}${white_background}${black_fill}${opacity}${size_inc}${bold}${placeholder}${form_border}${underline}${additionalCss}`;
 }
 
-function createElem() {
+function createStyleNode() {
 	const doc = document;
 
 	style_node = doc.createElement('style');
@@ -119,7 +135,7 @@ async function init() {
 		return;
 	}
 
-	createElem();
+	createStyleNode();
 
 	const stored = [
 		'whitelist',
@@ -155,7 +171,7 @@ async function init() {
 }
 
 function start(cfg, url) {
-	css_node.nodeValue = getCSS(cfg);
+	css_node.nodeValue = getCSS(cfg, url);
 
 	const nodes = nlToArr(document.body.getElementsByTagName('*'));
 
@@ -203,15 +219,15 @@ function start(cfg, url) {
 		let host = url.replace('www.', '');
 
 		switch (host) {
-		case 'youtube.com':
-			// Make sure youtube player stays untouched
-			classes_to_skip += 'ytp';
-			proc_img = false;
-			break;
-		case 'facebook.com':
-			skipWhites = true;
-			proc_img = false;
-			break;
+			case 'youtube.com':
+				// Make sure youtube player stays untouched
+				classes_to_skip += 'ytp';
+				proc_img = false;
+				break;
+			case 'facebook.com':
+				// skipWhites = true;
+				proc_img = false;
+				break;
 		}
 	};
 
@@ -220,7 +236,7 @@ function start(cfg, url) {
 	const process = (nodes, mutation = false) => {
 		// Debug variables
 		let   db_arr     = [];
-		const db_node    = false;
+		const db_node    = true;
 		const db_time    = false;
 		let   db_timestr = `Process ${callcnt++} time`;
 
@@ -254,9 +270,12 @@ function start(cfg, url) {
 
 			const style = getComputedStyle(node);
 
-			if (cfg.size > 0) {
-				const f_sz = parseInt(style.getPropertyValue('font-size'));
+			const f_sz = parseInt(style.getPropertyValue('font-size'));
 
+			if (f_sz === 0)
+				return;
+
+			if (cfg.size > 0) {
 				if (f_sz <= cfg.threshold)
 					node.setAttribute('s__', f_sz);
 			}
@@ -281,7 +300,7 @@ function start(cfg, url) {
 					node.setAttribute('b__', '');
 			}
 
-			if (!containsText(node))
+			if (!childNodesContainsTextOrSvg(node))
 				return;
 
 			const color = style.getPropertyValue('color');
@@ -316,6 +335,8 @@ function start(cfg, url) {
 			if (db_node) {
 				db_obj = {
 					tag,
+					className: String(node.className),
+					text: node.innerText,
 					fg_brt,
 					bg_brt,
 					fg_colorfulness,
@@ -326,8 +347,8 @@ function start(cfg, url) {
 
 			const bg_threshold = 160 - cfg.strength + img_offset;
 
-			if (bg_brt < bg_threshold)
-				return;
+			// if (bg_brt < bg_threshold)
+				// return;
 
 			const contrast = +Math.abs(bg_brt - fg_brt).toFixed(2);
 			const is_link  = tag === 'A';
