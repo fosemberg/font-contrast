@@ -204,8 +204,8 @@ function start(cfg, url) {
 	];
 
 	const colors_to_skip  = [
-		'rgb(0, 0, 0)',
-		'rgba(0, 0, 0, 0)'
+		// 'rgb(0, 0, 0)',
+		// 'rgba(0, 0, 0, 0)'
 	];
 
 	let classes_to_skip = '';
@@ -265,56 +265,13 @@ function start(cfg, url) {
 
 		const new_rgba_rules = new Set();
 
-		const setAttribs = node => {
+		const setTextAttribs = node => {
 
 			const tag = String(node.nodeName);
 
 			const style = getComputedStyle(node);
 
 			const bg              = style.getPropertyValue('background');
-			const bg_color        = style.getPropertyValue('background-color');
-			const bg_image        = style.getPropertyValue('background-image');
-			const width           = parseInt(style.getPropertyValue('width'));
-			const height          = parseInt(style.getPropertyValue('height'));
-			// const bg_brt          = getBgBrightness(node.parentNode, bg_color);
-
-			if (
-				bg_color &&
-				bg_color !== 'rgba(255, 255, 255)' &&
-				bg_color !== 'rgba(0, 0, 0, 0)' &&
-				!bg.match(/url/) &&
-				tag !== 'IMG' &&
-				width > 10 &&
-				height > 10 &&
-				width * height > 1000
-			) {
-				node.setAttribute('bg__', '');
-				// node.setAttribute('bg_bs__', '');
-				if (bg_image.match(/linear-gradient/)) {
-					node.setAttribute('bg_ig__', '');
-				}
-				if (
-					// width > 50 &&
-					// height > 50 &&
-					// width * height > 30_000
-					width > 10 &&
-					height > 10 &&
-					width * height > 1000
-				) {
-					const {borderWidth} = style;
-					if (parseFloat(borderWidth) === 0) {
-						node.setAttribute('bg_bs__', '');
-					} else {
-						const {borderColor} = style;
-						if (
-							borderColor !== 'rgba(0, 0, 0, 0)' &&
-							borderColor !== 'rgba(0, 0, 0)'
-						) {
-							node.setAttribute('bg_b__', '');
-						}
-					}
-				}
-			}
 
 			if (tags_to_skip.includes(tag))
 				return;
@@ -407,7 +364,7 @@ function start(cfg, url) {
 			const bg_threshold = 160 - cfg.strength + img_offset;
 
 			// if (bg_brt < bg_threshold)
-				// return;
+			// return;
 
 			// const contrast = +Math.abs(bg_brt - fg_brt).toFixed(2);
 			const is_link  = tag === 'A';
@@ -432,6 +389,65 @@ function start(cfg, url) {
 			if (cfg.underlineLinks && is_link)
 				node.setAttribute('u__', '');
 		};
+
+		const setBgAttribs = node => {
+			const tag = String(node.nodeName);
+
+			const style = getComputedStyle(node);
+
+			const bg              = style.getPropertyValue('background');
+			const bg_color        = style.getPropertyValue('background-color');
+			const bg_image        = style.getPropertyValue('background-image');
+			const width           = parseInt(style.getPropertyValue('width'));
+			const height          = parseInt(style.getPropertyValue('height'));
+
+			console.log('fosemberg', 'node', node);
+			console.log(`node.getAttribute('d__')`, node.getAttribute('d__'))
+
+			if (
+				node.getAttribute('d__') === null &&
+				bg_color &&
+				bg_color !== 'rgba(255, 255, 255)' &&
+				bg_color !== 'rgba(0, 0, 0, 0)' &&
+				!bg.match(/url/) &&
+				tag !== 'IMG' &&
+				width > 10 &&
+				height > 10 &&
+				width * height > 1000
+			) {
+				node.setAttribute('bg__', '');
+				// node.setAttribute('bg_bs__', '');
+				if (bg_image.match(/linear-gradient/)) {
+					node.setAttribute('bg_ig__', '');
+				}
+				if (
+					// width > 50 &&
+					// height > 50 &&
+					// width * height > 30_000
+					width > 10 &&
+					height > 10 &&
+					width * height > 1000
+				) {
+					const {borderWidth} = style;
+					if (parseFloat(borderWidth) === 0) {
+						node.setAttribute('bg_bs__', '');
+					} else {
+						const {borderColor} = style;
+						if (
+							borderColor !== 'rgba(0, 0, 0, 0)' &&
+							borderColor !== 'rgba(0, 0, 0)'
+						) {
+							node.setAttribute('bg_b__', '');
+						}
+					}
+				}
+			}
+		}
+
+		const setAttribs = node => {
+			setTextAttribs(node);
+			setBgAttribs(node);
+		}
 
 		const iterateBigArr = (arr) => {
 			const chunk = 200;
