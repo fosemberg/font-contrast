@@ -14,6 +14,13 @@ function getRGBarr(rgba_str) {
 	return rgba_str.match(/\d\.\d|\d+/g);
 }
 
+function getAlfa(rgba_str) {
+	const rgbArr = getRGBarr(rgba_str)
+	return rgbArr.length === 4
+		? parseFloat(rgbArr[3])
+		: 1
+}
+
 function calcBrightness([r, g, b, a = 1]) {
 	return +(r * 0.2126 + g * 0.7152 + b * 0.0722).toFixed(1);
 }
@@ -99,6 +106,11 @@ function getCSS(cfg, url) {
 	if (cfg.forceOpacity)
 		opacity = '*,*[style]{opacity:1!important}';
 
+	let smartOpacityCss = '';
+	if (true) {
+		smartOpacityCss = '[o__]{opacity:1!important}';
+	}
+
 	let forceColorBlackCss = '';
 	if (true) {
 		// forceColorBlackCss = '*,*[style]{color:#000!important}';
@@ -132,7 +144,25 @@ function getCSS(cfg, url) {
 			size_inc += `[s__='${c}']{font-size: calc(${c++}px + ${cfg.size}%)!important}\n`;
 	}
 
-	return `${forceColorBlackCss}${white_background_for_text}${dim}${whiteBackground}${white_background_picked}${delete_gradient_for_background}${add_box_shadow_for_big_background}${add_border_color_for_big_background}${black_fill}${opacity}${size_inc}${bold}${placeholder}${form_border}${underline}${additionalCss}`;
+	return [
+		forceColorBlackCss,
+    white_background_for_text,
+    dim,
+    whiteBackground,
+    white_background_picked,
+    delete_gradient_for_background,
+    add_box_shadow_for_big_background,
+    add_border_color_for_big_background,
+		smartOpacityCss,
+    black_fill,
+    opacity,
+    size_inc,
+    bold,
+    placeholder,
+    form_border,
+    underline,
+    additionalCss,
+	].join('');
 }
 
 function createStyleNode() {
@@ -400,6 +430,7 @@ function start(cfg, url) {
 			const bg_image        = style.getPropertyValue('background-image');
 			const width           = parseInt(style.getPropertyValue('width'));
 			const height          = parseInt(style.getPropertyValue('height'));
+			const opacity         = parseFloat(style.opacity);
 
 			console.log('fosemberg', 'node', node);
 			console.log(`node.getAttribute('d__')`, node.getAttribute('d__'))
@@ -409,6 +440,8 @@ function start(cfg, url) {
 				bg_color &&
 				bg_color !== 'rgba(255, 255, 255)' &&
 				bg_color !== 'rgba(0, 0, 0, 0)' &&
+				getAlfa(bg_color) > 0.5 &&
+				opacity > 0.5 &&
 				!bg.match(/url/) &&
 				tag !== 'IMG' &&
 				width > 10 &&
@@ -441,6 +474,10 @@ function start(cfg, url) {
 						}
 					}
 				}
+			}
+
+			if (opacity > 0.1 && opacity < 0.9) {
+				node.setAttribute('o__', '');
 			}
 		}
 
