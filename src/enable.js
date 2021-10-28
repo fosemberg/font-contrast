@@ -74,10 +74,17 @@ function getCSS(cfg, url) {
 	}
 
 	const weight = 5;
+
+	const white_background_picked = `${'[bg__]'.repeat(weight)}{background-color:#fff !important;}`;
+	const delete_gradient_for_background = `${'[bg_ig__]'.repeat(weight)}{background-image:unset !important;}`;
+	const add_box_shadow_for_big_background = `${'[bg_bs__]'.repeat(weight)}{box-shadow: 0px 0px 0px 0.5px #000;}`;
+	const add_border_color_for_big_background = `${'[bg_b__]'.repeat(weight)}{border-color: #000;}`;
+
+
 	const d__repeat = '[d__]'.repeat(weight)
 	const attr = `${d__repeat},${d__repeat}[style],${d__repeat} svg`;
 
-	const white_background = `${attr}{background-color:#fff !important;}`;
+	const white_background_for_text = `${attr}{background-color:#fff !important;}`;
 	const black_fill = `${attr}{fill:#000 !important;}`;
 
 	let color_black = 'color:rgba(0, 0, 0, 1)!important';
@@ -91,6 +98,15 @@ function getCSS(cfg, url) {
 	let opacity = '';
 	if (cfg.forceOpacity)
 		opacity = '*,*[style]{opacity:1!important}';
+
+	let forceColorBlackCss = '';
+	if (true) {
+		// forceColorBlackCss = '*,*[style]{color:#000!important}';
+	}
+
+	let whiteBackground = '';
+	// if (true)
+	// 	whiteBackground = '*,*[style]{background-color:#fff!important}';
 
 	let bold = '';
 	if (cfg.boldText)
@@ -116,7 +132,7 @@ function getCSS(cfg, url) {
 			size_inc += `[s__='${c}']{font-size: calc(${c++}px + ${cfg.size}%)!important}\n`;
 	}
 
-	return `${dim}${white_background}${black_fill}${opacity}${size_inc}${bold}${placeholder}${form_border}${underline}${additionalCss}`;
+	return `${forceColorBlackCss}${white_background_for_text}${dim}${whiteBackground}${white_background_picked}${delete_gradient_for_background}${add_box_shadow_for_big_background}${add_border_color_for_big_background}${black_fill}${opacity}${size_inc}${bold}${placeholder}${form_border}${underline}${additionalCss}`;
 }
 
 function createStyleNode() {
@@ -174,6 +190,7 @@ function start(cfg, url) {
 	css_node.nodeValue = getCSS(cfg, url);
 
 	const nodes = nlToArr(document.body.getElementsByTagName('*'));
+	document.body.setAttribute('bg__', '');
 
 	const tags_to_skip = [
 		'SCRIPT',
@@ -252,6 +269,53 @@ function start(cfg, url) {
 
 			const tag = String(node.nodeName);
 
+			const style = getComputedStyle(node);
+
+			const bg              = style.getPropertyValue('background');
+			const bg_color        = style.getPropertyValue('background-color');
+			const bg_image        = style.getPropertyValue('background-image');
+			const width           = parseInt(style.getPropertyValue('width'));
+			const height          = parseInt(style.getPropertyValue('height'));
+			// const bg_brt          = getBgBrightness(node.parentNode, bg_color);
+
+			if (
+				bg_color &&
+				bg_color !== 'rgba(255, 255, 255)' &&
+				bg_color !== 'rgba(0, 0, 0, 0)' &&
+				!bg.match(/url/) &&
+				tag !== 'IMG' &&
+				width > 10 &&
+				height > 10 &&
+				width * height > 1000
+			) {
+				node.setAttribute('bg__', '');
+				// node.setAttribute('bg_bs__', '');
+				if (bg_image.match(/linear-gradient/)) {
+					node.setAttribute('bg_ig__', '');
+				}
+				if (
+					// width > 50 &&
+					// height > 50 &&
+					// width * height > 30_000
+					width > 10 &&
+					height > 10 &&
+					width * height > 1000
+				) {
+					const {borderWidth} = style;
+					if (parseFloat(borderWidth) === 0) {
+						node.setAttribute('bg_bs__', '');
+					} else {
+						const {borderColor} = style;
+						if (
+							borderColor !== 'rgba(0, 0, 0, 0)' &&
+							borderColor !== 'rgba(0, 0, 0)'
+						) {
+							node.setAttribute('bg_b__', '');
+						}
+					}
+				}
+			}
+
 			if (tags_to_skip.includes(tag))
 				return;
 
@@ -267,8 +331,6 @@ function start(cfg, url) {
 					return;
 				}
 			}
-
-			const style = getComputedStyle(node);
 
 			const f_sz = parseInt(style.getPropertyValue('font-size'));
 
@@ -327,8 +389,6 @@ function start(cfg, url) {
 			const fg_brt          = calcBrightness(rgba_arr);
 			const fg_colorfulness = calcColorfulness(rgba_arr);
 
-			const bg_color        = style.getPropertyValue('background-color');
-			const bg_brt          = getBgBrightness(node.parentNode, bg_color);
 
 			let db_obj = {};
 
@@ -337,8 +397,7 @@ function start(cfg, url) {
 					tag,
 					className: String(node.className),
 					text: node.innerText,
-					fg_brt,
-					bg_brt,
+					bg,
 					fg_colorfulness,
 				};
 
@@ -350,23 +409,23 @@ function start(cfg, url) {
 			// if (bg_brt < bg_threshold)
 				// return;
 
-			const contrast = +Math.abs(bg_brt - fg_brt).toFixed(2);
+			// const contrast = +Math.abs(bg_brt - fg_brt).toFixed(2);
 			const is_link  = tag === 'A';
 
-			if (cfg.skipColoreds) {
-				let   min_contrast      = 132 + (cfg.strength / 2);
-				const min_link_contrast = 96 + (cfg.strength / 3);
-				const min_colorfulness  = 32;
-
-				if (db_node)
-					Object.assign(db_obj, { contrast, min_contrast, min_link_contrast });
-
-				if (is_link)
-					min_contrast = min_link_contrast;
-
-				if (contrast > min_contrast && fg_colorfulness > min_colorfulness)
-					return;
-			}
+			// if (cfg.skipColoreds) {
+			// 	let   min_contrast      = 132 + (cfg.strength / 2);
+			// 	const min_link_contrast = 96 + (cfg.strength / 3);
+			// 	const min_colorfulness  = 32;
+			//
+			// 	if (db_node)
+			// 		Object.assign(db_obj, { contrast, min_contrast, min_link_contrast });
+			//
+			// 	if (is_link)
+			// 		min_contrast = min_link_contrast;
+			//
+			// 	if (contrast > min_contrast && fg_colorfulness > min_colorfulness)
+			// 		return;
+			// }
 
 			node.setAttribute('d__', '');
 
