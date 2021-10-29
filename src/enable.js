@@ -313,6 +313,10 @@ function createStyleNode() {
 }
 
 async function init() {
+	document.body.querySelectorAll('[bgus__]')
+		.forEach(node => {
+			node.setAttribute('style', node.getAttribute('style_backup'));
+		});
 	if (document.getElementById('_fc_')) {
 		style_node.appendChild(css_node);
 		return;
@@ -354,6 +358,8 @@ async function init() {
 }
 
 function start(cfg, url) {
+
+
 	let bodyId = document.body.getAttribute('id') || 'bid__';
 	css_node.nodeValue = getCSS(cfg, url, bodyId);
 
@@ -621,7 +627,8 @@ function start(cfg, url) {
 
 			if (bg_image.match(/url\(".*\.svg.*"\)/)) {
 				makeBackgroundUrlStyleWithSvg(node).then(svgBackground => {
-					node.setAttribute('style', svgBackground)
+					node.setAttribute('style', svgBackground);
+					node.setAttribute('bgus__', '');
 				});
 			}
 

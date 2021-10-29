@@ -4,4 +4,9 @@
  */
 
 style_node.removeChild(css_node);
+document.body.querySelectorAll('[bgus__]')
+  .forEach(node => {
+    node.setAttribute('style_backup', node.getAttribute('style'));
+    node.setAttribute('style', '');
+  });
 chrome.runtime.sendMessage({ from: 'toggle', enabled: false });
