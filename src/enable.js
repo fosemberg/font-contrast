@@ -11,7 +11,7 @@ var style_node;
 var css_node;
 
 function getRGBarr(rgba_str) {
-	return rgba_str.match(/\d\.\d|\d+/g);
+	return rgba_str.substring(4, rgba_str.length - 1).split(', ');
 }
 
 function getAlfa(rgba_str) {
@@ -64,12 +64,30 @@ function containsText(element) {
 		/\S/.test(element.nodeValue);
 }
 
+function roundTextsInsideRound(node) {
+	for (const child of Array.from(node.childNodes)) {
+		if (containsText(child)) {
+			child.parentNode.setAttribute('rb__', '');
+		}
+	}
+}
+
 function childNodesContainsTextOrSvg(node) {
 	const children = Array.from(node.childNodes);
 	return children.some(child => {
 		return containsText(child) || String(child.nodeName) === 'svg';
 	});
 }
+
+function isButtonWithoutIcon(node, tag, style = getComputedStyle(node)) {
+	return (
+		tag === 'BUTTON' &&
+		!node.getElementsByTagName('svg').length &&
+		!node.getElementsByTagName('img').length &&
+		!style.backgroundImage.match(/url\(/)
+	)
+}
+
 
 function getBgBrightness(parent, bg_color) {
 	// assume light-ish color if we can't find it
@@ -121,7 +139,7 @@ function getCSS(cfg, url) {
 	const d__repeat = '[d__]'.repeat(weight)
 	const attr = `${d__repeat},${d__repeat}[style],${d__repeat} svg`;
 
-	// const white_background_for_text = `${attr}{background-color:#fff !important;}`;
+	const white_background_for_text = `${attr}{background-color:#fff !important;}`;
 	const black_fill = `${attr}{fill:#000 !important;}`;
 
 	let color_black = 'color:rgba(0, 0, 0, 1)!important';
@@ -174,9 +192,12 @@ function getCSS(cfg, url) {
 			size_inc += `[s__='${c}']{font-size: calc(${c++}px + ${cfg.size}%)!important}\n`;
 	}
 
+	const roundBordersCss = '[r__] [d__]{border-radius: inherit;}'
+
 	return [
+		roundBordersCss,
 		forceColorBlackCss,
-    // white_background_for_text,
+    white_background_for_text,
     dim,
     whiteBackground,
     white_background_picked,
@@ -351,8 +372,9 @@ function start(cfg, url) {
 
 			const bg_color        = style.getPropertyValue('background-color');
 
+			const isRound = checkIsRound(node);
 			if (
-				tag === 'BUTTON' ||
+				isButtonWithoutIcon(node, tag, style) ||
 				(
 					bg_color &&
 					bg_color !== 'rgba(255, 255, 255)' &&
@@ -360,6 +382,9 @@ function start(cfg, url) {
 					checkIsRound(node)
 				)
 			) {
+				if (isRound) {
+					node.setAttribute('r__', '');
+				}
 				node.setAttribute('bg__', '');
 				const {borderWidth} = style;
 				if (parseFloat(borderWidth) === 0) {
@@ -498,9 +523,6 @@ function start(cfg, url) {
 			const height          = style.getPropertyValue('height');
 			const heightNum       = parseInt(height);
 			const opacity         = parseFloat(style.opacity);
-
-			console.log('fosemberg', 'node', node);
-			console.log(`node.getAttribute('d__')`, node.getAttribute('d__'));
 
 			if (bg_image.match(/linear-gradient/)) {
 				node.setAttribute('bg_ig__', '');
