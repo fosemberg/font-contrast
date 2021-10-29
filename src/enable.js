@@ -619,7 +619,7 @@ function start(cfg, url) {
 				node.setAttribute('bg_ig__', '');
 			}
 
-			if (bg_image.match(/url\(".*\.svg"\)/)) {
+			if (bg_image.match(/url\(".*\.svg.*"\)/)) {
 				makeBackgroundUrlStyleWithSvg(node).then(svgBackground => {
 					node.setAttribute('style', svgBackground)
 				});
