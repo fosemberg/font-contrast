@@ -10,6 +10,74 @@ var style_node;
 // Text node
 var css_node;
 
+// svg url replacer {
+
+async function getBackgroundUrlData (node) {
+	const style = getComputedStyle(node);
+	const url = style.backgroundImage.substring(5,style.backgroundImage.length-2);
+	const res = await fetch(url);
+	const text = await res.text();
+	console.log('fosemberg', 'svgText', text);
+	return text;
+}
+
+function addStyleToSvgStr (svgStr) {
+	const insertSvgStyle = '<style type="text/css">*{fill: rgba(0,0,0,0.25)!important;color: #000!important;stroke: #000!important}</style>'
+	// return svgStr.substring(0, svgStr.length - 7) + insertSvgStyle + svgStr.substring(svgStr.length - 7, svgStr.length);
+	return svgStr.replace('</svg>', `${insertSvgStyle}</svg>`);
+}
+
+function escapeRegExp(str) {
+	return str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
+}
+
+function replaceAll(str, find, replace) {
+	return str.replace(new RegExp(escapeRegExp(find), 'g'), replace);
+}
+
+function svgStrToDataImageCss (raw) {
+	var encoded = raw.replace(/\s+/g, " ")
+
+	// According to Taylor Hunt, lowercase gzips better ... my tiny test confirms this
+	encoded = replaceAll(encoded, "%", "%25");
+	encoded = replaceAll(encoded, "> <", "><"); // normalise spaces elements
+	encoded = replaceAll(encoded, "; }", ";}"); // normalise spaces css
+	encoded = replaceAll(encoded, "<", "%3c");
+	encoded = replaceAll(encoded, ">", "%3e");
+	encoded = replaceAll(encoded, "\"", "'");
+	encoded = replaceAll(encoded, "#", "%23"); // needed for ie and firefox
+	encoded = replaceAll(encoded, "{", "%7b");
+	encoded = replaceAll(encoded, "}", "%7d");
+	encoded = replaceAll(encoded, "|", "%7c");
+	encoded = replaceAll(encoded, "^", "%5e");
+	encoded = replaceAll(encoded, "`", "%60");
+	encoded = replaceAll(encoded, "@", "%40");
+
+	// charset reportedly not needed ... I need to test before implementing
+	var uri = 'url("data:image/svg+xml;charset=UTF-8,' + encoded + '")';
+	var style = 'background-image: ' + uri + ';';
+	return style;
+}
+
+function withLog (fn) {
+	return (...props) => {
+		const result = fn(...props);
+		console.log(fn.name, '(', ...props, ') =>');
+		console.log(result);
+		return result;
+	}
+}
+
+async function makeBackgroundUrlStyleWithSvg(node) {
+	return svgStrToDataImageCss(
+		withLog(addStyleToSvgStr)(
+			await getBackgroundUrlData(node)
+		)
+	);
+}
+
+// svg url replacer }
+
 function getRGBarr(rgba_str) {
 	return rgba_str.substring(4, rgba_str.length - 1).split(', ');
 }
@@ -74,9 +142,7 @@ function roundTextsInsideRound(node) {
 
 function childNodesContainsTextOrSvg(node) {
 	const children = Array.from(node.childNodes);
-	return children.some(child => {
-		return containsText(child) || String(child.nodeName) === 'svg';
-	});
+	return children.some(containsText) || node.getElementsByTagName('svg').length;
 }
 
 function isButtonWithoutIcon(node, tag, style = getComputedStyle(node)) {
@@ -119,7 +185,7 @@ function nlToArr(nl) {
 
 
 
-function getCSS(cfg, url) {
+function getCSS(cfg, url, bodyId) {
 	let host = url.replace('www.', '');
 	let additionalCss = ''
 	switch (host) {
@@ -128,21 +194,17 @@ function getCSS(cfg, url) {
 			break;
 	}
 
-	const weight = 5;
+	const white_background_picked = `#${bodyId},#${bodyId} [bg__]{background-color:#fff!important;}`;
+	const delete_gradient_for_background = `#${bodyId} [bg_ig__]{background-image:unset!important;}`;
+	const add_box_shadow_for_big_background = `#${bodyId} [bg_bs__]{box-shadow: 0px 0px 0px 0.5px #000;}`;
+	const add_border_color_for_big_background = `#${bodyId} [bg_b__]{border-color: #000;border-width: 1px;border-style: solid;}`;
 
-	const white_background_picked = `${'[bg__]'.repeat(weight)}{background-color:#fff !important;}`;
-	const delete_gradient_for_background = `${'[bg_ig__]'.repeat(weight)}{background-image:unset !important;}`;
-	const add_box_shadow_for_big_background = `${'[bg_bs__]'.repeat(weight)}{box-shadow: 0px 0px 0px 0.5px #000;}`;
-	const add_border_color_for_big_background = `${'[bg_b__]'.repeat(weight)}{border-color: #000;border-width: 1px;border-style: solid;}`;
-
-
-	const d__repeat = '[d__]'.repeat(weight)
-	const attr = `${d__repeat},${d__repeat}[style],${d__repeat} svg`;
+	const attr = `#${bodyId},#${bodyId}[id] [d__],#${bodyId} [d__] svg`;
 
 	const white_background_for_text = `${attr}{background-color:#fff !important;}`;
 	const black_fill = `${attr}{fill:#000 !important;}`;
 
-	let color_black = 'color:rgba(0, 0, 0, 1)!important';
+	let color_black = 'color:#000!important';
 
 	let dim = '';
 	if (cfg.advDimming)
@@ -162,6 +224,26 @@ function getCSS(cfg, url) {
 	let forceColorBlackCss = '';
 	if (true) {
 		// forceColorBlackCss = '*,*[style]{color:#000!important}';
+	}
+
+	let forceFilterDropShadowCss = '';
+	if (true) {
+		forceFilterDropShadowCss = '[src$=".png"] {filter: drop-shadow(0 0 2px black);}';
+	}
+
+	let forceBorderColorBlackCss = '';
+	if (true) {
+		forceBorderColorBlackCss = `#${bodyId} *{border-color:#000!important}`;
+	}
+
+	let forceBeforeAfterBlackAndWhiteCss = '';
+	if (true) {
+		forceBeforeAfterBlackAndWhiteCss = '#bid__ :before,#bid__ :after{color:#000!important;background-color:rgba(0,0,0,0)!important;filter: drop-shadow(0 0 1px #000);}'
+	}
+
+	let forceSvgBlackAndWhiteCss = '';
+	if (true) {
+		forceSvgBlackAndWhiteCss = '#bid__ svg, #bid__ svg *{color:#000!important;fill:rgba(0,0,0,0.25)!important;stroke:#000;background-color:#fff!important;}'
 	}
 
 	let whiteBackground = '';
@@ -192,11 +274,15 @@ function getCSS(cfg, url) {
 			size_inc += `[s__='${c}']{font-size: calc(${c++}px + ${cfg.size}%)!important}\n`;
 	}
 
-	const roundBordersCss = '[r__] [d__]{border-radius: inherit;}'
+	const roundBordersCss = '[r__] [d__]{border-radius: inherit;}';
 
 	return [
 		roundBordersCss,
 		forceColorBlackCss,
+		forceBorderColorBlackCss,
+		forceFilterDropShadowCss,
+		forceSvgBlackAndWhiteCss,
+		forceBeforeAfterBlackAndWhiteCss,
     white_background_for_text,
     dim,
     whiteBackground,
@@ -268,12 +354,16 @@ async function init() {
 }
 
 function start(cfg, url) {
-	css_node.nodeValue = getCSS(cfg, url);
+	let bodyId = document.body.getAttribute('id') || 'bid__';
+	css_node.nodeValue = getCSS(cfg, url, bodyId);
 
 	const nodes = nlToArr(document.body.getElementsByTagName('*'));
 	document.body.setAttribute('bg__', '');
 
+	document.body.setAttribute('id', bodyId);
+
 	const tags_to_skip = [
+		'svg',
 		'SCRIPT',
 		'LINK',
 		'STYLE',
@@ -515,6 +605,7 @@ function start(cfg, url) {
 
 			const style = getComputedStyle(node);
 
+			const src             = node.getAttribute('src');
 			const bg              = style.getPropertyValue('background');
 			const bg_color        = style.getPropertyValue('background-color');
 			const bg_image        = style.getPropertyValue('background-image');
@@ -527,6 +618,18 @@ function start(cfg, url) {
 			if (bg_image.match(/linear-gradient/)) {
 				node.setAttribute('bg_ig__', '');
 			}
+
+			if (bg_image.match(/url\(".*\.svg"\)/)) {
+				makeBackgroundUrlStyleWithSvg(node).then(svgBackground => {
+					node.setAttribute('style', svgBackground)
+				});
+			}
+
+			// if (src.match(/url\(".*\.svg"\)/)) {
+			// 	makeBackgroundUrlStyleWithSvg(node).then(svgBackground => {
+			// 		node.setAttribute('src', svgBackground)
+			// 	});
+			// }
 
 			if (
 				node.getAttribute('d__') === null &&
