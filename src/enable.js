@@ -493,12 +493,18 @@ function start(cfg, url) {
 			const bg              = style.getPropertyValue('background');
 			const bg_color        = style.getPropertyValue('background-color');
 			const bg_image        = style.getPropertyValue('background-image');
-			const width           = parseInt(style.getPropertyValue('width'));
-			const height          = parseInt(style.getPropertyValue('height'));
+			const width           = style.getPropertyValue('width');
+			const widthNum        = parseInt(width);
+			const height          = style.getPropertyValue('height');
+			const heightNum       = parseInt(height);
 			const opacity         = parseFloat(style.opacity);
 
 			console.log('fosemberg', 'node', node);
 			console.log(`node.getAttribute('d__')`, node.getAttribute('d__'));
+
+			if (bg_image.match(/linear-gradient/)) {
+				node.setAttribute('bg_ig__', '');
+			}
 
 			if (
 				node.getAttribute('d__') === null &&
@@ -509,24 +515,18 @@ function start(cfg, url) {
 				opacity > 0.5 &&
 				!bg.match(/url/) &&
 				tag !== 'IMG' &&
-				width > 10 &&
-				height > 10 &&
-				width * height > 1000
+				(
+					width === 'auto' ||
+					height === 'auto' ||
+					(widthNum > 10 && heightNum > 10 && widthNum * heightNum > 1000)
+				)
 			) {
 				node.setAttribute('bg__', '');
 				// node.setAttribute('bg_bs__', '');
-				if (bg_image.match(/linear-gradient/)) {
-					node.setAttribute('bg_ig__', '');
-				}
 				if (
-					// width > 50 &&
-					// height > 50 &&
-					// width * height > 30_000
-					(
-						width > 10 &&
-						height > 10 &&
-						width * height > 1000
-					) || checkIsRound(node)
+					widthNum > 50 &&
+					heightNum > 50 &&
+					widthNum * heightNum > 30_000
 				) {
 					const {borderWidth} = style;
 					if (parseFloat(borderWidth) === 0) {
