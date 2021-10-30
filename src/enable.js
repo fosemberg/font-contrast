@@ -12,17 +12,20 @@ var css_node;
 
 // svg url replacer {
 
+function getUrlFromBackgroundImageStyle (backgroundImageStyle) {
+	return backgroundImageStyle.substring(5, backgroundImageStyle.length - 2);
+}
+
 async function getBackgroundUrlData (node) {
 	const style = getComputedStyle(node);
-	const url = style.backgroundImage.substring(5,style.backgroundImage.length-2);
+	const url = getUrlFromBackgroundImageStyle(style.backgroundImage);
 	const res = await fetch(url);
 	const text = await res.text();
 	return text;
 }
 
 function addStyleToSvgStr (svgStr) {
-	const insertSvgStyle = '<style type="text/css">*{color: #000!important;stroke: #000!important}</style>'
-	// return svgStr.substring(0, svgStr.length - 7) + insertSvgStyle + svgStr.substring(svgStr.length - 7, svgStr.length);
+	const insertSvgStyle = '<style type="text/css">*{stroke: #000!important;stroke-width: 1px;}</style>'
 	return svgStr.replace('</svg>', `${insertSvgStyle}</svg>`);
 }
 
@@ -206,7 +209,7 @@ function getCSS(cfg, url, bodyId) {
 
 	let forceFilterDropShadowCss = '';
 	if (true) {
-		forceFilterDropShadowCss = '[src*=".png"], [bg_ut__], [src*="data:image/svg"], [src*=".svg"] {filter: drop-shadow(0 0 1px #000);}';
+		forceFilterDropShadowCss = '[src*=".png"], [bg_ut__], [src*="data:image/"], [src*=".svg"] {filter: drop-shadow(0 0 1px #000);}';
 	}
 
 	let forceBorderColorBlackCss = '';
@@ -631,7 +634,11 @@ function start(cfg, url) {
 							node.setAttribute('style', svgBackground);
 							node.setAttribute('bg_us__', '');
 						});
-					} else if (bg_image.includes('.png') || bg_image.includes('.webp')) {
+					} else if (
+						bg_image.includes('.png') ||
+						bg_image.includes('.webp') ||
+						bg_image.includes('data:image/')
+					) {
 						node.setAttribute('bg_ut__', '');
 					}
 				}
