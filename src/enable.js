@@ -177,7 +177,7 @@ function getCSS(cfg, url, bodyId) {
 	const add_border_color_for_big_background = `#${bodyId} [bg_b__]{border-color: #000;border-width: 1px;border-style: solid;}`;
 
 
-	const attr = `#${bodyId}[id] [d__],#${bodyId} [d__] svg, #${bodyId} [bgus__]`;
+	const attr = `#${bodyId}[id] [d__],#${bodyId} [d__] svg, #${bodyId} [bg_us__]`;
 
 	const white_background_for_text = `${attr}{background-color:#fff !important;}`;
 	const black_fill = `${attr}{fill:#000 !important;}`;
@@ -206,7 +206,7 @@ function getCSS(cfg, url, bodyId) {
 
 	let forceFilterDropShadowCss = '';
 	if (true) {
-		forceFilterDropShadowCss = '[src*=".png"], [src*="data:image/svg"], [src*=".svg"], [src$="svg"] {filter: drop-shadow(0 0 2px black);}';
+		forceFilterDropShadowCss = '[src*=".png"], [bg_ut__], [src*="data:image/svg"], [src*=".svg"] {filter: drop-shadow(0 0 1px #000);}';
 	}
 
 	let forceBorderColorBlackCss = '';
@@ -226,12 +226,12 @@ function getCSS(cfg, url, bodyId) {
 
 	let forceBeforeAfterBlackAndWhiteCss = '';
 	if (true) {
-		forceBeforeAfterBlackAndWhiteCss = '#bid__ :before,#bid__ :after{color:#000!important;filter: drop-shadow(0 0 1px #000);}'
+		forceBeforeAfterBlackAndWhiteCss = `#${bodyId} :before,#${bodyId} :after{color:#000!important;filter: drop-shadow(0 0 1px #000);}`
 	}
 
 	let forceSvgBlackAndWhiteCss = '';
 	if (true) {
-		forceSvgBlackAndWhiteCss = '#bid__ svg, #bid__ svg *{color:#000!important;stroke:#000;background-color:#fff!important;}'
+		forceSvgBlackAndWhiteCss = `#${bodyId} svg, #${bodyId} svg *{stroke:#000;}`
 	}
 
 	let whiteBackground = '';
@@ -307,7 +307,7 @@ function createStyleNode() {
 }
 
 async function init() {
-	document.body.querySelectorAll('[bgus__]')
+	document.body.querySelectorAll('[bg_us__]')
 		.forEach(node => {
 			node.setAttribute('style', node.getAttribute('style_backup'));
 		});
@@ -620,15 +620,21 @@ function start(cfg, url) {
 			const heightNum       = parseInt(height);
 			const opacity         = parseFloat(style.opacity);
 
-			if (bg_image.match(/linear-gradient/)) {
-				node.setAttribute('bg_ig__', '');
-			}
+			if (bg_image) {
+				if (bg_image.includes('linear-gradient')) {
+					node.setAttribute('bg_ig__', '');
+				}
 
-			if (bg_image.match(/url\(".*\.svg.*"\)/)) {
-				makeBackgroundUrlStyleWithSvg(node).then(svgBackground => {
-					node.setAttribute('style', svgBackground);
-					node.setAttribute('bgus__', '');
-				});
+				if (bg_image.includes('url("')) {
+					if (bg_image.includes('.svg')) {
+						makeBackgroundUrlStyleWithSvg(node).then(svgBackground => {
+							node.setAttribute('style', svgBackground);
+							node.setAttribute('bg_us__', '');
+						});
+					} else if (bg_image.includes('.png') || bg_image.includes('.webp')) {
+						node.setAttribute('bg_ut__', '');
+					}
+				}
 			}
 
 			// if (src.match(/url\(".*\.svg"\)/)) {
