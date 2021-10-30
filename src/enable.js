@@ -22,7 +22,7 @@ async function getBackgroundUrlData (node) {
 }
 
 function addStyleToSvgStr (svgStr) {
-	const insertSvgStyle = '<style type="text/css">*{fill: rgba(0,0,0,0.25)!important;color: #000!important;stroke: #000!important}</style>'
+	const insertSvgStyle = '<style type="text/css">*{color: #000!important;stroke: #000!important}</style>'
 	// return svgStr.substring(0, svgStr.length - 7) + insertSvgStyle + svgStr.substring(svgStr.length - 7, svgStr.length);
 	return svgStr.replace('</svg>', `${insertSvgStyle}</svg>`);
 }
@@ -35,7 +35,7 @@ function replaceAll(str, find, replace) {
 	return str.replace(new RegExp(escapeRegExp(find), 'g'), replace);
 }
 
-function svgStrToDataImageCss (raw) {
+function svgStrToDataImage (raw) {
 	var encoded = raw.replace(/\s+/g, " ")
 
 	// According to Taylor Hunt, lowercase gzips better ... my tiny test confirms this
@@ -69,7 +69,7 @@ function withLog (fn) {
 }
 
 async function makeBackgroundUrlStyleWithSvg(node) {
-	return svgStrToDataImageCss(
+	return svgStrToDataImage(
 		withLog(addStyleToSvgStr)(
 			await getBackgroundUrlData(node)
 		)
@@ -194,10 +194,13 @@ function getCSS(cfg, url, bodyId) {
 			break;
 	}
 
-	const white_background_picked = `#${bodyId},#${bodyId} [bg__]{background-color:#fff!important;}`;
+	const main_white_background = `html, #${bodyId}{background-color:#fff!important;}`;
+	const white_background_picked = `#${bodyId} [bg__]{background-color:rgba(0,0,0,0)!important;}`;
+	const white_text_background = `#${bodyId} [tbg__]{background-color:#fff!important;}`;
 	const delete_gradient_for_background = `#${bodyId} [bg_ig__]{background-image:unset!important;}`;
 	const add_box_shadow_for_big_background = `#${bodyId} [bg_bs__]{box-shadow: 0px 0px 0px 0.5px #000;}`;
 	const add_border_color_for_big_background = `#${bodyId} [bg_b__]{border-color: #000;border-width: 1px;border-style: solid;}`;
+
 
 	const attr = `#${bodyId},#${bodyId}[id] [d__],#${bodyId} [d__] svg`;
 
@@ -228,7 +231,7 @@ function getCSS(cfg, url, bodyId) {
 
 	let forceFilterDropShadowCss = '';
 	if (true) {
-		forceFilterDropShadowCss = '[src$=".png"] {filter: drop-shadow(0 0 2px black);}';
+		forceFilterDropShadowCss = '[src*=".png"], [src*="data:image/svg"], [src*=".svg"], [src$="svg"] {filter: drop-shadow(0 0 2px black);}';
 	}
 
 	let forceBorderColorBlackCss = '';
@@ -238,12 +241,12 @@ function getCSS(cfg, url, bodyId) {
 
 	let forceBeforeAfterBlackAndWhiteCss = '';
 	if (true) {
-		forceBeforeAfterBlackAndWhiteCss = '#bid__ :before,#bid__ :after{color:#000!important;background-color:rgba(0,0,0,0)!important;filter: drop-shadow(0 0 1px #000);}'
+		forceBeforeAfterBlackAndWhiteCss = '#bid__ :before,#bid__ :after{color:#000!important;filter: drop-shadow(0 0 1px #000);}'
 	}
 
 	let forceSvgBlackAndWhiteCss = '';
 	if (true) {
-		forceSvgBlackAndWhiteCss = '#bid__ svg, #bid__ svg *{color:#000!important;fill:rgba(0,0,0,0.25)!important;stroke:#000;background-color:#fff!important;}'
+		forceSvgBlackAndWhiteCss = '#bid__ svg, #bid__ svg *{color:#000!important;stroke:#000;background-color:#fff!important;}'
 	}
 
 	let whiteBackground = '';
@@ -283,15 +286,17 @@ function getCSS(cfg, url, bodyId) {
 		forceFilterDropShadowCss,
 		forceSvgBlackAndWhiteCss,
 		forceBeforeAfterBlackAndWhiteCss,
-    white_background_for_text,
+    // white_background_for_text,
     dim,
+		main_white_background,
     whiteBackground,
+		white_text_background,
     white_background_picked,
     delete_gradient_for_background,
     add_box_shadow_for_big_background,
     add_border_color_for_big_background,
 		smartOpacityCss,
-    black_fill,
+    // black_fill,
     opacity,
     size_inc,
     bold,
@@ -368,24 +373,27 @@ function start(cfg, url) {
 
 	document.body.setAttribute('id', bodyId);
 
-	const tags_to_skip = [
-		'svg',
+	const globalTagsToSkip = [
 		'SCRIPT',
 		'LINK',
 		'STYLE',
-		'IMG',
 		'VIDEO',
 		'SOURCE',
 		'CANVAS',
-		'undefined'
+		'undefined',
 	];
+
+	const textTagsToSkip = [
+		'svg',
+		'IMG',
+	]
 
 	const colors_to_skip  = [
 		// 'rgb(0, 0, 0)',
 		// 'rgba(0, 0, 0, 0)'
 	];
 
-	let classes_to_skip = '';
+	let globalClassesToSkip = '';
 
 	let proc_img = true;
 
@@ -403,7 +411,7 @@ function start(cfg, url) {
 	}
 
 	if (cfg.skipHeadings)
-		tags_to_skip.push(...['H1', 'H2', 'H3']);
+		globalTagsToSkip.push(...['H1', 'H2', 'H3']);
 
 	let callcnt = 0;
 
@@ -415,7 +423,7 @@ function start(cfg, url) {
 		switch (host) {
 			case 'youtube.com':
 				// Make sure youtube player stays untouched
-				classes_to_skip += 'ytp';
+				globalClassesToSkip += 'ytp';
 				proc_img = false;
 				break;
 			case 'facebook.com':
@@ -437,7 +445,7 @@ function start(cfg, url) {
 		if (db_time)
 			console.time(db_timestr);
 
-		const nodes_to_skip    = [];
+		const globalNodesToSkip = [];
 		const nodes_behind_img = [];
 
 		const new_rgba_rules = new Set();
@@ -450,18 +458,18 @@ function start(cfg, url) {
 
 			const bg              = style.getPropertyValue('background');
 
-			if (tags_to_skip.includes(tag))
+			if (textTagsToSkip.includes(tag))
 				return;
 
-			if (nodes_to_skip.includes(node))
+			if (globalNodesToSkip.includes(node))
 				return;
 
-			if (classes_to_skip.length) {
+			if (globalClassesToSkip.length) {
 
 				const classname = String(node.className);
 
-				if (classname.includes(classes_to_skip)) {
-					nodes_to_skip.push(...nlToArr(node.getElementsByTagName('*')));
+				if (classname.includes(globalClassesToSkip)) {
+					globalNodesToSkip.push(...nlToArr(node.getElementsByTagName('*')));
 					return;
 				}
 			}
@@ -592,14 +600,13 @@ function start(cfg, url) {
 			// }
 
 
-
-			if (
-				bg_color &&
-				bg_color !== 'rgba(255, 255, 255)' &&
-				bg_color !== 'rgba(0, 0, 0, 0)'
-			) {
-				node.setAttribute('bg__', '');
-			}
+			// if (
+				// bg_color &&
+				// bg_color !== 'rgba(255, 255, 255)' &&
+				// bg_color !== 'rgba(0, 0, 0, 0)'
+			// ) {
+				node.setAttribute('tbg__', '');
+			// }
 			node.setAttribute('d__', '');
 
 			if (cfg.underlineLinks && is_link)
@@ -682,6 +689,9 @@ function start(cfg, url) {
 		}
 
 		const setAttribs = node => {
+			const tag = String(node.nodeName);
+			if (globalTagsToSkip.includes(tag))
+				return;
 			setTextAttribs(node);
 			setBgAttribs(node);
 		}
