@@ -17,7 +17,6 @@ async function getBackgroundUrlData (node) {
 	const url = style.backgroundImage.substring(5,style.backgroundImage.length-2);
 	const res = await fetch(url);
 	const text = await res.text();
-	console.log('fosemberg', 'svgText', text);
 	return text;
 }
 
@@ -100,8 +99,8 @@ function checkIsRound (node, style = getComputedStyle(node)) {
 		widthNum = node.getBoundingClientRect().width;
 		heightNum = node.getBoundingClientRect().height;
 	} else {
-		widthNum = parseFloat(paddingLeft) + parseFloat(width) + parseFloat(paddingRight);
-		heightNum = parseFloat(paddingTop) + parseFloat(height) + parseFloat(paddingBottom);
+		widthNum = parseInt(paddingLeft) + parseInt(width) + parseInt(paddingRight);
+		heightNum = parseInt(paddingTop) + parseInt(height) + parseInt(paddingBottom);
 	}
 	// const widthNum = width === 'auto'
 	// 	? node.getBoundingClientRect().width
@@ -114,13 +113,11 @@ function checkIsRound (node, style = getComputedStyle(node)) {
 		return borderRadiusNum > 40 && borderRadiusNum < 60
 	} else {
 		// console.log({widthNum, heightNum});
-		return Math.max(widthNum, heightNum) / Math.min(widthNum, heightNum) < 2 &&
+		return (
+			// Math.max(widthNum, heightNum) / Math.min(widthNum, heightNum) < 2 &&
 			Math.min(widthNum, heightNum) / borderRadiusNum < 3
+		)
 	}
-}
-
-function calcBrightness([r, g, b, a = 1]) {
-	return +(r * 0.2126 + g * 0.7152 + b * 0.0722).toFixed(1);
 }
 
 function calcColorfulness([r, g, b, a = 1]) {
@@ -142,7 +139,7 @@ function roundTextsInsideRound(node) {
 
 function childNodesContainsTextOrSvg(node) {
 	const children = Array.from(node.childNodes);
-	return children.some(containsText) || node.getElementsByTagName('svg').length;
+	return children.some(containsText)// || node.getElementsByTagName('svg').length;
 }
 
 function isButtonWithoutIcon(node, tag, style = getComputedStyle(node)) {
@@ -154,26 +151,6 @@ function isButtonWithoutIcon(node, tag, style = getComputedStyle(node)) {
 	)
 }
 
-
-function getBgBrightness(parent, bg_color) {
-	// assume light-ish color if we can't find it
-	let bg_luma = 236;
-
-	const transparent = "rgba(0, 0, 0, 0)";
-
-	while (bg_color === transparent && parent) {
-		if (parent instanceof Element)
-			bg_color = getComputedStyle(parent).getPropertyValue("background-color");
-
-		parent = parent.parentNode;
-	}
-
-	if (bg_color !== transparent)
-		bg_luma = calcBrightness(getRGBarr(bg_color));
-
-	return bg_luma;
-}
-
 function nlToArr(nl) {
 	let arr = [];
 
@@ -182,8 +159,6 @@ function nlToArr(nl) {
 
 	return arr;
 }
-
-
 
 function getCSS(cfg, url, bodyId) {
 	let host = url.replace('www.', '');
@@ -195,14 +170,14 @@ function getCSS(cfg, url, bodyId) {
 	}
 
 	const main_white_background = `html, #${bodyId}{background-color:#fff!important;}`;
-	const white_background_picked = `#${bodyId} [bg__]{background-color:rgba(0,0,0,0)!important;}`;
+	const white_background_picked = `#${bodyId} [bg__]{background-color:#fff!important;}`;
 	const white_text_background = `#${bodyId} [tbg__]{background-color:#fff!important;}`;
 	const delete_gradient_for_background = `#${bodyId} [bg_ig__]{background-image:unset!important;}`;
 	const add_box_shadow_for_big_background = `#${bodyId} [bg_bs__]{box-shadow: 0px 0px 0px 0.5px #000;}`;
 	const add_border_color_for_big_background = `#${bodyId} [bg_b__]{border-color: #000;border-width: 1px;border-style: solid;}`;
 
 
-	const attr = `#${bodyId},#${bodyId}[id] [d__],#${bodyId} [d__] svg`;
+	const attr = `#${bodyId}[id] [d__],#${bodyId} [d__] svg, #${bodyId} [bgus__]`;
 
 	const white_background_for_text = `${attr}{background-color:#fff !important;}`;
 	const black_fill = `${attr}{fill:#000 !important;}`;
@@ -278,9 +253,11 @@ function getCSS(cfg, url, bodyId) {
 	}
 
 	const roundBordersCss = '[r__] [d__]{border-radius: inherit;}';
+	const roundBackgroundCss = `#${bodyId}[id] [r__]{background-color: #fff!important}`;
 
 	return [
 		roundBordersCss,
+		roundBackgroundCss,
 		forceColorBlackCss,
 		forceBorderColorBlackCss,
 		forceFilterDropShadowCss,
@@ -393,7 +370,7 @@ function start(cfg, url) {
 		// 'rgba(0, 0, 0, 0)'
 	];
 
-	let globalClassesToSkip = '';
+	let textClassesToSkip = '';
 
 	let proc_img = true;
 
@@ -423,7 +400,7 @@ function start(cfg, url) {
 		switch (host) {
 			case 'youtube.com':
 				// Make sure youtube player stays untouched
-				globalClassesToSkip += 'ytp';
+				textClassesToSkip += 'ytp';
 				proc_img = false;
 				break;
 			case 'facebook.com':
@@ -445,7 +422,7 @@ function start(cfg, url) {
 		if (db_time)
 			console.time(db_timestr);
 
-		const globalNodesToSkip = [];
+		const textNodesToSkip = [];
 		const nodes_behind_img = [];
 
 		const new_rgba_rules = new Set();
@@ -461,15 +438,15 @@ function start(cfg, url) {
 			if (textTagsToSkip.includes(tag))
 				return;
 
-			if (globalNodesToSkip.includes(node))
+			if (textNodesToSkip.includes(node))
 				return;
 
-			if (globalClassesToSkip.length) {
+			if (textClassesToSkip.length) {
 
 				const classname = String(node.className);
 
-				if (classname.includes(globalClassesToSkip)) {
-					globalNodesToSkip.push(...nlToArr(node.getElementsByTagName('*')));
+				if (classname.includes(textClassesToSkip)) {
+					textNodesToSkip.push(...nlToArr(node.getElementsByTagName('*')));
 					return;
 				}
 			}
@@ -477,19 +454,23 @@ function start(cfg, url) {
 			const bg_color        = style.getPropertyValue('background-color');
 
 			const isRound = checkIsRound(node);
+			if (isRound) {
+				node.setAttribute('r__', '');
+			}
+			// чтобы норм кружочки были в соц-сетях
 			if (
 				isButtonWithoutIcon(node, tag, style) ||
 				(
 					bg_color &&
 					bg_color !== 'rgba(255, 255, 255)' &&
-					bg_color !== 'rgba(0, 0, 0, 0)' &&
-					checkIsRound(node)
+					bg_color !== 'rgba(0, 0, 0, 0)'// &&
+					// checkIsRound(node)
 				)
 			) {
-				if (isRound) {
-					node.setAttribute('r__', '');
-				}
-				node.setAttribute('bg__', '');
+				// if (isRound) {
+				// 	node.setAttribute('r__', '');
+				// }
+				node.setAttribute('tbg__', '');
 				const {borderWidth} = style;
 				if (parseFloat(borderWidth) === 0) {
 					node.setAttribute('bg_bs__', '');
@@ -547,18 +528,17 @@ function start(cfg, url) {
 			if (!rgba_arr)
 				return;
 
-			if (rgba_arr.length > 3) {
+			// if (rgba_arr.length > 3) {
+			//
+			// 	const class_name = `fc_rgba__${rgba_arr[0]}${rgba_arr[1]}${rgba_arr[2]}`;
+			// 	node.classList.add(class_name);
+			//
+			// 	const new_color = color.replace(/\d\.\d+/, '1');
+			// 	const rule      = `.${class_name}{color:${new_color}!important}`;
+			//
+			// 	new_rgba_rules.add(rule);
+			// }
 
-				const class_name = `fc_rgba__${rgba_arr[0]}${rgba_arr[1]}${rgba_arr[2]}`;
-				node.classList.add(class_name);
-
-				const new_color = color.replace(/\d\.\d+/, '1');
-				const rule      = `.${class_name}{color:${new_color}!important}`;
-
-				new_rgba_rules.add(rule);
-			}
-
-			const fg_brt          = calcBrightness(rgba_arr);
 			const fg_colorfulness = calcColorfulness(rgba_arr);
 
 
@@ -647,6 +627,7 @@ function start(cfg, url) {
 
 			if (
 				node.getAttribute('d__') === null &&
+				node.getAttribute('tbg__') === null &&
 				bg_color &&
 				bg_color !== 'rgba(255, 255, 255)' &&
 				bg_color !== 'rgba(0, 0, 0, 0)' &&
@@ -661,7 +642,6 @@ function start(cfg, url) {
 				)
 			) {
 				node.setAttribute('bg__', '');
-				// node.setAttribute('bg_bs__', '');
 				if (
 					widthNum > 50 &&
 					heightNum > 50 &&
@@ -721,14 +701,14 @@ function start(cfg, url) {
 		iterateBigArr(nodes);
 
 		// Get the RGBA selectors that aren't already present.
-		const diff = [...new_rgba_rules].filter(x => !rgba_rules.has(x));
+		// const diff = [...new_rgba_rules].filter(x => !rgba_rules.has(x));
 
-		if (diff.length) {
-			css_node.nodeValue += diff.join('');
-
-			for (const new_rule of new_rgba_rules)
-				rgba_rules.add(new_rule);
-		}
+		// if (diff.length) {
+		// 	css_node.nodeValue += diff.join('');
+		//
+		// 	for (const new_rule of new_rgba_rules)
+		// 		rgba_rules.add(new_rule);
+		// }
 
 		if (db_time)
 			console.timeEnd(db_timestr);
@@ -756,7 +736,7 @@ function start(cfg, url) {
 		});
 
 		if(new_nodes.length)
-			setTimeout(() => process(new_nodes, true), 1000);
+			setTimeout(() => process(new_nodes, true), 200);
 	};
 
 	new MutationObserver(observer).observe(document.body, { childList: true, subtree: true });
