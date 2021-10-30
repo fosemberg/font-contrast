@@ -69,7 +69,7 @@ function withLog (fn) {
 
 async function makeBackgroundUrlStyleWithSvg(node) {
 	return svgStrToDataImage(
-		withLog(addStyleToSvgStr)(
+		addStyleToSvgStr(
 			await getBackgroundUrlData(node)
 		)
 	);
@@ -210,9 +210,19 @@ function getCSS(cfg, url, bodyId) {
 	}
 
 	let forceBorderColorBlackCss = '';
+	let skipForceBorderColorBlackCss = '';
 	if (true) {
 		forceBorderColorBlackCss = `#${bodyId} *{border-color:#000!important}`;
+		skipForceBorderColorBlackCss = `#${bodyId} [sbc__][border-color:rgba(0,0,0,0)!important]`
 	}
+
+	let smartBorderColorBlackCss = '';
+	if (true) {
+		const sides = ['a', 't', 'r', 'b', 'l'];
+		const sideSelector = sides.map(side => `#${bodyId} [bc_${side}__]`).join(',');
+		smartBorderColorBlackCss = `${sideSelector}{border-color:#000!important}`;
+	}
+
 
 	let forceBeforeAfterBlackAndWhiteCss = '';
 	if (true) {
@@ -259,7 +269,9 @@ function getCSS(cfg, url, bodyId) {
 		roundBordersCss,
 		roundBackgroundCss,
 		forceColorBlackCss,
-		forceBorderColorBlackCss,
+		// forceBorderColorBlackCss,
+		// skipForceBorderColorBlackCss,
+		smartBorderColorBlackCss,
 		forceFilterDropShadowCss,
 		forceSvgBlackAndWhiteCss,
 		forceBeforeAfterBlackAndWhiteCss,
@@ -346,7 +358,7 @@ function start(cfg, url) {
 	css_node.nodeValue = getCSS(cfg, url, bodyId);
 
 	const nodes = nlToArr(document.body.getElementsByTagName('*'));
-	document.body.setAttribute('bg__', '');
+	// document.body.setAttribute('bg__', '');
 
 	document.body.setAttribute('id', bodyId);
 
@@ -463,8 +475,8 @@ function start(cfg, url) {
 				(
 					bg_color &&
 					bg_color !== 'rgba(255, 255, 255)' &&
-					bg_color !== 'rgba(0, 0, 0, 0)'// &&
-					// checkIsRound(node)
+					bg_color !== 'rgba(0, 0, 0, 0)' &&
+					isRound
 				)
 			) {
 				// if (isRound) {
@@ -581,9 +593,9 @@ function start(cfg, url) {
 
 
 			// if (
-				// bg_color &&
-				// bg_color !== 'rgba(255, 255, 255)' &&
-				// bg_color !== 'rgba(0, 0, 0, 0)'
+			// 	bg_color &&
+			// 	bg_color !== 'rgba(255, 255, 255)' &&
+			// 	bg_color !== 'rgba(0, 0, 0, 0)'
 			// ) {
 				node.setAttribute('tbg__', '');
 			// }
@@ -668,12 +680,61 @@ function start(cfg, url) {
 
 		}
 
+		const setOtherAttribs = (node, style = getComputedStyle(node)) => {
+			const {
+				borderTopWidth,
+				borderRightWidth,
+				borderBottomWidth,
+				borderLeftWidth,
+
+				borderRightColor,
+				borderTopColor,
+				borderBottomColor,
+				borderLeftColor,
+			} = style;
+
+			const borderTopWidthNum = parseInt(borderTopWidth);
+			const borderRightWidthNum = parseInt(borderRightWidth);
+			const borderBottomWidthNum = parseInt(borderBottomWidth);
+			const borderLeftWidthNum = parseInt(borderLeftWidth);
+
+			const blackBorders = [];
+			const checkIsBorderBlack = (borderWidthNum, borderColor) => (
+				borderWidthNum > 0 &&
+				borderColor &&
+				borderColor !== 'rgba(0, 0, 0, 0)' &&
+				borderColor !== 'rgba(0, 0, 0)'
+			);
+
+			if (checkIsBorderBlack(borderTopWidthNum, borderTopColor)) {
+				blackBorders.push('t');
+			}
+			if (checkIsBorderBlack(borderRightWidthNum, borderRightColor)) {
+				blackBorders.push('r');
+			}
+			if (checkIsBorderBlack(borderBottomWidthNum, borderBottomColor)) {
+				blackBorders.push('b');
+			}
+			if (checkIsBorderBlack(borderLeftWidthNum, borderLeftColor)) {
+				blackBorders.push('l');
+			}
+
+			if (blackBorders.length === 4) {
+				node.setAttribute('bc_a__', '');
+			} else {
+				blackBorders.forEach(border => {
+					node.setAttribute(`bc_${border}__`, '');
+				})
+			}
+		}
+
 		const setAttribs = node => {
 			const tag = String(node.nodeName);
 			if (globalTagsToSkip.includes(tag))
 				return;
 			setTextAttribs(node);
 			setBgAttribs(node);
+			setOtherAttribs(node);
 		}
 
 		const iterateBigArr = (arr) => {
