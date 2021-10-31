@@ -21,9 +21,9 @@ chrome.runtime.onInstalled.addListener(details => {
 			'size': 0,
 			'sizeThreshold': 12,
 			'brightness': 50,
-			'skipColoreds': true,
-			'skipWhites': true,
-			'enableEverywhere': true
+			'enableEverywhere': true,
+			'underlineLinks': true,
+			'input_border': true,
 		};
 
 		storage.set(defaults);
