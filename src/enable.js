@@ -25,7 +25,7 @@ async function getBackgroundUrlData (node) {
 }
 
 function addStyleToSvgStr (svgStr) {
-	const insertSvgStyle = '<style type="text/css">*{stroke: #000!important;stroke-width: 1px;}</style>'
+	const insertSvgStyle = '<style type="text/css">*{stroke: #fff!important;stroke-width: 1px;}</style>'
 	return svgStr.replace('</svg>', `${insertSvgStyle}</svg>`);
 }
 
@@ -172,20 +172,20 @@ function getCSS(cfg, url, bodyId) {
 			break;
 	}
 
-	const main_white_background = `html, #${bodyId}{background-color:#fff!important;}`;
-	const white_background_picked = `#${bodyId} [bg__]{background-color:#fff!important;}`;
-	const white_text_background = `#${bodyId} [tbg__]{background-color:#fff!important;}`;
+	const main_white_background = `html, #${bodyId}{background-color:#000!important;}`;
+	const white_background_picked = `#${bodyId} [bg__]{background-color:#000!important;}`;
+	const white_text_background = `#${bodyId} [tbg__]{background-color:#000!important;}`;
 	const delete_gradient_for_background = `#${bodyId} [bg_ig__]{background-image:unset!important;}`;
-	const add_box_shadow_for_big_background = `#${bodyId} [bg_bs__]{box-shadow: 0px 0px 0px 0.5px #000;}`;
-	const add_border_color_for_big_background = `#${bodyId} [bg_b__]{border-color: #000;border-width: 1px;border-style: solid;}`;
+	const add_box_shadow_for_big_background = `#${bodyId} [bg_bs__]{box-shadow: 0px 0px 0px 0.5px #fff;}`;
+	const add_border_color_for_big_background = `#${bodyId} [bg_b__]{border-color: #fff;border-width: 1px;border-style: solid;}`;
 
 
 	const attr = `#${bodyId}[id] [d__],#${bodyId} [d__] svg, #${bodyId} [bg_us__]`;
 
-	const white_background_for_text = `${attr}{background-color:#fff !important;}`;
-	const black_fill = `${attr}{fill:#000 !important;}`;
+	const white_background_for_text = `${attr}{background-color:#000 !important;}`;
+	const black_fill = `${attr}{fill:#fff !important;}`;
 
-	let color_black = 'color:#000!important';
+	let color_black = 'color:#fff!important';
 
 	let dim = '';
 	if (cfg.advDimming)
@@ -204,18 +204,18 @@ function getCSS(cfg, url, bodyId) {
 
 	let forceColorBlackCss = '';
 	if (true) {
-		// forceColorBlackCss = '*,*[style]{color:#000!important}';
+		// forceColorBlackCss = '*,*[style]{color:#fff!important}';
 	}
 
 	let forceFilterDropShadowCss = '';
 	if (true) {
-		forceFilterDropShadowCss = '[src*=".png"], [bg_ut__], [src*="data:image/"], [src*=".svg"] {filter: drop-shadow(0 0 1px #000);}';
+		forceFilterDropShadowCss = '[src*=".png"], [bg_ut__], [src*="data:image/"], [src*=".svg"] {filter: drop-shadow(0 0 1px #fff);}';
 	}
 
 	let forceBorderColorBlackCss = '';
 	let skipForceBorderColorBlackCss = '';
 	if (true) {
-		forceBorderColorBlackCss = `#${bodyId} *{border-color:#000!important}`;
+		forceBorderColorBlackCss = `#${bodyId} *{border-color:#fff!important}`;
 		skipForceBorderColorBlackCss = `#${bodyId} [sbc__][border-color:rgba(0,0,0,0)!important]`
 	}
 
@@ -223,23 +223,23 @@ function getCSS(cfg, url, bodyId) {
 	if (true) {
 		const sides = ['a', 't', 'r', 'b', 'l'];
 		const sideSelector = sides.map(side => `#${bodyId} [bc_${side}__]`).join(',');
-		smartBorderColorBlackCss = `${sideSelector}{border-color:#000!important}`;
+		smartBorderColorBlackCss = `${sideSelector}{border-color:#fff!important}`;
 	}
 
 
 	let forceBeforeAfterBlackAndWhiteCss = '';
 	if (true) {
-		forceBeforeAfterBlackAndWhiteCss = `#${bodyId} :before,#${bodyId} :after{color:#000!important;filter: drop-shadow(0 0 1px #000);}`
+		forceBeforeAfterBlackAndWhiteCss = `#${bodyId} :before,#${bodyId} :after{color:#fff!important;filter: drop-shadow(0 0 1px #fff);}`
 	}
 
 	let forceSvgBlackAndWhiteCss = '';
 	if (true) {
-		forceSvgBlackAndWhiteCss = `#${bodyId} svg, #${bodyId} svg *{stroke:#000;}`
+		forceSvgBlackAndWhiteCss = `#${bodyId} svg, #${bodyId} svg *{stroke:#fff;}`
 	}
 
 	let whiteBackground = '';
 	// if (true)
-	// 	whiteBackground = '*,*[style]{background-color:#fff!important}';
+	// 	whiteBackground = '*,*[style]{background-color:#000!important}';
 
 	let bold = '';
 	if (cfg.boldText)
@@ -266,7 +266,7 @@ function getCSS(cfg, url, bodyId) {
 	}
 
 	const roundBordersCss = '[r__] [d__]{border-radius: inherit;}';
-	const roundBackgroundCss = `#${bodyId}[id] [r__]{background-color: #fff!important}`;
+	const roundBackgroundCss = `#${bodyId}[id] [r__]{background-color: #000!important}`;
 
 	return [
 		roundBordersCss,
