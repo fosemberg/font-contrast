@@ -10,8 +10,8 @@ var style_node;
 // Text node
 var css_node;
 
-var color = '#cecece'
-var bgColor = '#323232'
+var color = '#000'
+var bgColor = '#fff'
 
 // svg url replacer {
 
