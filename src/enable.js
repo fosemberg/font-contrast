@@ -212,7 +212,7 @@ function getCSS(cfg, url, bodyId) {
 
 	let forceFilterDropShadowCss = '';
 	if (true) {
-		forceFilterDropShadowCss = `[src*=".png"], [bg_ut__], [src*="data:image/"], [src*=".svg"] {filter: drop-shadow(0 0 1px ${color});}`;
+		forceFilterDropShadowCss = `[src*=".png"], [bg_ut__], [src*="data:image/"], [src*=".svg"] {filter: drop-shadow(0 0 0.1px ${color});}`;
 	}
 
 	let forceBorderColorBlackCss = '';
@@ -237,7 +237,12 @@ function getCSS(cfg, url, bodyId) {
 
 	let forceSvgBlackAndWhiteCss = '';
 	if (true) {
-		forceSvgBlackAndWhiteCss = `#${bodyId} svg, #${bodyId} svg *{stroke:${color};}`
+		forceSvgBlackAndWhiteCss = `#${bodyId} svg, #${bodyId} svg *{stroke:${color}!important;}`
+	}
+
+	let forceSvgWhiteBackgroundCss = '';
+	if (true) {
+		forceSvgWhiteBackgroundCss = `#${bodyId} svg {background-color:${bgColor};}`
 	}
 
 	let whiteBackground = '';
@@ -280,6 +285,7 @@ function getCSS(cfg, url, bodyId) {
 		smartBorderColorBlackCss,
 		forceFilterDropShadowCss,
 		forceSvgBlackAndWhiteCss,
+		forceSvgWhiteBackgroundCss,
 		forceBeforeAfterBlackAndWhiteCss,
     // white_background_for_text,
     dim,
