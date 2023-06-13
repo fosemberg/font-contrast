@@ -232,7 +232,7 @@ function getCSS(cfg, url, bodyId) {
 
 	let forceBeforeAfterBlackAndWhiteCss = '';
 	if (true) {
-		forceBeforeAfterBlackAndWhiteCss = `#${bodyId} :before,#${bodyId} :after{color:${color}!important;filter: drop-shadow(0 0 1px ${color});}`
+		forceBeforeAfterBlackAndWhiteCss = `#${bodyId} :before,#${bodyId} :after{color:${color}!important;filter: drop-shadow(0 0 0.1px ${color});}`
 	}
 
 	let forceSvgBlackAndWhiteCss = '';
